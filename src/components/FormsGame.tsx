@@ -176,18 +176,20 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
 
       // Check if everyone has submitted
       if (Object.keys(updatedResponses).length === players.length && currentPlayer.is_host) {
-        setTimeout(async () => {
-          const resultsGameState = {
-            ...gameState,
-            responses: updatedResponses,
-            showResults: true
-          };
+        // Immediately show results when everyone has submitted
+        const resultsGameState = {
+          ...updatedGameState,
+          showResults: true
+        };
 
-          await supabase
-            .from("rooms")
-            .update({ game_state: resultsGameState })
-            .eq("id", room.id);
-        }, 1000);
+        const { error: resultsError } = await supabase
+          .from("rooms")
+          .update({ game_state: resultsGameState })
+          .eq("id", room.id);
+
+        if (resultsError) {
+          console.error("Error showing results:", resultsError);
+        }
       }
     } catch (error) {
       console.error("Error submitting responses:", error);
