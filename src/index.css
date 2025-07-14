@@ -123,32 +123,32 @@
   /* Game Option Buttons */
   .game-option-a {
     @apply bg-[hsl(var(--game-option-a))] text-white hover:bg-[hsl(var(--game-option-a)/0.9)] 
-           shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] 
-           transition-all duration-[var(--transition-smooth)] transform hover:scale-105;
+           shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105;
   }
   
   .game-option-b {
     @apply bg-[hsl(var(--game-option-b))] text-white hover:bg-[hsl(var(--game-option-b)/0.9)]
-           shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]
-           transition-all duration-[var(--transition-smooth)] transform hover:scale-105;
+           shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105;
   }
   
   /* Room Code Display */
   .room-code {
     @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] 
-           text-white font-bold text-2xl tracking-wider px-6 py-3 rounded-lg 
-           shadow-[var(--shadow-game)];
+           text-white font-bold text-2xl tracking-wider px-6 py-3 rounded-lg;
+    box-shadow: 0 8px 25px -5px hsl(217 91% 60% / 0.25);
   }
   
   /* Animated Gradient Background */
   .gradient-bg {
-    background: var(--gradient-subtle);
+    background: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 98%));
   }
   
   /* Interactive Card Hover */
   .card-interactive {
-    @apply transition-all duration-[var(--transition-smooth)] hover:shadow-[var(--shadow-lg)]
-           hover:bg-[hsl(var(--hover))] cursor-pointer;
+    @apply transition-all duration-300 hover:shadow-lg cursor-pointer;
+  }
+  .card-interactive:hover {
+    background-color: hsl(220 13% 91%);
   }
   
   /* Pulse Animation for Waiting States */
