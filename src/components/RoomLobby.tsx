@@ -90,8 +90,27 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         .delete()
         .eq("player_id", currentPlayer.player_id);
 
-      // If host is leaving, close the room
-      if (currentPlayer.is_host) {
+      // Check if this was the last player
+      const { data: remainingPlayers } = await supabase
+        .from("players")
+        .select("id")
+        .eq("room_id", room.id);
+
+      // If no players remain, delete the room completely
+      if (!remainingPlayers || remainingPlayers.length === 0) {
+        // Delete game votes first
+        await supabase
+          .from("game_votes")
+          .delete()
+          .eq("room_id", room.id);
+
+        // Delete the room
+        await supabase
+          .from("rooms")
+          .delete()
+          .eq("id", room.id);
+      } else if (currentPlayer.is_host) {
+        // If host is leaving but players remain, just mark as inactive
         await supabase
           .from("rooms")
           .update({ is_active: false })
