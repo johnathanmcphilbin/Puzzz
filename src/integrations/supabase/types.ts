@@ -14,7 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_votes: {
+        Row: {
+          id: string
+          player_id: string
+          question_id: string
+          room_id: string
+          vote: string
+          voted_at: string
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          question_id: string
+          room_id: string
+          vote: string
+          voted_at?: string
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          question_id?: string
+          room_id?: string
+          vote?: string
+          voted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_votes_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "would_you_rather_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_votes_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          id: string
+          is_host: boolean | null
+          joined_at: string
+          player_id: string
+          player_name: string
+          room_id: string
+        }
+        Insert: {
+          id?: string
+          is_host?: boolean | null
+          joined_at?: string
+          player_id: string
+          player_name: string
+          room_id: string
+        }
+        Update: {
+          id?: string
+          is_host?: boolean | null
+          joined_at?: string
+          player_id?: string
+          player_name?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          current_game: string | null
+          game_state: Json | null
+          host_id: string
+          id: string
+          is_active: boolean | null
+          name: string
+          room_code: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_game?: string | null
+          game_state?: Json | null
+          host_id: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          room_code: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_game?: string | null
+          game_state?: Json | null
+          host_id?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          room_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      would_you_rather_questions: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          option_a: string
+          option_b: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          option_a: string
+          option_b: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          option_a?: string
+          option_b?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

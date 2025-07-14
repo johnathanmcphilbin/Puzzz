@@ -2,57 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Puzzz Design System - Modern, Clean, Accessible Party Game Platform */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --background: 0 0% 98%;
+    --foreground: 220 13% 18%;
+    
+    /* Primary - Modern Blue for Actions */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 217 91% 55%;
+    
+    /* Secondary - Soft Gray for Balance */
+    --secondary: 220 13% 96%;
+    --secondary-foreground: 220 13% 18%;
+    
+    /* Accent - Vibrant Purple for Highlights */
+    --accent: 262 52% 47%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Success - Fresh Green for Positive Actions */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    /* Warning - Warm Orange for Alerts */
+    --warning: 32 95% 44%;
+    --warning-foreground: 0 0% 100%;
+    
+    /* Game Colors - Fun and Engaging */
+    --game-option-a: 217 91% 60%;
+    --game-option-b: 262 52% 47%;
+    --game-result: 142 76% 36%;
+    
+    /* Interactive States */
+    --hover: 220 13% 91%;
+    --active: 220 13% 86%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(262 52% 47%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 98%));
+    --gradient-game: linear-gradient(45deg, hsl(217 91% 60%), hsl(262 52% 47%));
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 13% 18% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(220 13% 18% / 0.1), 0 2px 4px -1px hsl(220 13% 18% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(220 13% 18% / 0.1), 0 4px 6px -2px hsl(220 13% 18% / 0.05);
+    --shadow-game: 0 8px 25px -5px hsl(217 91% 60% / 0.25);
+    
+    /* Animation */
+    --transition-fast: 0.15s ease-out;
+    --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Standard UI Components */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 220 13% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --popover-foreground: 220 13% 18%;
+    --muted: 220 13% 96%;
+    --muted-foreground: 220 9% 46%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -100,6 +115,44 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  /* Game Option Buttons */
+  .game-option-a {
+    @apply bg-[hsl(var(--game-option-a))] text-white hover:bg-[hsl(var(--game-option-a)/0.9)] 
+           shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] 
+           transition-all duration-[var(--transition-smooth)] transform hover:scale-105;
+  }
+  
+  .game-option-b {
+    @apply bg-[hsl(var(--game-option-b))] text-white hover:bg-[hsl(var(--game-option-b)/0.9)]
+           shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]
+           transition-all duration-[var(--transition-smooth)] transform hover:scale-105;
+  }
+  
+  /* Room Code Display */
+  .room-code {
+    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] 
+           text-white font-bold text-2xl tracking-wider px-6 py-3 rounded-lg 
+           shadow-[var(--shadow-game)];
+  }
+  
+  /* Animated Gradient Background */
+  .gradient-bg {
+    background: var(--gradient-subtle);
+  }
+  
+  /* Interactive Card Hover */
+  .card-interactive {
+    @apply transition-all duration-[var(--transition-smooth)] hover:shadow-[var(--shadow-lg)]
+           hover:bg-[hsl(var(--hover))] cursor-pointer;
+  }
+  
+  /* Pulse Animation for Waiting States */
+  .pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }
