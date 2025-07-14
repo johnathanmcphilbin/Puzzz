@@ -159,7 +159,7 @@ export const Room = () => {
         (payload) => {
           console.log("Player update received:", payload);
           // Reload players when any player in this room changes
-          loadPlayers();
+          loadPlayers(roomData.id);
         }
       )
       .subscribe();
@@ -169,13 +169,14 @@ export const Room = () => {
     };
   };
 
-  const loadPlayers = async () => {
-    if (!room) return;
+  const loadPlayers = async (roomId?: string) => {
+    const targetRoomId = roomId || room?.id;
+    if (!targetRoomId) return;
 
     const { data: playersData } = await supabase
       .from("players")
       .select("*")
-      .eq("room_id", room.id)
+      .eq("room_id", targetRoomId)
       .order("joined_at", { ascending: true });
 
     setPlayers(playersData || []);
