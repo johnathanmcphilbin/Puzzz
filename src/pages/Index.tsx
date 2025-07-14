@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { CreateRoom } from "@/components/CreateRoom";
 import { JoinRoom } from "@/components/JoinRoom";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
+  const roomSectionRef = useRef<HTMLDivElement>(null);
+
+  const scrollToRoomSection = () => {
+    roomSectionRef.current?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  };
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -22,7 +30,7 @@ const Index = () => {
         </div>
 
         {/* Main Action Area */}
-        <div className="max-w-4xl mx-auto mb-16">
+        <div ref={roomSectionRef} className="max-w-4xl mx-auto mb-16">
           <div className="flex justify-center mb-8">
             <div className="inline-flex bg-card rounded-lg p-1 shadow-sm border">
               <Button
@@ -56,7 +64,10 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {/* Would You Rather Game */}
-            <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden">
+            <Card 
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden"
+              onClick={scrollToRoomSection}
+            >
               <div className="aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -87,7 +98,10 @@ const Index = () => {
             </Card>
 
             {/* Forms Game */}
-            <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden">
+            <Card 
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden"
+              onClick={scrollToRoomSection}
+            >
               <div className="aspect-video bg-gradient-to-br from-primary to-secondary relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">

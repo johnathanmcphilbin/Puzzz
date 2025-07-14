@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
 
 export const CreateRoom = () => {
-  const [roomName, setRoomName] = useState("");
   const [hostName, setHostName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
@@ -25,10 +24,10 @@ export const CreateRoom = () => {
   };
 
   const createRoom = async () => {
-    if (!roomName.trim() || !hostName.trim()) {
+    if (!hostName.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please fill in both room name and your name.",
+        description: "Please enter your name.",
         variant: "destructive",
       });
       return;
@@ -44,7 +43,7 @@ export const CreateRoom = () => {
         .from("rooms")
         .insert({
           room_code: roomCode,
-          name: roomName.trim(),
+          name: `${hostName.trim()}'s Room`,
           host_id: hostId,
           current_game: "would_you_rather",
           game_state: { phase: "lobby", currentQuestion: null, votes: {} }
@@ -72,7 +71,7 @@ export const CreateRoom = () => {
 
       toast({
         title: "Room Created!",
-        description: `Room "${roomName}" created with code ${roomCode}`,
+        description: `Room created with code ${roomCode}`,
         className: "bg-success text-success-foreground",
       });
 
@@ -101,20 +100,6 @@ export const CreateRoom = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="roomName" className="text-base font-medium">
-            Room Name
-          </Label>
-          <Input
-            id="roomName"
-            placeholder="Enter a fun room name..."
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-            className="text-lg py-3"
-            maxLength={50}
-          />
-        </div>
-
         <div className="space-y-2">
           <Label htmlFor="hostName" className="text-base font-medium">
             Your Name
