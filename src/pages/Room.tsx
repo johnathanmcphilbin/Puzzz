@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +32,7 @@ export const Room = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!roomCode) {
@@ -53,7 +54,13 @@ export const Room = () => {
     }
 
     loadRoomData();
-    setupRealtimeSubscriptions();
+    
+    // Cleanup on unmount
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+      }
+    };
   }, [roomCode]);
 
   const loadRoomData = async () => {
@@ -77,6 +84,12 @@ export const Room = () => {
       }
 
       setRoom(roomData);
+
+      // Set up real-time subscriptions after room is loaded
+      const cleanup = setupRealtimeSubscriptions(roomData);
+      
+      // Store cleanup function for later use
+      cleanupRef.current = cleanup;
 
       // Load players
       const { data: playersData, error: playersError } = await supabase
@@ -117,7 +130,7 @@ export const Room = () => {
     }
   };
 
-  const setupRealtimeSubscriptions = () => {
+  const setupRealtimeSubscriptions = (roomData: Room) => {
     const roomChannel = supabase
       .channel(`room_${roomCode}`)
       .on(
@@ -129,6 +142,7 @@ export const Room = () => {
           filter: `room_code=eq.${roomCode}`,
         },
         (payload) => {
+          console.log("Room update received:", payload);
           if (payload.eventType === "UPDATE") {
             setRoom(payload.new as Room);
           }
@@ -140,9 +154,11 @@ export const Room = () => {
           event: "*",
           schema: "public",
           table: "players",
+          filter: `room_id=eq.${roomData.id}`,
         },
-        () => {
-          // Reload players when any player changes
+        (payload) => {
+          console.log("Player update received:", payload);
+          // Reload players when any player in this room changes
           loadPlayers();
         }
       )
