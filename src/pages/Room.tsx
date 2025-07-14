@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RoomLobby } from "@/components/RoomLobby";
 import { WouldYouRatherGame } from "@/components/WouldYouRatherGame";
+import { FormsGame } from "@/components/FormsGame";
 import { Loader2 } from "lucide-react";
 
 interface Room {
@@ -198,11 +199,19 @@ export const Room = () => {
   }
 
   const gamePhase = room.game_state?.phase || "lobby";
+  const currentGame = room.current_game || "would_you_rather";
 
   return (
     <div className="min-h-screen gradient-bg">
       {gamePhase === "lobby" ? (
         <RoomLobby 
+          room={room} 
+          players={players} 
+          currentPlayer={currentPlayer}
+          onUpdateRoom={setRoom}
+        />
+      ) : currentGame === "forms_game" ? (
+        <FormsGame 
           room={room} 
           players={players} 
           currentPlayer={currentPlayer}

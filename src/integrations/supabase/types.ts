@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      forms_questions: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_controversial: boolean | null
+          question: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_controversial?: boolean | null
+          question: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_controversial?: boolean | null
+          question?: string
+        }
+        Relationships: []
+      }
+      forms_responses: {
+        Row: {
+          id: string
+          player_id: string
+          question_id: string
+          responded_at: string
+          room_id: string
+          selected_player_id: string
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          question_id: string
+          responded_at?: string
+          room_id: string
+          selected_player_id: string
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          question_id?: string
+          responded_at?: string
+          room_id?: string
+          selected_player_id?: string
+        }
+        Relationships: []
+      }
       game_votes: {
         Row: {
           id: string

@@ -33,6 +33,7 @@ interface RoomLobbyProps {
 
 export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLobbyProps) => {
   const [isStarting, setIsStarting] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<string>("would_you_rather");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -53,6 +54,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
       const { error } = await supabase
         .from("rooms")
         .update({
+          current_game: selectedGame,
           game_state: { 
             phase: "playing", 
             currentQuestion: null, 
@@ -65,9 +67,11 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
       if (error) throw error;
 
+      const gameTitle = selectedGame === "forms_game" ? "Forms Game" : "Would You Rather";
+      
       toast({
         title: "Game Started!",
-        description: "Would You Rather game is now beginning",
+        description: `${gameTitle} is now beginning`,
         className: "bg-success text-success-foreground",
       });
     } catch (error) {
@@ -197,49 +201,90 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
             </CardContent>
           </Card>
 
-          {/* Game Info */}
+          {/* Game Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Would You Rather</CardTitle>
+              <CardTitle>Select Game</CardTitle>
               <CardDescription>
-                Choose between two interesting scenarios and see how everyone votes!
+                Choose which game to play with your friends
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <h4 className="font-semibold mb-2">How to Play:</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Read the question carefully</li>
-                  <li>• Choose Option A or Option B</li>
-                  <li>• See how others voted</li>
-                  <li>• Discuss and have fun!</li>
-                </ul>
+              {/* Game Options */}
+              <div className="space-y-3">
+                <div 
+                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                    selectedGame === "would_you_rather" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"
+                  }`}
+                  onClick={() => setSelectedGame("would_you_rather")}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold">Would You Rather</h4>
+                      <p className="text-sm text-muted-foreground">Choose between two scenarios</p>
+                    </div>
+                    <div className="flex gap-1">
+                      <div className="w-6 h-6 game-option-a rounded text-xs flex items-center justify-center text-white font-bold">A</div>
+                      <div className="w-6 h-6 game-option-b rounded text-xs flex items-center justify-center text-white font-bold">B</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                    selectedGame === "forms_game" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"
+                  }`}
+                  onClick={() => setSelectedGame("forms_game")}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold">Forms Game</h4>
+                      <p className="text-sm text-muted-foreground">Survey-style questions about friends</p>
+                    </div>
+                    <div className="text-2xl">📋</div>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex gap-2">
-                <div className="flex-1 p-3 game-option-a rounded-lg text-center text-white font-medium">
-                  Option A
-                </div>
-                <div className="flex-1 p-3 game-option-b rounded-lg text-center text-white font-medium">
-                  Option B
-                </div>
+              {/* Game Instructions */}
+              <div className="p-4 bg-muted rounded-lg">
+                <h4 className="font-semibold mb-2">
+                  {selectedGame === "forms_game" ? "Forms Game Rules:" : "How to Play:"}
+                </h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  {selectedGame === "forms_game" ? (
+                    <>
+                      <li>• Answer 8 questions about your friends</li>
+                      <li>• Select who is most likely for each scenario</li>
+                      <li>• Wait for everyone to finish</li>
+                      <li>• See the results and laugh together!</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• Read the question carefully</li>
+                      <li>• Choose Option A or Option B</li>
+                      <li>• See how others voted</li>
+                      <li>• Discuss and have fun!</li>
+                    </>
+                  )}
+                </ul>
               </div>
 
               {currentPlayer.is_host ? (
                 <Button
                   onClick={startGame}
-                  disabled={isStarting || players.length < 2}
+                  disabled={isStarting || players.length < (selectedGame === "forms_game" ? 3 : 2)}
                   className="w-full text-lg py-6"
                   size="lg"
                 >
                   {isStarting ? (
                     "Starting Game..."
-                  ) : players.length < 2 ? (
-                    "Need at least 2 players"
+                  ) : players.length < (selectedGame === "forms_game" ? 3 : 2) ? (
+                    `Need at least ${selectedGame === "forms_game" ? 3 : 2} players`
                   ) : (
                     <>
                       <Play className="mr-2 h-5 w-5" />
-                      Start Game
+                      Start {selectedGame === "forms_game" ? "Forms Game" : "Would You Rather"}
                     </>
                   )}
                 </Button>
