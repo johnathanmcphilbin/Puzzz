@@ -48,42 +48,111 @@ const Index = () => {
         </div>
 
 
-        {/* Games Preview */}
-        <div className="max-w-4xl mx-auto mt-16">
-          <h2 className="text-3xl font-bold text-center mb-8 text-foreground">
+        {/* Games Selection */}
+        <div className="max-w-7xl mx-auto mt-16">
+          <h2 className="text-3xl font-bold text-left mb-8 text-foreground">
             Available Games
           </h2>
           
-          <Card className="card-interactive">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl">Would You Rather</CardTitle>
-                <span className="bg-success text-success-foreground px-3 py-1 rounded-full text-sm font-medium">
-                  Available Now
-                </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* Would You Rather Game */}
+            <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden">
+              <div className="aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="text-4xl font-bold mb-2">A vs B</div>
+                    <div className="text-sm opacity-90">Choose Your Side</div>
+                  </div>
+                </div>
+                <div className="absolute top-3 right-3">
+                  <span className="bg-success text-success-foreground px-2 py-1 rounded-full text-xs font-medium">
+                    LIVE
+                  </span>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-lg mb-4">
-                Choose between two interesting scenarios and see how your friends vote. 
-                With 200+ carefully crafted questions across multiple categories.
-              </CardDescription>
-              <div className="flex gap-4">
-                <Button 
-                  className="bg-game-option-a hover:bg-game-option-a/90 text-white"
-                  size="lg"
-                >
-                  Option A
-                </Button>
-                <Button 
-                  className="bg-game-option-b hover:bg-game-option-b/90 text-white"
-                  size="lg"
-                >
-                  Option B
-                </Button>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-bold">Would You Rather</CardTitle>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Party Game</span>
+                  <span>•</span>
+                  <span>2-10 Players</span>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CardDescription className="text-sm line-clamp-2">
+                  Make tough choices and see how your friends decide. Over 200 thought-provoking scenarios await!
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            {/* Coming Soon Games */}
+            <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-dashed border-2 border-muted-foreground/30 bg-muted/20">
+              <div className="aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-2xl font-bold mb-1">🎯</div>
+                  <div className="text-sm">Coming Soon</div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-bold text-muted-foreground">Trivia Challenge</CardTitle>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Quiz Game</span>
+                  <span>•</span>
+                  <span>2-8 Players</span>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CardDescription className="text-sm line-clamp-2">
+                  Test your knowledge across various categories in this fast-paced trivia game.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-dashed border-2 border-muted-foreground/30 bg-muted/20">
+              <div className="aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-2xl font-bold mb-1">🎨</div>
+                  <div className="text-sm">Coming Soon</div>
+                </div>
+              </div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-bold text-muted-foreground">Draw & Guess</CardTitle>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Creative Game</span>
+                  <span>•</span>
+                  <span>3-12 Players</span>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CardDescription className="text-sm line-clamp-2">
+                  Express your creativity and guess what others are drawing in this hilarious party game.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-dashed border-2 border-muted-foreground/30 bg-muted/20">
+              <div className="aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-2xl font-bold mb-1">🎭</div>
+                  <div className="text-sm">Coming Soon</div>
+                </div>
+              </div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-bold text-muted-foreground">Truth or Dare</CardTitle>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Social Game</span>
+                  <span>•</span>
+                  <span>3-10 Players</span>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CardDescription className="text-sm line-clamp-2">
+                  The classic party game with modern twists and age-appropriate challenges.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
