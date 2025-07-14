@@ -201,9 +201,20 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         className: "bg-success text-success-foreground",
       });
 
-      // Auto-show results if everyone has voted
+      // Show host actions if everyone has voted
       if (Object.keys(newVotes).length === players.length && currentPlayer.is_host) {
-        setTimeout(() => showResultsHandler(), 1000);
+        const hostActionGameState = {
+          ...gameState,
+          votes: newVotes,
+          phase: "hostActions"
+        };
+
+        setTimeout(async () => {
+          await supabase
+            .from("rooms")
+            .update({ game_state: hostActionGameState })
+            .eq("id", room.id);
+        }, 1000);
       }
     } catch (error) {
       console.error("Error voting:", error);
@@ -437,6 +448,73 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
     );
   }
 
+  // Host Actions Phase - after everyone has voted
+  if (gameState.phase === "hostActions") {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <h1 className="text-3xl font-bold text-foreground">Round Complete!</h1>
+              <Badge variant="outline" className="text-sm">
+                Question {questionIndex}
+              </Badge>
+            </div>
+            <div className="room-code text-lg">{room.room_code}</div>
+            <p className="text-muted-foreground mt-2">All players have voted. What would you like to do next?</p>
+          </div>
+
+          {/* Action Cards */}
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={showResultsHandler}>
+              <CardContent className="p-6 text-center">
+                <BarChart3 className="h-8 w-8 mx-auto mb-4 text-primary" />
+                <h3 className="text-lg font-semibold mb-2">Show Results</h3>
+                <p className="text-sm text-muted-foreground">View voting results for this question</p>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={loadNextQuestion}>
+              <CardContent className="p-6 text-center">
+                <ChevronRight className="h-8 w-8 mx-auto mb-4 text-secondary" />
+                <h3 className="text-lg font-semibold mb-2">Next Question</h3>
+                <p className="text-sm text-muted-foreground">Continue to the next question</p>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={showEndGame}>
+              <CardContent className="p-6 text-center">
+                <Trophy className="h-8 w-8 mx-auto mb-4 text-warning" />
+                <h3 className="text-lg font-semibold mb-2">End Game</h3>
+                <p className="text-sm text-muted-foreground">View all results and end the game</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Vote Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Question Votes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold text-game-option-a mb-2">{optionAVotes}</div>
+                  <div className="text-sm text-muted-foreground">votes for Option A</div>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold text-game-option-b mb-2">{optionBVotes}</div>
+                  <div className="text-sm text-muted-foreground">votes for Option B</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
@@ -587,17 +665,15 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                   )}
                 </Button>
                 
-                {gameHistory.length > 0 && (
-                  <Button
-                    onClick={showEndGame}
-                    variant="secondary"
-                    className="gap-2"
-                    size="lg"
-                  >
-                    <Trophy className="h-4 w-4" />
-                    End Game
-                  </Button>
-                )}
+                <Button
+                  onClick={showEndGame}
+                  variant="secondary"
+                  className="gap-2"
+                  size="lg"
+                >
+                  <Trophy className="h-4 w-4" />
+                  End Game
+                </Button>
               </>
             ) : (
               totalVotes > 0 && (
