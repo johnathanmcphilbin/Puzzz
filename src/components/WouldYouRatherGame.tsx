@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronRight, Users, RotateCcw, Crown } from "lucide-react";
+import { ChevronRight, Users, RotateCcw, Crown, Trophy, BarChart3 } from "lucide-react";
 
 interface Room {
   id: string;
@@ -48,6 +48,8 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   const gameState = room.game_state || {};
   const showResults = gameState.showResults || false;
   const questionIndex = gameState.questionIndex || 0;
+  const gameHistory = gameState.gameHistory || [];
+  const isEndGame = gameState.phase === "endGame";
 
   useEffect(() => {
     loadCurrentQuestion();
@@ -93,6 +95,20 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
 
     setIsLoading(true);
     try {
+      // Save current question and results to history before loading next
+      if (currentQuestion && Object.keys(votes).length > 0) {
+        const currentQuestionResult = {
+          question: currentQuestion,
+          votes: votes,
+          optionAVotes: Object.values(votes).filter(vote => vote === "A").length,
+          optionBVotes: Object.values(votes).filter(vote => vote === "B").length,
+          totalVotes: Object.keys(votes).length,
+          questionNumber: questionIndex
+        };
+        
+        gameHistory.push(currentQuestionResult);
+      }
+
       // Get a random question
       const { data: questionsData } = await supabase
         .from("would_you_rather_questions")
@@ -109,13 +125,14 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
 
       const randomQuestion = questionsData[Math.floor(Math.random() * questionsData.length)];
 
-      // Update room with new question
+      // Update room with new question and history
       const newGameState = {
         ...gameState,
         currentQuestion: randomQuestion,
         questionIndex: questionIndex + 1,
         votes: {},
-        showResults: false
+        showResults: false,
+        gameHistory: gameHistory
       };
 
       const { error } = await supabase
@@ -212,6 +229,48 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       .eq("id", room.id);
   };
 
+  const showEndGame = async () => {
+    if (!currentPlayer.is_host) return;
+
+    // Save the current question to history before ending
+    if (currentQuestion && Object.keys(votes).length > 0) {
+      const currentQuestionResult = {
+        question: currentQuestion,
+        votes: votes,
+        optionAVotes: Object.values(votes).filter(vote => vote === "A").length,
+        optionBVotes: Object.values(votes).filter(vote => vote === "B").length,
+        totalVotes: Object.keys(votes).length,
+        questionNumber: questionIndex
+      };
+      
+      gameHistory.push(currentQuestionResult);
+    }
+
+    const endGameState = {
+      ...gameState,
+      phase: "endGame",
+      gameHistory: gameHistory
+    };
+
+    const { error } = await supabase
+      .from("rooms")
+      .update({ game_state: endGameState })
+      .eq("id", room.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to end game",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Game Ended!",
+        description: "Viewing final results",
+      });
+    }
+  };
+
   const backToLobby = async () => {
     if (!currentPlayer.is_host) return;
 
@@ -247,6 +306,136 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   const totalVotes = optionAVotes + optionBVotes;
   const optionAPercentage = totalVotes > 0 ? (optionAVotes / totalVotes) * 100 : 0;
   const optionBPercentage = totalVotes > 0 ? (optionBVotes / totalVotes) * 100 : 0;
+
+  // End Game View
+  if (isEndGame) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <Trophy className="h-8 w-8 text-warning" />
+              <h1 className="text-4xl font-bold text-foreground">Game Complete!</h1>
+              <Trophy className="h-8 w-8 text-warning" />
+            </div>
+            <div className="room-code text-lg">{room.room_code}</div>
+            <p className="text-muted-foreground mt-2">
+              {gameHistory.length} question{gameHistory.length !== 1 ? 's' : ''} played
+            </p>
+          </div>
+
+          {/* Game Summary */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Final Results Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div className="p-4 bg-primary/10 rounded-lg">
+                  <div className="text-2xl font-bold text-primary">{gameHistory.length}</div>
+                  <div className="text-sm text-muted-foreground">Questions Played</div>
+                </div>
+                <div className="p-4 bg-secondary/10 rounded-lg">
+                  <div className="text-2xl font-bold text-secondary">{players.length}</div>
+                  <div className="text-sm text-muted-foreground">Players</div>
+                </div>
+                <div className="p-4 bg-accent/10 rounded-lg">
+                  <div className="text-2xl font-bold text-accent">
+                    {Math.round(gameHistory.reduce((sum, q) => sum + q.totalVotes, 0) / gameHistory.length) || 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Avg Votes per Question</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Question Results */}
+          <div className="space-y-6 mb-8">
+            {gameHistory.map((questionResult, index) => (
+              <Card key={index}>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Question {questionResult.questionNumber}</span>
+                    <Badge variant="outline">
+                      {questionResult.totalVotes} vote{questionResult.totalVotes !== 1 ? 's' : ''}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Option A Results */}
+                    <div className="p-4 border rounded-lg">
+                      <div className="text-center mb-4">
+                        <div className="text-lg font-semibold mb-2 text-game-option-a">Option A</div>
+                        <p className="text-sm text-foreground">{questionResult.question.option_a}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>{questionResult.optionAVotes} votes</span>
+                          <span>{questionResult.totalVotes > 0 ? Math.round((questionResult.optionAVotes / questionResult.totalVotes) * 100) : 0}%</span>
+                        </div>
+                        <Progress 
+                          value={questionResult.totalVotes > 0 ? (questionResult.optionAVotes / questionResult.totalVotes) * 100 : 0} 
+                          className="h-3" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Option B Results */}
+                    <div className="p-4 border rounded-lg">
+                      <div className="text-center mb-4">
+                        <div className="text-lg font-semibold mb-2 text-game-option-b">Option B</div>
+                        <p className="text-sm text-foreground">{questionResult.question.option_b}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>{questionResult.optionBVotes} votes</span>
+                          <span>{questionResult.totalVotes > 0 ? Math.round((questionResult.optionBVotes / questionResult.totalVotes) * 100) : 0}%</span>
+                        </div>
+                        <Progress 
+                          value={questionResult.totalVotes > 0 ? (questionResult.optionBVotes / questionResult.totalVotes) * 100 : 0} 
+                          className="h-3" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Winner Badge */}
+                  <div className="text-center mt-4">
+                    {questionResult.optionAVotes > questionResult.optionBVotes ? (
+                      <Badge className="bg-game-option-a text-white">Option A Won!</Badge>
+                    ) : questionResult.optionBVotes > questionResult.optionAVotes ? (
+                      <Badge className="bg-game-option-b text-white">Option B Won!</Badge>
+                    ) : (
+                      <Badge variant="outline">Tie!</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Host Controls */}
+          {currentPlayer.is_host && (
+            <div className="flex justify-center">
+              <Button
+                onClick={backToLobby}
+                className="gap-2"
+                size="lg"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Back to Lobby
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -381,21 +570,35 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         {currentPlayer.is_host && (
           <div className="flex justify-center gap-4">
             {showResults ? (
-              <Button
-                onClick={loadNextQuestion}
-                disabled={isLoading}
-                className="gap-2"
-                size="lg"
-              >
-                {isLoading ? (
-                  "Loading..."
-                ) : (
-                  <>
-                    <ChevronRight className="h-4 w-4" />
-                    Next Question
-                  </>
+              <>
+                <Button
+                  onClick={loadNextQuestion}
+                  disabled={isLoading}
+                  className="gap-2"
+                  size="lg"
+                >
+                  {isLoading ? (
+                    "Loading..."
+                  ) : (
+                    <>
+                      <ChevronRight className="h-4 w-4" />
+                      Next Question
+                    </>
+                  )}
+                </Button>
+                
+                {gameHistory.length > 0 && (
+                  <Button
+                    onClick={showEndGame}
+                    variant="secondary"
+                    className="gap-2"
+                    size="lg"
+                  >
+                    <Trophy className="h-4 w-4" />
+                    End Game
+                  </Button>
                 )}
-              </Button>
+              </>
             ) : (
               totalVotes > 0 && (
                 <Button
