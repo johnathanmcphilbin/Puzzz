@@ -218,36 +218,15 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   const showResultsHandler = async () => {
     if (!currentPlayer.is_host) return;
 
-    // Save current question to history and go directly to end game
-    if (currentQuestion && Object.keys(votes).length > 0) {
-      const currentQuestionResult = {
-        question: currentQuestion,
-        votes: votes,
-        optionAVotes: Object.values(votes).filter(vote => vote === "A").length,
-        optionBVotes: Object.values(votes).filter(vote => vote === "B").length,
-        totalVotes: Object.keys(votes).length,
-        questionNumber: questionIndex
-      };
-      
-      gameHistory.push(currentQuestionResult);
-    }
-
-    const endGameState = {
+    const updatedGameState = {
       ...gameState,
-      phase: "endGame",
-      showResults: true,
-      gameHistory: gameHistory
+      showResults: true
     };
 
     await supabase
       .from("rooms")
-      .update({ game_state: endGameState })
+      .update({ game_state: updatedGameState })
       .eq("id", room.id);
-
-    toast({
-      title: "Game Complete!",
-      description: "Viewing final results",
-    });
   };
 
   const showEndGame = async () => {
