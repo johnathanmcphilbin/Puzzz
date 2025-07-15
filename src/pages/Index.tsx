@@ -17,21 +17,39 @@ const Index = () => {
     <div className="min-h-screen gradient-bg">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="relative text-center mb-12">
-          <Button 
-            onClick={() => {
-              setActiveTab("join");
-              setShowDialog(true);
-            }}
-            className="absolute top-0 right-0"
-            variant="outline"
-          >
-            Join Room
-          </Button>
-          <h1 className="text-6xl font-bold text-foreground mb-4 tracking-tight">
+        <div className="text-center mb-8 md:mb-12">
+          {/* Mobile-friendly join button */}
+          <div className="flex justify-center mb-4 md:hidden">
+            <Button 
+              onClick={() => {
+                setActiveTab("join");
+                setShowDialog(true);
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Join Room
+            </Button>
+          </div>
+          
+          {/* Desktop join button */}
+          <div className="hidden md:block relative">
+            <Button 
+              onClick={() => {
+                setActiveTab("join");
+                setShowDialog(true);
+              }}
+              className="absolute top-0 right-0"
+              variant="outline"
+            >
+              Join Room
+            </Button>
+          </div>
+          
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4 tracking-tight">
             Puzzz
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
             The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
           </p>
         </div>
@@ -42,18 +60,18 @@ const Index = () => {
             Choose Your Game
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {/* Would You Rather Game */}
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden"
               onClick={handleGameClick}
             >
-              <div className="aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
+              <div className="aspect-[4/3] sm:aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-white">
-                    <div className="text-4xl font-bold mb-2">A vs B</div>
-                    <div className="text-sm opacity-90">Choose Your Side</div>
+                    <div className="text-2xl sm:text-4xl font-bold mb-2">A vs B</div>
+                    <div className="text-xs sm:text-sm opacity-90">Choose Your Side</div>
                   </div>
                 </div>
                 <div className="absolute top-3 right-3">
@@ -82,12 +100,12 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden"
               onClick={handleGameClick}
             >
-              <div className="aspect-video bg-gradient-to-br from-primary to-secondary relative overflow-hidden">
+              <div className="aspect-[4/3] sm:aspect-video bg-gradient-to-br from-primary to-secondary relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-white">
-                    <div className="text-4xl font-bold mb-2">📋</div>
-                    <div className="text-sm opacity-90">Survey Time</div>
+                    <div className="text-2xl sm:text-4xl font-bold mb-2">📋</div>
+                    <div className="text-xs sm:text-sm opacity-90">Survey Time</div>
                   </div>
                 </div>
                 <div className="absolute top-3 right-3">
@@ -117,12 +135,12 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-destructive/20 to-warning/20 overflow-hidden"
               onClick={handleGameClick}
             >
-              <div className="aspect-video bg-gradient-to-br from-destructive to-warning relative overflow-hidden">
+              <div className="aspect-[4/3] sm:aspect-video bg-gradient-to-br from-destructive to-warning relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-white">
-                    <div className="text-4xl font-bold mb-2">🤫</div>
-                    <div className="text-sm opacity-90">Secrets & Suspense</div>
+                    <div className="text-2xl sm:text-4xl font-bold mb-2">🤫</div>
+                    <div className="text-xs sm:text-sm opacity-90">Secrets & Suspense</div>
                   </div>
                 </div>
                 <div className="absolute top-2 right-2">
@@ -147,7 +165,7 @@ const Index = () => {
             </Card>
 
             <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-dashed border-2 border-muted-foreground/30 bg-muted/20">
-              <div className="aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
+              <div className="aspect-[4/3] sm:aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
                 <div className="text-center text-muted-foreground">
                   <div className="text-2xl font-bold mb-1">🎨</div>
                   <div className="text-sm">Coming Soon</div>
@@ -169,7 +187,7 @@ const Index = () => {
             </Card>
 
             <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-dashed border-2 border-muted-foreground/30 bg-muted/20">
-              <div className="aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
+              <div className="aspect-[4/3] sm:aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
                 <div className="text-center text-muted-foreground">
                   <div className="text-2xl font-bold mb-1">🎭</div>
                   <div className="text-sm">Coming Soon</div>
