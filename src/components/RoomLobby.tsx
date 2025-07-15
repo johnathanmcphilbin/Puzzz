@@ -99,22 +99,41 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
       
       if (hasVoted) {
         // Remove vote
-        await supabase
+        const { error } = await supabase
           .from("game_requests")
           .delete()
           .eq("room_id", room.id)
           .eq("player_id", currentPlayer.player_id)
           .eq("game_type", gameType);
+
+        if (error) throw error;
       } else {
-        // Add vote
-        await supabase
+        // Add vote using upsert to avoid duplicates
+        const { error } = await supabase
           .from("game_requests")
-          .insert({
+          .upsert({
             room_id: room.id,
             player_id: currentPlayer.player_id,
             game_type: gameType,
+          }, {
+            onConflict: 'room_id,player_id,game_type',
+            ignoreDuplicates: false
           });
+
+        if (error) throw error;
       }
+
+      // Update local state immediately for better UX
+      setUserVotes(prev => ({
+        ...prev,
+        [gameType]: !hasVoted
+      }));
+
+      setGameVotes(prev => ({
+        ...prev,
+        [gameType]: (prev[gameType] || 0) + (hasVoted ? -1 : 1)
+      }));
+
     } catch (error) {
       console.error("Error toggling game vote:", error);
       toast({
