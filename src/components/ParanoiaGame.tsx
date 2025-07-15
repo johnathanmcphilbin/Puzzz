@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Shuffle, Crown, History } from "lucide-react";
+import { Eye, EyeOff, Shuffle, Crown, History, Users } from "lucide-react";
 
 interface Room {
   id: string;
@@ -38,58 +38,53 @@ interface ParanoiaQuestion {
   spiciness_level: number;
 }
 
-interface ParanoiaRound {
-  id: string;
-  question_id: string;
-  asker_player_id: string;
-  chosen_player_id: string;
-  is_revealed: boolean;
-  round_number: number;
-  question?: ParanoiaQuestion;
-}
-
 export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: ParanoiaGameProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<ParanoiaQuestion | null>(null);
-  const [gameHistory, setGameHistory] = useState<ParanoiaRound[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [spinResult, setSpinResult] = useState<string | null>(null);
 
   const gameState = room.game_state || {};
-  const phase = gameState.phase || "waiting"; // waiting, reading, answering, randomizing, results, ended
-  const currentPlayerIndex = gameState.currentPlayerIndex || 0;
+  const phase = gameState.phase || "waiting"; // waiting, answering, spinning, results, ended
   const roundNumber = gameState.roundNumber || 1;
-  const maxRounds = gameState.maxRounds || 10;
-  const isCurrentPlayerTurn = players[currentPlayerIndex]?.player_id === currentPlayer.player_id;
+  const maxRounds = gameState.maxRounds || 5;
+  const playerAnswers = gameState.playerAnswers || {};
+  const currentQuestions = gameState.currentQuestions || {};
+  const revealedPlayer = gameState.revealedPlayer || null;
 
   useEffect(() => {
-    if (room.current_game === "paranoia") {
-      loadGameHistory();
-      if (phase === "reading" && isCurrentPlayerTurn && !currentQuestion) {
-        loadNewQuestion();
-      }
+    if (room.current_game === "paranoia" && phase === "answering" && !currentQuestion) {
+      loadQuestion();
     }
-  }, [room.current_game, phase, isCurrentPlayerTurn]);
+  }, [room.current_game, phase]);
 
-  const loadGameHistory = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("paranoia_rounds")
-        .select(`
-          *,
-          question:paranoia_questions(*)
-        `)
-        .eq("room_id", room.id)
-        .order("round_number", { ascending: true });
+  // Real-time subscription for game state changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('paranoia-game-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rooms',
+          filter: `id=eq.${room.id}`
+        },
+        (payload) => {
+          if (payload.new) {
+            onUpdateRoom(payload.new as Room);
+          }
+        }
+      )
+      .subscribe();
 
-      if (error) throw error;
-      setGameHistory(data || []);
-    } catch (error) {
-      console.error("Error loading game history:", error);
-    }
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [room.id]);
 
-  const loadNewQuestion = async () => {
+  const loadQuestion = async () => {
     try {
       const { data, error } = await supabase
         .from("paranoia_questions")
@@ -116,10 +111,12 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     try {
       const newGameState = {
         ...gameState,
-        phase: "reading",
-        currentPlayerIndex: 0,
+        phase: "answering",
         roundNumber: 1,
-        maxRounds: 10
+        maxRounds: 5,
+        playerAnswers: {},
+        currentQuestions: {},
+        revealedPlayer: null
       };
 
       await supabase
@@ -131,7 +128,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       
       toast({
         title: "Game Started!",
-        description: "The paranoia begins...",
+        description: "Everyone gets a question. Answer secretly!",
         className: "bg-success text-success-foreground",
       });
     } catch (error) {
@@ -146,32 +143,33 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   };
 
-  const selectPlayer = async (selectedPlayerId: string) => {
-    if (!currentQuestion || !isCurrentPlayerTurn) return;
+  const submitAnswer = async (selectedPlayerId: string) => {
+    if (!currentQuestion) return;
 
     setIsLoading(true);
     try {
-      // Save the round to database
-      const { error: roundError } = await supabase
-        .from("paranoia_rounds")
-        .insert({
-          room_id: room.id,
-          question_id: currentQuestion.id,
-          asker_player_id: currentPlayer.player_id,
-          chosen_player_id: selectedPlayerId,
-          round_number: roundNumber,
-          is_revealed: false
-        });
+      const newPlayerAnswers = {
+        ...playerAnswers,
+        [currentPlayer.player_id]: selectedPlayerId
+      };
 
-      if (roundError) throw roundError;
+      const newCurrentQuestions = {
+        ...currentQuestions,
+        [currentPlayer.player_id]: currentQuestion
+      };
 
-      // Update game state to randomizing phase
       const newGameState = {
         ...gameState,
-        phase: "randomizing",
-        selectedPlayerId,
-        currentQuestionId: currentQuestion.id
+        playerAnswers: newPlayerAnswers,
+        currentQuestions: newCurrentQuestions
       };
+
+      // Check if all players have answered
+      const allAnswered = Object.keys(newPlayerAnswers).length === players.length;
+      
+      if (allAnswered) {
+        newGameState.phase = "spinning";
+      }
 
       await supabase
         .from("rooms")
@@ -182,15 +180,23 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
       const selectedPlayer = players.find(p => p.player_id === selectedPlayerId);
       toast({
-        title: "Choice Made!",
-        description: `${currentPlayer.player_name} chose ${selectedPlayer?.player_name}`,
+        title: "Answer Submitted!",
+        description: `You chose ${selectedPlayer?.player_name}`,
         className: "bg-success text-success-foreground",
       });
+
+      if (allAnswered) {
+        toast({
+          title: "Everyone Answered!",
+          description: "Time to spin the wheel of fate...",
+          className: "bg-warning text-warning-foreground",
+        });
+      }
     } catch (error) {
-      console.error("Error selecting player:", error);
+      console.error("Error submitting answer:", error);
       toast({
         title: "Error",
-        description: "Failed to select player. Please try again.",
+        description: "Failed to submit answer. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -198,34 +204,21 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   };
 
-  const spinRandomizer = async () => {
-    if (!isCurrentPlayerTurn) return;
+  const spinWheel = async () => {
+    if (!currentPlayer.is_host) return;
 
     setIsSpinning(true);
     
     // Dramatic pause for suspense
     setTimeout(async () => {
-      const shouldReveal = Math.random() < 0.5; // 50% chance to reveal
+      const randomPlayer = players[Math.floor(Math.random() * players.length)];
+      setSpinResult(randomPlayer.player_id);
       
       try {
-        // Update the round in database
-        const { error: updateError } = await supabase
-          .from("paranoia_rounds")
-          .update({ is_revealed: shouldReveal })
-          .eq("room_id", room.id)
-          .eq("round_number", roundNumber);
-
-        if (updateError) throw updateError;
-
-        const nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
-        const isGameEnded = roundNumber >= maxRounds;
-
         const newGameState = {
           ...gameState,
-          phase: isGameEnded ? "ended" : "reading",
-          currentPlayerIndex: isGameEnded ? currentPlayerIndex : nextPlayerIndex,
-          roundNumber: isGameEnded ? roundNumber : roundNumber + 1,
-          revealed: shouldReveal
+          phase: "results",
+          revealedPlayer: randomPlayer.player_id
         };
 
         await supabase
@@ -235,41 +228,37 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
         onUpdateRoom({ ...room, game_state: newGameState });
         
-        // Reload history to show the new round
-        loadGameHistory();
-        setCurrentQuestion(null);
-
-        if (shouldReveal) {
-          toast({
-            title: "🎉 REVEALED!",
-            description: "The question is exposed for all to see!",
-            className: "bg-destructive text-destructive-foreground",
-          });
-        } else {
-          toast({
-            title: "🤫 Secret Safe",
-            description: "The question remains hidden...",
-            className: "bg-muted text-muted-foreground",
-          });
-        }
+        toast({
+          title: "🎉 The Wheel Has Spoken!",
+          description: `${randomPlayer.player_name}'s question will be revealed!`,
+          className: "bg-destructive text-destructive-foreground",
+        });
       } catch (error) {
-        console.error("Error spinning randomizer:", error);
+        console.error("Error spinning wheel:", error);
         toast({
           title: "Error",
-          description: "Failed to process randomizer. Please try again.",
+          description: "Failed to process wheel spin. Please try again.",
           variant: "destructive",
         });
       } finally {
         setIsSpinning(false);
       }
-    }, 2000);
+    }, 3000);
   };
 
-  const endGame = async () => {
+  const nextRound = async () => {
+    if (!currentPlayer.is_host) return;
+
     try {
+      const isGameEnded = roundNumber >= maxRounds;
+      
       const newGameState = {
         ...gameState,
-        phase: "ended"
+        phase: isGameEnded ? "ended" : "answering",
+        roundNumber: isGameEnded ? roundNumber : roundNumber + 1,
+        playerAnswers: {},
+        currentQuestions: {},
+        revealedPlayer: null
       };
 
       await supabase
@@ -278,14 +267,24 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         .eq("id", room.id);
 
       onUpdateRoom({ ...room, game_state: newGameState });
+      setCurrentQuestion(null);
+      setSpinResult(null);
       
-      toast({
-        title: "Game Ended",
-        description: "Thanks for playing Paranoia!",
-        className: "bg-success text-success-foreground",
-      });
+      if (isGameEnded) {
+        toast({
+          title: "Game Complete!",
+          description: "Thanks for playing Paranoia!",
+          className: "bg-success text-success-foreground",
+        });
+      } else {
+        toast({
+          title: `Round ${roundNumber + 1} Starting!`,
+          description: "Get ready for new questions...",
+          className: "bg-primary text-primary-foreground",
+        });
+      }
     } catch (error) {
-      console.error("Error ending game:", error);
+      console.error("Error starting next round:", error);
     }
   };
 
@@ -311,8 +310,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             Paranoia
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            A whisper-and-reveal party game that feeds on suspense. Read secret questions, name someone, 
-            then let fate decide if the question gets revealed!
+            Everyone gets a secret question and chooses someone. Then the wheel of fate decides 
+            whose question gets revealed to everyone!
           </p>
         </div>
 
@@ -343,19 +342,25 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     );
   }
 
-  // Reading phase - current player sees the question
-  if (phase === "reading") {
+  // Answering phase - everyone answers their question
+  if (phase === "answering") {
+    const hasAnswered = currentPlayer.player_id in playerAnswers;
+    const answeredCount = Object.keys(playerAnswers).length;
+
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Round {roundNumber} of {maxRounds}</h1>
-          <p className="text-muted-foreground">
-            Current turn: <Badge variant="secondary">{players[currentPlayerIndex]?.player_name}</Badge>
-          </p>
-          <Progress value={(roundNumber / maxRounds) * 100} className="w-64 mx-auto mt-4" />
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Users className="h-4 w-4" />
+            <span className="text-muted-foreground">
+              {answeredCount} of {players.length} players answered
+            </span>
+          </div>
+          <Progress value={(answeredCount / players.length) * 100} className="w-64 mx-auto" />
         </div>
 
-        {isCurrentPlayerTurn ? (
+        {!hasAnswered ? (
           <Card className="border-primary">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -376,14 +381,14 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                   
                   <div>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Choose who this question applies to. Everyone will see your choice, but only you know the question!
+                      Choose who this question applies to. Your choice will be revealed later!
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {players.filter(p => p.player_id !== currentPlayer.player_id).map((player) => (
                         <Button
                           key={player.player_id}
                           variant="outline"
-                          onClick={() => selectPlayer(player.player_id)}
+                          onClick={() => submitAnswer(player.player_id)}
                           disabled={isLoading}
                           className="h-auto p-4 text-left"
                         >
@@ -404,12 +409,12 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         ) : (
           <Card>
             <CardContent className="p-8 text-center">
-              <EyeOff className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg">
-                {players[currentPlayerIndex]?.player_name} is reading their secret question...
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                They'll choose someone and then we'll see if fate reveals the question!
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/20 flex items-center justify-center">
+                <Eye className="h-8 w-8 text-success" />
+              </div>
+              <p className="text-lg font-medium mb-2">Answer Submitted!</p>
+              <p className="text-muted-foreground">
+                Waiting for other players to finish answering...
               </p>
             </CardContent>
           </Card>
@@ -418,44 +423,50 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     );
   }
 
-  // Randomizing phase
-  if (phase === "randomizing") {
-    const selectedPlayer = players.find(p => p.player_id === gameState.selectedPlayerId);
-    
+  // Spinning phase - wheel decides whose question gets revealed
+  if (phase === "spinning") {
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Round {roundNumber} of {maxRounds}</h1>
-          <p className="text-lg mb-4">
-            {players[currentPlayerIndex]?.player_name} chose <Badge variant="secondary">{selectedPlayer?.player_name}</Badge>
-          </p>
+          <p className="text-lg mb-4">Everyone has answered! Time for the wheel of fate...</p>
         </div>
 
         <Card className="border-warning">
           <CardContent className="p-8 text-center">
             <div className="mb-6">
-              <Shuffle className={`h-16 w-16 mx-auto mb-4 ${isSpinning ? 'animate-spin' : ''}`} />
-              <h2 className="text-xl font-bold mb-2">Fate Decides...</h2>
+              <div className="relative w-32 h-32 mx-auto mb-4">
+                <Shuffle className={`w-full h-full ${isSpinning ? 'animate-spin' : ''}`} style={{ 
+                  animationDuration: isSpinning ? '2s' : '0s' 
+                }} />
+                {isSpinning && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-pulse" />
+                )}
+              </div>
+              <h2 className="text-xl font-bold mb-2">Wheel of Fate</h2>
               <p className="text-muted-foreground">
-                Will the secret question be revealed to everyone?
+                Which player's question will be revealed?
               </p>
             </div>
 
-            {isCurrentPlayerTurn && !isSpinning ? (
+            {currentPlayer.is_host && !isSpinning ? (
               <Button 
-                onClick={spinRandomizer}
+                onClick={spinWheel}
                 size="lg"
                 className="bg-gradient-to-r from-warning to-destructive hover:from-warning/90 hover:to-destructive/90"
               >
-                Spin the Wheel of Fate
+                Spin the Wheel!
               </Button>
             ) : isSpinning ? (
-              <div className="animate-pulse">
-                <p className="text-lg font-medium">Spinning...</p>
+              <div className="space-y-2">
+                <div className="animate-pulse">
+                  <p className="text-lg font-medium">The wheel is spinning...</p>
+                  <p className="text-sm text-muted-foreground">Deciding fate...</p>
+                </div>
               </div>
             ) : (
               <p className="text-muted-foreground">
-                {players[currentPlayerIndex]?.player_name} will spin the wheel...
+                {players.find(p => p.is_host)?.player_name} will spin the wheel...
               </p>
             )}
           </CardContent>
@@ -464,16 +475,104 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     );
   }
 
-  // Game ended - show history
-  if (phase === "ended") {
-    const revealedQuestions = gameHistory.filter(round => round.is_revealed);
+  // Results phase - show whose question was revealed and all answers
+  if (phase === "results") {
+    const revealedPlayerObj = players.find(p => p.player_id === revealedPlayer);
+    const revealedQuestion = currentQuestions[revealedPlayer];
     
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Round {roundNumber} Results</h1>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 text-destructive rounded-full">
+            <Crown className="h-4 w-4" />
+            <span className="font-medium">{revealedPlayerObj?.player_name}'s question was revealed!</span>
+          </div>
+        </div>
+
+        {/* Revealed Question */}
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-center text-destructive">
+              🎯 The Revealed Question
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center p-4 bg-destructive/10 rounded-lg">
+              <p className="text-lg font-medium">{revealedQuestion?.question}</p>
+              <div className="flex justify-center gap-2 mt-2">
+                <Badge variant="outline">{revealedQuestion?.category}</Badge>
+                <Badge variant="outline">Spice Level: {revealedQuestion?.spiciness_level}/5</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* All Player Answers */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Everyone's Answers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4">
+              {players.map((player) => {
+                const answeredPlayerId = playerAnswers[player.player_id];
+                const answeredPlayer = players.find(p => p.player_id === answeredPlayerId);
+                const isRevealed = player.player_id === revealedPlayer;
+                
+                return (
+                  <div 
+                    key={player.player_id} 
+                    className={`p-4 rounded-lg border ${isRevealed ? 'border-destructive bg-destructive/5' : 'border-muted'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{player.player_name}</span>
+                        {player.is_host && <Crown className="h-3 w-3" />}
+                        {isRevealed && <Badge variant="destructive" className="text-xs">REVEALED</Badge>}
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm text-muted-foreground">chose</span>
+                        <div className="font-medium">{answeredPlayer?.player_name}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex gap-4 justify-center">
+          {currentPlayer.is_host && (
+            <>
+              {roundNumber < maxRounds ? (
+                <Button onClick={nextRound} size="lg">
+                  Next Round ({roundNumber + 1}/{maxRounds})
+                </Button>
+              ) : (
+                <Button onClick={nextRound} size="lg">
+                  End Game
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Game ended
+  if (phase === "ended") {
+    return (
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="text-center">
           <h1 className="text-3xl font-bold mb-4">Game Complete!</h1>
-          <p className="text-muted-foreground">
-            {revealedQuestions.length} out of {gameHistory.length} secrets were revealed
+          <p className="text-muted-foreground text-lg">
+            Thanks for playing Paranoia! Hope you enjoyed the suspense.
           </p>
         </div>
 
@@ -481,32 +580,20 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <History className="h-5 w-5" />
-              Revealed Secrets
+              Game Summary
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {revealedQuestions.length > 0 ? (
-              <div className="space-y-4">
-                {revealedQuestions.map((round) => {
-                  const asker = players.find(p => p.player_id === round.asker_player_id);
-                  const chosen = players.find(p => p.player_id === round.chosen_player_id);
-                  
-                  return (
-                    <div key={round.id} className="p-4 border rounded-lg">
-                      <p className="font-medium mb-2">{round.question?.question}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{asker?.player_name} chose {chosen?.player_name}</span>
-                        <Badge variant="outline">Round {round.round_number}</Badge>
-                      </div>
-                    </div>
-                  );
-                })}
+          <CardContent className="text-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-4 bg-primary/10 rounded-lg">
+                <div className="text-2xl font-bold text-primary">{maxRounds}</div>
+                <div className="text-sm text-muted-foreground">Rounds Played</div>
               </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">
-                No secrets were revealed this game! 🤫
-              </p>
-            )}
+              <div className="p-4 bg-secondary/10 rounded-lg">
+                <div className="text-2xl font-bold text-secondary">{players.length}</div>
+                <div className="text-sm text-muted-foreground">Players</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
