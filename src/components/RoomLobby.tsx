@@ -539,13 +539,13 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
               {currentPlayer.is_host ? (
                 <Button
                   onClick={startGame}
-                  disabled={isStarting || players.length < (selectedGame === "forms_game" || selectedGame === "paranoia" ? 3 : 2)}
+                  disabled={isStarting || players.length < (selectedGame === "forms_game" ? 3 : 2)}
                   className="w-full text-lg py-6"
                   size="lg"
                 >
                   {isStarting ? (
                     "Starting Game..."
-                  ) : players.length < (selectedGame === "forms_game" || selectedGame === "paranoia" ? 3 : 2) ? (
+                  ) : players.length < (selectedGame === "forms_game" ? 3 : 2) ? (
                     `Need at least ${selectedGame === "forms_game" ? 3 : 2} players`
                   ) : (
                     <>

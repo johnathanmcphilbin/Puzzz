@@ -136,7 +136,7 @@ const Index = () => {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>Whisper Game</span>
                   <span>•</span>
-                  <span>3-10 Players</span>
+                  <span>2-10 Players</span>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
