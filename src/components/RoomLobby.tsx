@@ -40,7 +40,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Setting up game votes for room:", room.id, "player:", currentPlayer.player_id);
+    console.log("🚀 Setting up game votes for room:", room.id, "player:", currentPlayer.player_id, "is_host:", currentPlayer.is_host);
     loadGameVotes();
     
     // Set up real-time subscription for game votes
@@ -55,8 +55,9 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           filter: `room_id=eq.${room.id}`,
         },
         (payload) => {
-          console.log("🔄 Real-time update received by", currentPlayer.is_host ? "HOST" : "PLAYER", payload);
-          console.log("📊 Reloading game votes due to real-time update");
+          console.log("🔄 Real-time update received by", currentPlayer.is_host ? "HOST" : "PLAYER", "Event:", payload.eventType, "New data:", payload.new, "Old data:", payload.old);
+          console.log("📊 Current vote counts before reload:", gameVotes);
+          console.log("📊 Current user votes before reload:", userVotes);
           loadGameVotes();
         }
       )
@@ -64,11 +65,15 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         console.log("📡 Game requests subscription status:", status, "for", currentPlayer.is_host ? "HOST" : "PLAYER");
         if (status === 'SUBSCRIBED') {
           console.log("✅ Successfully subscribed to game requests changes as", currentPlayer.is_host ? "HOST" : "PLAYER");
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error("❌ Channel error for", currentPlayer.is_host ? "HOST" : "PLAYER");
+        } else if (status === 'TIMED_OUT') {
+          console.error("⏰ Subscription timed out for", currentPlayer.is_host ? "HOST" : "PLAYER");
         }
       });
 
     return () => {
-      console.log("Cleaning up game requests subscription");
+      console.log("🧹 Cleaning up game requests subscription for", currentPlayer.is_host ? "HOST" : "PLAYER");
       supabase.removeChannel(channel);
     };
   }, [room.id, currentPlayer.player_id]);
