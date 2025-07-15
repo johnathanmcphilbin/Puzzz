@@ -43,7 +43,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
   const generateQRCode = async () => {
     try {
-      const joinUrl = `${window.location.origin}/join?room=${room.room_code}`;
+      const joinUrl = `${window.location.origin}/join/${room.room_code}`;
       const qrDataUrl = await QRCode.toDataURL(joinUrl, {
         width: 200,
         margin: 2,
