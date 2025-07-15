@@ -72,7 +72,7 @@ const Index = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6 max-w-4xl mx-auto justify-items-center">
             {/* Would You Rather Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-full"
               onClick={handleGameClick}
             >
               <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
@@ -84,29 +84,31 @@ const Index = () => {
                   </div>
                 </div>
                 <div className="absolute top-1 right-1 sm:top-3 sm:right-3">
-                  <span className="bg-success text-success-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
                     LIVE
                   </span>
                 </div>
               </div>
-              <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6">
-                <CardTitle className="text-sm sm:text-lg font-bold">Would You Rather</CardTitle>
-                <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                  <span>Party Game</span>
-                  <span>•</span>
-                  <span>2-10 Players</span>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block">
-                <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                  Make tough choices and see how your friends decide. Over 200 thought-provoking scenarios await!
-                </CardDescription>
-              </CardContent>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <CardTitle className="text-sm sm:text-lg font-bold truncate">Would You Rather</CardTitle>
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <span>Party Game</span>
+                    <span>•</span>
+                    <span>2-10 Players</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
+                  <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                    Make tough choices and see how your friends decide. Over 200 thought-provoking scenarios await!
+                  </CardDescription>
+                </CardContent>
+              </div>
             </Card>
 
             {/* Forms Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden h-full"
               onClick={handleGameClick}
             >
               <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-primary to-secondary relative overflow-hidden">
@@ -118,30 +120,31 @@ const Index = () => {
                   </div>
                 </div>
                 <div className="absolute top-1 right-1 sm:top-3 sm:right-3">
-                  <span className="bg-success text-success-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
                     NEW
                   </span>
                 </div>
               </div>
-              <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6">
-                <CardTitle className="text-sm sm:text-lg font-bold">Forms Game</CardTitle>
-                <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                  <span>Survey Game</span>
-                  <span>•</span>
-                  <span>3-10 Players</span>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block">
-                <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                  Answer fun questions about your friends! Who's most likely to get arrested? Find out together.
-                </CardDescription>
-              </CardContent>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <CardTitle className="text-sm sm:text-lg font-bold truncate">Forms Game</CardTitle>
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <span>Survey Game</span>
+                    <span>•</span>
+                    <span>3-10 Players</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
+                  <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                    Answer fun questions about your friends! Who's most likely to get arrested? Find out together.
+                  </CardDescription>
+                </CardContent>
+              </div>
             </Card>
 
-            {/* Coming Soon Games */}
             {/* Paranoia Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-destructive/20 to-warning/20 overflow-hidden"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-destructive/20 to-warning/20 overflow-hidden h-full"
               onClick={handleGameClick}
             >
               <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-destructive to-warning relative overflow-hidden">
@@ -158,19 +161,21 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6">
-                <CardTitle className="text-sm sm:text-lg font-bold">Paranoia</CardTitle>
-                <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                  <span>Whisper Game</span>
-                  <span>•</span>
-                  <span>2-10 Players</span>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block">
-                <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                  Read secret questions, name someone, then let fate decide if the question gets revealed!
-                </CardDescription>
-              </CardContent>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <CardTitle className="text-sm sm:text-lg font-bold truncate">Paranoia</CardTitle>
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <span>Whisper Game</span>
+                    <span>•</span>
+                    <span>2-10 Players</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
+                  <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                    Read secret questions, name someone, then let fate decide if the question gets revealed!
+                  </CardDescription>
+                </CardContent>
+              </div>
             </Card>
 
           </div>
