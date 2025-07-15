@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Play, Users, Crown, LogOut, ThumbsUp } from "lucide-react";
+import { Copy, Play, Users, Crown, LogOut, ThumbsUp, QrCode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import QRCode from "qrcode";
 
 interface Room {
   id: string;
@@ -36,12 +37,31 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const [selectedGame, setSelectedGame] = useState<string>("would_you_rather");
   const [gameVotes, setGameVotes] = useState<{[key: string]: number}>({});
   const [userVotes, setUserVotes] = useState<{[key: string]: boolean}>({});
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const generateQRCode = async () => {
+    try {
+      const joinUrl = `${window.location.origin}/join?room=${room.room_code}`;
+      const qrDataUrl = await QRCode.toDataURL(joinUrl, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      });
+      setQrCodeUrl(qrDataUrl);
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+    }
+  };
 
   useEffect(() => {
     console.log("🚀 Setting up game votes for room:", room.id, "player:", currentPlayer.player_id, "is_host:", currentPlayer.is_host);
     loadGameVotes();
+    generateQRCode();
     
     // Set up real-time subscription for game votes
     const channel = supabase
@@ -329,6 +349,34 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           <p className="text-muted-foreground">
             Share the room code with friends to let them join
           </p>
+        </div>
+
+        {/* QR Code Section */}
+        <div className="flex justify-center mb-8">
+          <Card className="w-fit">
+            <CardContent className="p-6 text-center">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <QrCode className="h-5 w-5" />
+                <h3 className="font-semibold">Quick Join</h3>
+              </div>
+              {qrCodeUrl ? (
+                <div className="space-y-3">
+                  <img 
+                    src={qrCodeUrl} 
+                    alt="QR Code to join room" 
+                    className="mx-auto rounded-lg border"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Scan to join the room instantly
+                  </p>
+                </div>
+              ) : (
+                <div className="w-[200px] h-[200px] bg-muted rounded-lg flex items-center justify-center">
+                  <div className="text-muted-foreground">Generating QR code...</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">

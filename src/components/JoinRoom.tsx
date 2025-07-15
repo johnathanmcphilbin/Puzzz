@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,16 @@ export const JoinRoom = () => {
   const [playerName, setPlayerName] = useState("");
   const [isJoining, setIsJoining] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Check for room code in URL parameters (from QR code)
+  useEffect(() => {
+    const urlRoomCode = searchParams.get("room");
+    if (urlRoomCode) {
+      setRoomCode(urlRoomCode.toUpperCase());
+    }
+  }, [searchParams]);
 
   const joinRoom = async () => {
     if (!roomCode.trim() || !playerName.trim()) {
