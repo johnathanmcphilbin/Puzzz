@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import { Room } from "./pages/Room";
 import { DirectJoin } from "./pages/DirectJoin";
 import NotFound from "./pages/NotFound";
+import { AnalyticsProvider } from "./providers/AnalyticsProvider";
+import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 
 const queryClient = new QueryClient();
 
@@ -16,14 +18,17 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/join" element={<Index />} />
-          <Route path="/join/:roomCode" element={<DirectJoin />} />
-          <Route path="/room/:roomCode" element={<Room />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AnalyticsProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/join" element={<Index />} />
+            <Route path="/join/:roomCode" element={<DirectJoin />} />
+            <Route path="/room/:roomCode" element={<Room />} />
+            <Route path="/analytics" element={<AnalyticsDashboard />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AnalyticsProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

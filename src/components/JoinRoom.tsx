@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, UserPlus } from "lucide-react";
+import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
 
 export const JoinRoom = () => {
   const [roomCode, setRoomCode] = useState("");
@@ -15,6 +16,7 @@ export const JoinRoom = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { trackEvent } = useAnalyticsContext();
 
   // Check for room code in URL parameters (from QR code)
   useEffect(() => {
@@ -83,6 +85,12 @@ export const JoinRoom = () => {
         });
 
       if (playerError) throw playerError;
+
+      // Track player join
+      await trackEvent("player_joined", { 
+        roomCode: roomCode.toUpperCase(), 
+        playerName: playerName.trim() 
+      }, roomCode.toUpperCase());
 
       // Store player info in localStorage
       localStorage.setItem("puzzz_player_id", playerId);

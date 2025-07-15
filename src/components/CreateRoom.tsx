@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
+import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
 
 export const CreateRoom = () => {
   const [hostName, setHostName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { trackEvent } = useAnalyticsContext();
 
   const generateRoomCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -64,6 +66,9 @@ export const CreateRoom = () => {
         });
 
       if (playerError) throw playerError;
+
+      // Track room creation
+      await trackEvent("room_created", { roomCode, hostName: hostName.trim() });
 
       // Store host info in localStorage
       localStorage.setItem("puzzz_player_id", hostId);
