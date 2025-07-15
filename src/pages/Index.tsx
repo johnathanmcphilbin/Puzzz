@@ -1,19 +1,17 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { CreateRoom } from "@/components/CreateRoom";
 import { JoinRoom } from "@/components/JoinRoom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
-  const roomSectionRef = useRef<HTMLDivElement>(null);
+  const [showDialog, setShowDialog] = useState(false);
 
-  const scrollToRoomSection = () => {
-    roomSectionRef.current?.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    });
+  const handleGameClick = () => {
+    setShowDialog(true);
   };
 
   return (
@@ -29,44 +27,17 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Main Action Area */}
-        <div ref={roomSectionRef} className="max-w-4xl mx-auto mb-16">
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex bg-card rounded-lg p-1 shadow-sm border">
-              <Button
-                variant={activeTab === "create" ? "default" : "ghost"}
-                onClick={() => setActiveTab("create")}
-                className="px-8 py-3 text-lg"
-              >
-                Create Room
-              </Button>
-              <Button
-                variant={activeTab === "join" ? "default" : "ghost"}
-                onClick={() => setActiveTab("join")}
-                className="px-8 py-3 text-lg"
-              >
-                Join Room
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex justify-center">
-            {activeTab === "create" ? <CreateRoom /> : <JoinRoom />}
-          </div>
-        </div>
-
-
         {/* Games Selection */}
-        <div className="max-w-7xl mx-auto mt-16">
-          <h2 className="text-3xl font-bold text-left mb-8 text-foreground">
-            Available Games
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-8 text-foreground">
+            Choose Your Game
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {/* Would You Rather Game */}
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden"
-              onClick={scrollToRoomSection}
+              onClick={handleGameClick}
             >
               <div className="aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
@@ -100,7 +71,7 @@ const Index = () => {
             {/* Forms Game */}
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden"
-              onClick={scrollToRoomSection}
+              onClick={handleGameClick}
             >
               <div className="aspect-video bg-gradient-to-br from-primary to-secondary relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
@@ -200,6 +171,36 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Create/Join Room Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Get Started</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <div className="inline-flex bg-card rounded-lg p-1 shadow-sm border">
+                <Button
+                  variant={activeTab === "create" ? "default" : "ghost"}
+                  onClick={() => setActiveTab("create")}
+                  className="px-6 py-2"
+                >
+                  Create Room
+                </Button>
+                <Button
+                  variant={activeTab === "join" ? "default" : "ghost"}
+                  onClick={() => setActiveTab("join")}
+                  className="px-6 py-2"
+                >
+                  Join Room
+                </Button>
+              </div>
+            </div>
+            {activeTab === "create" ? <CreateRoom /> : <JoinRoom />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
