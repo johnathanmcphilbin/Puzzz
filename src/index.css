@@ -150,6 +150,7 @@
     inset: 0;
     opacity: 0.25;
     z-index: -1;
+    filter: grayscale(50%);
   }
   
   /* Interactive Card Hover */
