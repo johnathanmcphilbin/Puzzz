@@ -46,19 +46,28 @@ const Index = () => {
             </Button>
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4 tracking-tight">
-            Puzzz
-          </h1>
-          <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
-            The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
-          </p>
+          {/* Title Card Widget */}
+          <Card className="mx-auto max-w-2xl mb-6 bg-card/95 backdrop-blur-sm border-2">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-4xl md:text-6xl font-bold text-foreground tracking-tight">
+                Puzzz
+              </CardTitle>
+              <CardDescription className="text-base md:text-xl text-muted-foreground px-4">
+                The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
 
         {/* Games Selection */}
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-8 text-foreground">
-            Choose Your Game
-          </h2>
+          <Card className="mx-auto max-w-md mb-8 bg-card/95 backdrop-blur-sm border-2">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-3xl font-bold text-center text-foreground">
+                Choose Your Game
+              </CardTitle>
+            </CardHeader>
+          </Card>
           
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
             {/* Would You Rather Game */}
