@@ -86,15 +86,30 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const loadQuestion = async () => {
     try {
+      // First get the count of questions
+      const { count } = await supabase
+        .from("paranoia_questions")
+        .select("*", { count: "exact", head: true });
+      
+      if (!count || count === 0) {
+        throw new Error("No questions available");
+      }
+
+      // Get a random offset
+      const randomOffset = Math.floor(Math.random() * count);
+      
+      // Get the question at that offset
       const { data, error } = await supabase
         .from("paranoia_questions")
         .select("*")
-        .order("RANDOM()")
+        .range(randomOffset, randomOffset)
         .limit(1);
 
       if (error) throw error;
       if (data && data.length > 0) {
         setCurrentQuestion(data[0]);
+      } else {
+        throw new Error("No question found");
       }
     } catch (error) {
       console.error("Error loading question:", error);
