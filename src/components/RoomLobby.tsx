@@ -328,6 +328,30 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     }
   };
 
+  const triggerCleanup = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('cleanup-rooms', {
+        body: { trigger: 'manual' }
+      });
+      
+      if (error) throw error;
+      
+      console.log('Cleanup triggered:', data);
+      toast({
+        title: "Cleanup Triggered",
+        description: "Stale rooms cleanup has been initiated",
+        className: "bg-success text-success-foreground",
+      });
+    } catch (error) {
+      console.error('Error triggering cleanup:', error);
+      toast({
+        title: "Cleanup Failed",
+        description: "Failed to trigger cleanup function",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
