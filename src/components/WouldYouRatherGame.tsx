@@ -201,18 +201,18 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         className: "bg-success text-success-foreground",
       });
 
-      // Show host actions if everyone has voted
-      if (Object.keys(newVotes).length === players.length && currentPlayer.is_host) {
-        const hostActionGameState = {
+      // Auto-show results if everyone has voted
+      if (Object.keys(newVotes).length === players.length) {
+        const autoShowResultsGameState = {
           ...gameState,
           votes: newVotes,
-          phase: "hostActions"
+          showResults: true
         };
 
         setTimeout(async () => {
           await supabase
             .from("rooms")
-            .update({ game_state: hostActionGameState })
+            .update({ game_state: autoShowResultsGameState })
             .eq("id", room.id);
         }, 1000);
       }
@@ -336,33 +336,6 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
             </p>
           </div>
 
-          {/* Game Summary */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Final Results Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div className="p-4 bg-primary/10 rounded-lg">
-                  <div className="text-2xl font-bold text-primary">{gameHistory.length}</div>
-                  <div className="text-sm text-muted-foreground">Questions Played</div>
-                </div>
-                <div className="p-4 bg-secondary/10 rounded-lg">
-                  <div className="text-2xl font-bold text-secondary">{players.length}</div>
-                  <div className="text-sm text-muted-foreground">Players</div>
-                </div>
-                <div className="p-4 bg-accent/10 rounded-lg">
-                  <div className="text-2xl font-bold text-accent">
-                    {Math.round(gameHistory.reduce((sum, q) => sum + q.totalVotes, 0) / gameHistory.length) || 0}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Avg Votes per Question</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Question Results */}
           <div className="space-y-6 mb-8">
@@ -393,6 +366,22 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                           value={questionResult.totalVotes > 0 ? (questionResult.optionAVotes / questionResult.totalVotes) * 100 : 0} 
                           className="h-3" 
                         />
+                        {/* Show who voted for Option A */}
+                        <div className="mt-3">
+                          <div className="text-xs text-muted-foreground mb-1">Voted for this:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {Object.entries(questionResult.votes)
+                              .filter(([_, vote]) => vote === "A")
+                              .map(([playerId, _]) => {
+                                const player = players.find(p => p.player_id === playerId);
+                                return (
+                                  <Badge key={playerId} variant="secondary" className="text-xs">
+                                    {player?.player_name || playerId}
+                                  </Badge>
+                                );
+                              })}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -411,6 +400,22 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                           value={questionResult.totalVotes > 0 ? (questionResult.optionBVotes / questionResult.totalVotes) * 100 : 0} 
                           className="h-3" 
                         />
+                        {/* Show who voted for Option B */}
+                        <div className="mt-3">
+                          <div className="text-xs text-muted-foreground mb-1">Voted for this:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {Object.entries(questionResult.votes)
+                              .filter(([_, vote]) => vote === "B")
+                              .map(([playerId, _]) => {
+                                const player = players.find(p => p.player_id === playerId);
+                                return (
+                                  <Badge key={playerId} variant="secondary" className="text-xs">
+                                    {player?.player_name || playerId}
+                                  </Badge>
+                                );
+                              })}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
