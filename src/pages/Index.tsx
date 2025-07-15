@@ -173,49 +173,6 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-dashed border-2 border-muted-foreground/30 bg-muted/20">
-              <div className="aspect-[3/4] sm:aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <div className="text-lg sm:text-2xl font-bold mb-1">🎨</div>
-                  <div className="text-[10px] sm:text-sm">Coming Soon</div>
-                </div>
-              </div>
-              <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6">
-                <CardTitle className="text-sm sm:text-lg font-bold text-muted-foreground">Draw & Guess</CardTitle>
-                <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                  <span>Creative Game</span>
-                  <span>•</span>
-                  <span>3-12 Players</span>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block">
-                <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                  Express your creativity and guess what others are drawing in this hilarious party game.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-dashed border-2 border-muted-foreground/30 bg-muted/20">
-              <div className="aspect-[3/4] sm:aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <div className="text-lg sm:text-2xl font-bold mb-1">🎭</div>
-                  <div className="text-[10px] sm:text-sm">Coming Soon</div>
-                </div>
-              </div>
-              <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6">
-                <CardTitle className="text-sm sm:text-lg font-bold text-muted-foreground">Truth or Dare</CardTitle>
-                <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                  <span>Social Game</span>
-                  <span>•</span>
-                  <span>3-10 Players</span>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block">
-                <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                  The classic party game with modern twists and age-appropriate challenges.
-                </CardDescription>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
