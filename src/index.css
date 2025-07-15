@@ -143,7 +143,9 @@
   
   /* Animated Gradient Background */
   .gradient-bg {
-    background: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 98%));
+    background-image: url('/lovable-uploads/97e3edcc-c426-4315-8b63-294a6edaf30b.png');
+    background-repeat: repeat;
+    background-attachment: fixed;
   }
   
   /* Interactive Card Hover */
