@@ -17,7 +17,17 @@ const Index = () => {
     <div className="min-h-screen gradient-bg">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="relative text-center mb-12">
+          <Button 
+            onClick={() => {
+              setActiveTab("join");
+              setShowDialog(true);
+            }}
+            className="absolute top-0 right-0"
+            variant="outline"
+          >
+            Join Room
+          </Button>
           <h1 className="text-6xl font-bold text-foreground mb-4 tracking-tight">
             Puzzz
           </h1>
