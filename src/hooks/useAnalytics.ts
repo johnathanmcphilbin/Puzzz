@@ -1,13 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
-// Extend window to include Matomo _paq
-declare global {
-  interface Window {
-    _paq?: any[];
-  }
-}
-
 // Generate a unique session ID
 const generateSessionId = () => {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -39,12 +32,6 @@ export const useAnalytics = () => {
 
     const trackPageView = async () => {
       try {
-        // Use Matomo for page tracking
-        if (typeof window !== 'undefined' && window._paq) {
-          window._paq.push(['setCustomUrl', currentPath]);
-          window._paq.push(['trackPageView']);
-        }
-        
         console.log('Page view tracked:', currentPath);
       } catch (error) {
         console.error('Analytics tracking error:', error);
@@ -62,20 +49,6 @@ export const useAnalytics = () => {
     gameType?: string
   ) => {
     try {
-      // Use Matomo for event tracking
-      if (typeof window !== 'undefined' && window._paq) {
-        const eventData = {
-          type: eventType,
-          page: location.pathname,
-          session: sessionId.current,
-          room: roomCode,
-          game: gameType,
-          ...metadata
-        };
-        
-        window._paq.push(['trackEvent', 'Custom', eventType, JSON.stringify(eventData)]);
-      }
-      
       console.log('Event tracked:', eventType, { metadata, roomCode, gameType });
     } catch (error) {
       console.error('Event tracking error:', error);
