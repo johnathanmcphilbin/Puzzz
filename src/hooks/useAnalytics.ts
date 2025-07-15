@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from 'react-router-dom';
+
+// Extend window to include Matomo _paq
+declare global {
+  interface Window {
+    _paq?: any[];
+  }
+}
 
 // Generate a unique session ID
 const generateSessionId = () => {
@@ -33,29 +39,13 @@ export const useAnalytics = () => {
 
     const trackPageView = async () => {
       try {
-        // Update or create session
-        await supabase
-          .from('analytics_sessions')
-          .upsert({
-            session_id: sessionId.current,
-            user_agent: navigator.userAgent,
-            last_activity: new Date().toISOString(),
-          }, {
-            onConflict: 'session_id'
-          });
-
-        // Track page view event
-        await supabase
-          .from('analytics_events')
-          .insert({
-            event_type: 'page_view',
-            page_path: currentPath,
-            session_id: sessionId.current,
-            metadata: {
-              referrer: document.referrer,
-              timestamp: new Date().toISOString()
-            }
-          });
+        // Use Matomo for page tracking
+        if (typeof window !== 'undefined' && window._paq) {
+          window._paq.push(['setCustomUrl', currentPath]);
+          window._paq.push(['trackPageView']);
+        }
+        
+        console.log('Page view tracked:', currentPath);
       } catch (error) {
         console.error('Analytics tracking error:', error);
       }
@@ -72,27 +62,21 @@ export const useAnalytics = () => {
     gameType?: string
   ) => {
     try {
-      await supabase
-        .from('analytics_events')
-        .insert({
-          event_type: eventType,
-          page_path: location.pathname,
-          session_id: sessionId.current,
-          room_code: roomCode,
-          game_type: gameType,
-          metadata: {
-            ...metadata,
-            timestamp: new Date().toISOString()
-          }
-        });
-
-      // Update session activity
-      await supabase
-        .from('analytics_sessions')
-        .update({
-          last_activity: new Date().toISOString()
-        })
-        .eq('session_id', sessionId.current);
+      // Use Matomo for event tracking
+      if (typeof window !== 'undefined' && window._paq) {
+        const eventData = {
+          type: eventType,
+          page: location.pathname,
+          session: sessionId.current,
+          room: roomCode,
+          game: gameType,
+          ...metadata
+        };
+        
+        window._paq.push(['trackEvent', 'Custom', eventType, JSON.stringify(eventData)]);
+      }
+      
+      console.log('Event tracked:', eventType, { metadata, roomCode, gameType });
     } catch (error) {
       console.error('Event tracking error:', error);
     }
