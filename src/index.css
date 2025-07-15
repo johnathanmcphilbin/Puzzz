@@ -145,9 +145,16 @@
   
   /* Animated Gradient Background */
   .gradient-bg {
-    background-image: url('/lovable-uploads/97e3edcc-c426-4315-8b63-294a6edaf30b.png');
-    background-repeat: repeat;
-    background-attachment: fixed;
+    position: relative;
+  }
+  
+  .gradient-bg::before {
+    background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('/lovable-uploads/97e3edcc-c426-4315-8b63-294a6edaf30b.png') no-repeat center center / cover;
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.25;
+    z-index: -1;
   }
   
   /* Interactive Card Hover */
