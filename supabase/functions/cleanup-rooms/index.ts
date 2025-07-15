@@ -13,6 +13,38 @@ serve(async (req) => {
   }
 
   try {
+    // Authorization check
+    const authHeader = req.headers.get('authorization');
+    const cleanupSecret = Deno.env.get('CLEANUP_SECRET');
+    
+    // Check if request has the cleanup secret (for cron jobs)
+    const body = await req.text();
+    let requestData;
+    try {
+      requestData = body ? JSON.parse(body) : {};
+    } catch {
+      requestData = {};
+    }
+    
+    const hasValidSecret = requestData.secret === cleanupSecret;
+    
+    // Check if request is from authenticated user with service role
+    const hasValidAuth = authHeader && authHeader.includes('service_role');
+    
+    if (!hasValidSecret && !hasValidAuth) {
+      console.error('Unauthorized cleanup attempt');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { 
+          status: 401,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
