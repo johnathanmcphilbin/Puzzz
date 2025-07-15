@@ -59,7 +59,7 @@ export const DirectJoin = () => {
         .select("player_name")
         .eq("room_id", roomData.id)
         .eq("player_name", playerName.trim())
-        .single();
+        .maybeSingle();
 
       if (existingPlayer) {
         toast({
