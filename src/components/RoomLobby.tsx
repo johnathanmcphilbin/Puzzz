@@ -111,8 +111,14 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   };
 
   const toggleGameVote = async (gameType: string) => {
-    if (currentPlayer.is_host) return; // Hosts don't vote
+    console.log("Toggle vote attempt - Game:", gameType, "Player:", currentPlayer.player_id, "Is Host:", currentPlayer.is_host);
+    
+    if (currentPlayer.is_host) {
+      console.log("Vote blocked: Hosts cannot vote");
+      return; // Hosts don't vote
+    }
 
+    console.log("Saving vote for game:", gameType);
     try {
       const hasVoted = userVotes[gameType];
       
