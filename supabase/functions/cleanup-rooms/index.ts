@@ -14,8 +14,8 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(
-      "https://heqqjpxlithgoswwyjoi.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlcXFqcHhsaXRoZ29zd3d5am9pIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjQ4NjM5MSwiZXhwIjoyMDY4MDYyMzkxfQ.qCRCqUE7AwlQkLMWGnUORAp0X9uNcxrJOBGpHhj6E7Y"
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     console.log('Starting room cleanup...');
@@ -23,8 +23,8 @@ serve(async (req) => {
     // Find rooms that are either:
     // 1. Inactive
     // 2. Have no players
-    // 3. Have players who joined more than 10 minutes ago and room hasn't been updated recently
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    // 3. Have players who joined more than 30 minutes ago and room hasn't been updated recently
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
     // Get all active rooms
     const { data: rooms, error: roomsError } = await supabase
@@ -60,12 +60,12 @@ serve(async (req) => {
         continue;
       }
 
-      // Check if room is stale (no activity for 10+ minutes)
+      // Check if room is stale (no activity for 30+ minutes)
       const roomUpdatedAt = new Date(room.updated_at);
       const oldestPlayerJoinedAt = new Date(Math.min(...players.map(p => new Date(p.joined_at).getTime())));
       
-      if (roomUpdatedAt < new Date(tenMinutesAgo) && oldestPlayerJoinedAt < new Date(tenMinutesAgo)) {
-        console.log(`Room ${room.id} is stale (no activity for 10+ minutes), marking for deletion`);
+      if (roomUpdatedAt < new Date(thirtyMinutesAgo) && oldestPlayerJoinedAt < new Date(thirtyMinutesAgo)) {
+        console.log(`Room ${room.id} is stale (no activity for 30+ minutes), marking for deletion`);
         roomsToDelete.push(room.id);
       }
     }
@@ -75,9 +75,31 @@ serve(async (req) => {
     // Delete stale rooms and their associated data
     for (const roomId of roomsToDelete) {
       try {
-        // Delete game votes first
+        console.log(`Cleaning up room ${roomId}...`);
+        
+        // Delete all related data in correct order to avoid foreign key constraints
+        
+        // Delete paranoia rounds
+        await supabase
+          .from('paranoia_rounds')
+          .delete()
+          .eq('room_id', roomId);
+
+        // Delete forms responses
+        await supabase
+          .from('forms_responses')
+          .delete()
+          .eq('room_id', roomId);
+
+        // Delete game votes
         await supabase
           .from('game_votes')
+          .delete()
+          .eq('room_id', roomId);
+
+        // Delete game requests
+        await supabase
+          .from('game_requests')
           .delete()
           .eq('room_id', roomId);
 
@@ -87,13 +109,13 @@ serve(async (req) => {
           .delete()
           .eq('room_id', roomId);
 
-        // Delete room
+        // Finally delete the room itself
         await supabase
           .from('rooms')
           .delete()
           .eq('id', roomId);
 
-        console.log(`Successfully deleted room ${roomId}`);
+        console.log(`Successfully deleted room ${roomId} and all related data`);
       } catch (error) {
         console.error(`Error deleting room ${roomId}:`, error);
       }
