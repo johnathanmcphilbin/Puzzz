@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Shuffle, Crown, History, Users } from "lucide-react";
@@ -44,6 +46,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const [currentQuestion, setCurrentQuestion] = useState<ParanoiaQuestion | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinResult, setSpinResult] = useState<string | null>(null);
+  const [customName, setCustomName] = useState<string>("");
+  const [selectedOption, setSelectedOption] = useState<string>("");
 
   const gameState = room.game_state || {};
   const phase = gameState.phase || "waiting"; // waiting, answering, spinning, results, ended
@@ -52,6 +56,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const playerAnswers = gameState.playerAnswers || {};
   const currentQuestions = gameState.currentQuestions || {};
   const revealedPlayer = gameState.revealedPlayer || null;
+  const freakinessLevel = gameState.freakinessLevel || 3;
 
   useEffect(() => {
     if (room.current_game === "paranoia" && phase === "answering" && !currentQuestion) {
@@ -86,13 +91,14 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const loadQuestion = async () => {
     try {
-      // First get the count of questions
+      // First get the count of questions with the appropriate spiciness level
       const { count } = await supabase
         .from("paranoia_questions")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .lte("spiciness_level", freakinessLevel);
       
       if (!count || count === 0) {
-        throw new Error("No questions available");
+        throw new Error("No questions available for this spiciness level");
       }
 
       // Get a random offset
@@ -102,6 +108,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       const { data, error } = await supabase
         .from("paranoia_questions")
         .select("*")
+        .lte("spiciness_level", freakinessLevel)
         .range(randomOffset, randomOffset)
         .limit(1);
 
@@ -163,9 +170,14 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
     setIsLoading(true);
     try {
+      // Use custom name if "other" is selected and custom name is provided
+      const finalAnswer = selectedPlayerId === "other" && customName.trim() 
+        ? customName.trim() 
+        : selectedPlayerId;
+
       const newPlayerAnswers = {
         ...playerAnswers,
-        [currentPlayer.player_id]: selectedPlayerId
+        [currentPlayer.player_id]: finalAnswer
       };
 
       const newCurrentQuestions = {
@@ -194,9 +206,11 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       onUpdateRoom({ ...room, game_state: newGameState });
 
       const selectedPlayer = players.find(p => p.player_id === selectedPlayerId);
+      const displayName = selectedPlayerId === "other" ? customName : selectedPlayer?.player_name;
+      
       toast({
         title: "Answer Submitted!",
-        description: `You chose ${selectedPlayer?.player_name}`,
+        description: `You chose ${displayName}`,
         className: "bg-success text-success-foreground",
       });
 
@@ -398,21 +412,60 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                     <p className="text-sm text-muted-foreground mb-4">
                       Choose who this question applies to. Your choice will be revealed later!
                     </p>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {players.filter(p => p.player_id !== currentPlayer.player_id).map((player) => (
+                    <div className="space-y-4">
+                      {/* Player Selection */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {players.map((player) => (
+                          <Button
+                            key={player.player_id}
+                            variant={selectedOption === player.player_id ? "default" : "outline"}
+                            onClick={() => setSelectedOption(player.player_id)}
+                            disabled={isLoading}
+                            className="h-auto p-4 text-left"
+                          >
+                            <div>
+                              <div className="font-medium">{player.player_name}</div>
+                              {player.is_host && <Crown className="inline h-3 w-3 ml-1" />}
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+
+                      {/* Custom "Other" Option */}
+                      <div className="space-y-2">
                         <Button
-                          key={player.player_id}
-                          variant="outline"
-                          onClick={() => submitAnswer(player.player_id)}
+                          variant={selectedOption === "other" ? "default" : "outline"}
+                          onClick={() => setSelectedOption("other")}
                           disabled={isLoading}
-                          className="h-auto p-4 text-left"
+                          className="w-full h-auto p-4 text-left"
                         >
-                          <div>
-                            <div className="font-medium">{player.player_name}</div>
-                            {player.is_host && <Crown className="inline h-3 w-3 ml-1" />}
-                          </div>
+                          <div className="font-medium">Other (Custom Name)</div>
                         </Button>
-                      ))}
+                        
+                        {selectedOption === "other" && (
+                          <div className="space-y-2">
+                            <Label htmlFor="custom-name" className="text-sm">Enter custom name:</Label>
+                            <Input
+                              id="custom-name"
+                              type="text"
+                              placeholder="Type a name..."
+                              value={customName}
+                              onChange={(e) => setCustomName(e.target.value)}
+                              className="w-full"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Submit Button */}
+                      <Button
+                        onClick={() => submitAnswer(selectedOption)}
+                        disabled={isLoading || !selectedOption || (selectedOption === "other" && !customName.trim())}
+                        className="w-full"
+                        size="lg"
+                      >
+                        {isLoading ? "Submitting..." : "Submit Answer"}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -538,6 +591,9 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 const answeredPlayer = players.find(p => p.player_id === answeredPlayerId);
                 const isRevealed = player.player_id === revealedPlayer;
                 
+                // Check if the answer is a custom name or a player
+                const displayAnswer = answeredPlayer?.player_name || answeredPlayerId;
+                
                 return (
                   <div 
                     key={player.player_id} 
@@ -551,7 +607,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                       </div>
                       <div className="text-right">
                         <span className="text-sm text-muted-foreground">chose</span>
-                        <div className="font-medium">{answeredPlayer?.player_name}</div>
+                        <div className="font-medium">{displayAnswer}</div>
                       </div>
                     </div>
                   </div>

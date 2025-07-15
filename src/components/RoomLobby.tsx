@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Play, Users, Crown, LogOut, ThumbsUp, QrCode } from "lucide-react";
@@ -38,6 +39,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const [gameVotes, setGameVotes] = useState<{[key: string]: number}>({});
   const [userVotes, setUserVotes] = useState<{[key: string]: boolean}>({});
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+  const [freakinessLevel, setFreakinessLevel] = useState<number>(3);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -216,13 +218,15 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
             phase: "waiting",
             currentPlayerIndex: 0,
             roundNumber: 1,
-            maxRounds: 10
+            maxRounds: 10,
+            freakinessLevel: freakinessLevel
           } : { 
             phase: "playing", 
             currentQuestion: null, 
             questionIndex: 0,
             votes: {},
-            showResults: false
+            showResults: false,
+            freakinessLevel: freakinessLevel
           }
         })
         .eq("id", room.id);
@@ -399,6 +403,47 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                   <div className="text-muted-foreground">Generating QR code...</div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Freakometer Section */}
+        <div className="flex justify-center mb-8">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-center text-lg">🌶️ Freakometer</CardTitle>
+              <CardDescription className="text-center">
+                Control the spiciness of questions across all games
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="px-4">
+                <Slider
+                  value={[freakinessLevel]}
+                  onValueChange={(value) => setFreakinessLevel(value[0])}
+                  max={5}
+                  min={1}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex justify-between text-sm text-muted-foreground px-4">
+                <span>Mild</span>
+                <span>Medium</span>
+                <span>Spicy</span>
+              </div>
+              <div className="text-center">
+                <Badge variant="outline" className="text-lg px-4 py-2">
+                  Level {freakinessLevel}/5
+                </Badge>
+              </div>
+              <div className="text-center text-sm text-muted-foreground">
+                {freakinessLevel === 1 && "😊 Keep it tame and friendly"}
+                {freakinessLevel === 2 && "😏 A little mischievous"}
+                {freakinessLevel === 3 && "😈 Getting interesting"}
+                {freakinessLevel === 4 && "🔥 Things are heating up"}
+                {freakinessLevel === 5 && "🌶️ Maximum chaos unleashed"}
+              </div>
             </CardContent>
           </Card>
         </div>
