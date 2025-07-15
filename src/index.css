@@ -56,16 +56,16 @@
     --transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     
     /* Standard UI Components */
-    --card: 0 0% 100% / 0.95;
+    --card: 0 0% 100%;
     --card-foreground: 220 13% 18%;
-    --popover: 0 0% 100% / 0.95;
+    --popover: 0 0% 100%;
     --popover-foreground: 220 13% 18%;
-    --muted: 220 13% 96% / 0.8;
+    --muted: 220 13% 96%;
     --muted-foreground: 220 9% 46%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91% / 0.6;
-    --input: 220 13% 91% / 0.9;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
     --ring: 217 91% 60%;
     --radius: 0.75rem;
   }
@@ -119,7 +119,6 @@
     background-image: url('/lovable-uploads/97e3edcc-c426-4315-8b63-294a6edaf30b.png');
     background-repeat: repeat;
     background-attachment: fixed;
-    background-size: 200px 200px;
   }
 }
 

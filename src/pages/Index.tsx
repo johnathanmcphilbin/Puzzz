@@ -47,7 +47,7 @@ const Index = () => {
           </div>
           
           {/* Title Card Widget */}
-          <Card className="mx-auto max-w-2xl mb-6 bg-card/95 backdrop-blur-sm border-2">
+          <Card className="mx-auto max-w-2xl mb-6 bg-card border-2 shadow-lg">
             <CardHeader className="pb-4">
               <CardTitle className="text-4xl md:text-6xl font-bold text-foreground tracking-tight">
                 Puzzz
@@ -61,7 +61,7 @@ const Index = () => {
 
         {/* Games Selection */}
         <div className="max-w-7xl mx-auto">
-          <Card className="mx-auto max-w-md mb-8 bg-card/95 backdrop-blur-sm border-2">
+          <Card className="mx-auto max-w-md mb-8 bg-card border-2 shadow-lg">
             <CardHeader className="pb-4">
               <CardTitle className="text-3xl font-bold text-center text-foreground">
                 Choose Your Game
