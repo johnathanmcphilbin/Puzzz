@@ -40,11 +40,12 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("Setting up game votes for room:", room.id, "player:", currentPlayer.player_id);
     loadGameVotes();
     
     // Set up real-time subscription for game votes
     const channel = supabase
-      .channel(`game_requests_room_${room.id}`)
+      .channel(`game_votes_${room.id}_${Date.now()}`) // Unique channel name
       .on(
         "postgres_changes",
         {
@@ -55,11 +56,15 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         },
         (payload) => {
           console.log("Game request change received:", payload);
+          console.log("Reloading game votes due to real-time update");
           loadGameVotes();
         }
       )
       .subscribe((status) => {
         console.log("Game requests subscription status:", status);
+        if (status === 'SUBSCRIBED') {
+          console.log("Successfully subscribed to game requests changes");
+        }
       });
 
     return () => {
@@ -70,6 +75,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
   const loadGameVotes = async () => {
     try {
+      console.log("Loading game votes for room:", room.id);
       const { data: votes, error } = await supabase
         .from("game_requests")
         .select("game_type, player_id")
@@ -80,7 +86,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         return;
       }
 
-      console.log("Loaded game votes:", votes);
+      console.log("Raw votes data:", votes);
 
       // Count votes per game
       const voteCounts: {[key: string]: number} = {};
@@ -93,8 +99,9 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         }
       });
 
-      console.log("Vote counts:", voteCounts);
-      console.log("User votes:", userGameVotes);
+      console.log("Processed vote counts:", voteCounts);
+      console.log("User votes for player", currentPlayer.player_id, ":", userGameVotes);
+      console.log("Is host:", currentPlayer.is_host);
 
       setGameVotes(voteCounts);
       setUserVotes(userGameVotes);
