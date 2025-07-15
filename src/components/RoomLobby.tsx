@@ -227,15 +227,21 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
       // If no players remain, delete the room completely
       if (!remainingPlayers || remainingPlayers.length === 0) {
+        // Delete all game requests for this room
+        await supabase
+          .from("game_requests")
+          .delete()
+          .eq("room_id", room.id);
+
         // Delete game votes first
         await supabase
           .from("game_votes")
           .delete()
           .eq("room_id", room.id);
 
-        // Delete remaining game requests
+        // Delete forms responses if any
         await supabase
-          .from("game_requests")
+          .from("forms_responses")
           .delete()
           .eq("room_id", room.id);
 
@@ -245,11 +251,17 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           .delete()
           .eq("id", room.id);
       } else if (currentPlayer.is_host) {
-        // If host is leaving but players remain, just mark as inactive
+        // If host is leaving but players remain, mark room as inactive and clean up requests
         await supabase
           .from("rooms")
           .update({ is_active: false })
           .eq("id", room.id);
+
+        // Also clean up all game requests when room becomes inactive
+        await supabase
+          .from("game_requests")
+          .delete()
+          .eq("room_id", room.id);
       }
 
       // Clear local storage
