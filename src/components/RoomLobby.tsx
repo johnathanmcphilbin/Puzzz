@@ -45,7 +45,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     
     // Set up real-time subscription for game votes
     const channel = supabase
-      .channel(`game_votes_${room.id}_${Date.now()}`) // Unique channel name
+      .channel(`game_votes_${room.id}`) // Consistent channel name
       .on(
         "postgres_changes",
         {
@@ -55,15 +55,15 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           filter: `room_id=eq.${room.id}`,
         },
         (payload) => {
-          console.log("Game request change received:", payload);
-          console.log("Reloading game votes due to real-time update");
+          console.log("🔄 Real-time update received by", currentPlayer.is_host ? "HOST" : "PLAYER", payload);
+          console.log("📊 Reloading game votes due to real-time update");
           loadGameVotes();
         }
       )
       .subscribe((status) => {
-        console.log("Game requests subscription status:", status);
+        console.log("📡 Game requests subscription status:", status, "for", currentPlayer.is_host ? "HOST" : "PLAYER");
         if (status === 'SUBSCRIBED') {
-          console.log("Successfully subscribed to game requests changes");
+          console.log("✅ Successfully subscribed to game requests changes as", currentPlayer.is_host ? "HOST" : "PLAYER");
         }
       });
 
