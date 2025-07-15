@@ -56,7 +56,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const playerAnswers = gameState.playerAnswers || {};
   const currentQuestions = gameState.currentQuestions || {};
   const revealedPlayer = gameState.revealedPlayer || null;
-  const freakinessLevel = gameState.freakinessLevel || 3;
+  
 
   useEffect(() => {
     if (room.current_game === "paranoia" && phase === "answering" && !currentQuestion) {
@@ -91,14 +91,13 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const loadQuestion = async () => {
     try {
-      // First get the count of questions with the appropriate spiciness level
+      // First get the count of all questions
       const { count } = await supabase
         .from("paranoia_questions")
-        .select("*", { count: "exact", head: true })
-        .lte("spiciness_level", freakinessLevel);
+        .select("*", { count: "exact", head: true });
       
       if (!count || count === 0) {
-        throw new Error("No questions available for this spiciness level");
+        throw new Error("No questions available");
       }
 
       // Get a random offset
@@ -108,7 +107,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       const { data, error } = await supabase
         .from("paranoia_questions")
         .select("*")
-        .lte("spiciness_level", freakinessLevel)
         .range(randomOffset, randomOffset)
         .limit(1);
 
