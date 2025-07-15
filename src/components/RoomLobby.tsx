@@ -44,7 +44,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     
     // Set up real-time subscription for game votes
     const channel = supabase
-      .channel(`game_requests_${room.id}`)
+      .channel(`game_requests_room_${room.id}`)
       .on(
         "postgres_changes",
         {
@@ -53,16 +53,20 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           table: "game_requests",
           filter: `room_id=eq.${room.id}`,
         },
-        () => {
+        (payload) => {
+          console.log("Game request change received:", payload);
           loadGameVotes();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Game requests subscription status:", status);
+      });
 
     return () => {
+      console.log("Cleaning up game requests subscription");
       supabase.removeChannel(channel);
     };
-  }, [room.id]);
+  }, [room.id, currentPlayer.player_id]);
 
   const loadGameVotes = async () => {
     try {
@@ -71,7 +75,12 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         .select("game_type, player_id")
         .eq("room_id", room.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading game votes:", error);
+        return;
+      }
+
+      console.log("Loaded game votes:", votes);
 
       // Count votes per game
       const voteCounts: {[key: string]: number} = {};
@@ -83,6 +92,9 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           userGameVotes[vote.game_type] = true;
         }
       });
+
+      console.log("Vote counts:", voteCounts);
+      console.log("User votes:", userGameVotes);
 
       setGameVotes(voteCounts);
       setUserVotes(userGameVotes);
