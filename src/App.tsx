@@ -8,7 +8,7 @@ import { Room } from "./pages/Room";
 import { DirectJoin } from "./pages/DirectJoin";
 import NotFound from "./pages/NotFound";
 import { AnalyticsProvider } from "./providers/AnalyticsProvider";
-import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
+
 
 const queryClient = new QueryClient();
 
@@ -24,7 +24,7 @@ const App = () => (
             <Route path="/join" element={<Index />} />
             <Route path="/join/:roomCode" element={<DirectJoin />} />
             <Route path="/room/:roomCode" element={<Room />} />
-            <Route path="/analytics" element={<AnalyticsDashboard />} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
