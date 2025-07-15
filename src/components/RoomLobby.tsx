@@ -192,7 +192,12 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         .from("rooms")
         .update({
           current_game: selectedGame,
-          game_state: { 
+          game_state: selectedGame === "paranoia" ? {
+            phase: "waiting",
+            currentPlayerIndex: 0,
+            roundNumber: 1,
+            maxRounds: 10
+          } : { 
             phase: "playing", 
             currentQuestion: null, 
             questionIndex: 0,
@@ -204,7 +209,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
       if (error) throw error;
 
-      const gameTitle = selectedGame === "forms_game" ? "Forms Game" : "Would You Rather";
+      const gameTitle = selectedGame === "forms_game" ? "Forms Game" : 
+                        selectedGame === "paranoia" ? "Paranoia" : "Would You Rather";
       
       toast({
         title: "Game Started!",
@@ -550,7 +556,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                   ) : (
                     <>
                       <Play className="mr-2 h-5 w-5" />
-                      Start {selectedGame === "forms_game" ? "Forms Game" : "Would You Rather"}
+                      Start {selectedGame === "forms_game" ? "Forms Game" : 
+                            selectedGame === "paranoia" ? "Paranoia" : "Would You Rather"}
                     </>
                   )}
                 </Button>
