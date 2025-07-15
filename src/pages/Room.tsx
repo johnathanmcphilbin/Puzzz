@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RoomLobby } from "@/components/RoomLobby";
 import { WouldYouRatherGame } from "@/components/WouldYouRatherGame";
 import { FormsGame } from "@/components/FormsGame";
+import { ParanoiaGame } from "@/components/ParanoiaGame";
 import { Loader2 } from "lucide-react";
 
 interface Room {
@@ -212,6 +213,13 @@ export const Room = () => {
         />
       ) : currentGame === "forms_game" ? (
         <FormsGame 
+          room={room} 
+          players={players} 
+          currentPlayer={currentPlayer}
+          onUpdateRoom={setRoom}
+        />
+      ) : currentGame === "paranoia" ? (
+        <ParanoiaGame 
           room={room} 
           players={players} 
           currentPlayer={currentPlayer}

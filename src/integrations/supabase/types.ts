@@ -131,6 +131,71 @@ export type Database = {
           },
         ]
       }
+      paranoia_questions: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          question: string
+          spiciness_level: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          spiciness_level?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          spiciness_level?: number | null
+        }
+        Relationships: []
+      }
+      paranoia_rounds: {
+        Row: {
+          asker_player_id: string
+          chosen_player_id: string
+          created_at: string
+          id: string
+          is_revealed: boolean | null
+          question_id: string
+          room_id: string
+          round_number: number
+        }
+        Insert: {
+          asker_player_id: string
+          chosen_player_id: string
+          created_at?: string
+          id?: string
+          is_revealed?: boolean | null
+          question_id: string
+          room_id: string
+          round_number: number
+        }
+        Update: {
+          asker_player_id?: string
+          chosen_player_id?: string
+          created_at?: string
+          id?: string
+          is_revealed?: boolean | null
+          question_id?: string
+          room_id?: string
+          round_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paranoia_rounds_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "paranoia_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           id: string

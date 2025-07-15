@@ -460,13 +460,54 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                     </div>
                   </div>
                 </div>
+
+                {/* Paranoia Game */}
+                <div 
+                  className={`relative p-4 border rounded-lg transition-all ${
+                    currentPlayer.is_host
+                      ? `cursor-pointer ${selectedGame === "paranoia" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                      : "border-muted"
+                  }`}
+                  onClick={() => currentPlayer.is_host && setSelectedGame("paranoia")}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold">Paranoia</h4>
+                      <p className="text-sm text-muted-foreground">Whisper secrets, let fate reveal them</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-2xl">🤫</div>
+                      {!currentPlayer.is_host && (
+                        <Button
+                          variant={userVotes["paranoia"] ? "default" : "outline"}
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleGameVote("paranoia");
+                          }}
+                          className="gap-1"
+                        >
+                          <ThumbsUp className="h-3 w-3" />
+                          {gameVotes["paranoia"] || 0}
+                        </Button>
+                      )}
+                      {currentPlayer.is_host && gameVotes["paranoia"] > 0 && (
+                        <Badge variant="secondary" className="gap-1">
+                          <ThumbsUp className="h-3 w-3" />
+                          {gameVotes["paranoia"]}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Game Instructions - only show for host */}
               {currentPlayer.is_host && (
                 <div className="p-4 bg-muted rounded-lg">
                   <h4 className="font-semibold mb-2">
-                    {selectedGame === "forms_game" ? "Forms Game Rules:" : "How to Play:"}
+                    {selectedGame === "forms_game" ? "Forms Game Rules:" : 
+                     selectedGame === "paranoia" ? "Paranoia Rules:" : "How to Play:"}
                   </h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
                     {selectedGame === "forms_game" ? (
@@ -475,6 +516,13 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                         <li>• Select who is most likely for each scenario</li>
                         <li>• Wait for everyone to finish</li>
                         <li>• See the results and laugh together!</li>
+                      </>
+                    ) : selectedGame === "paranoia" ? (
+                      <>
+                        <li>• Read your secret question (don't share it!)</li>
+                        <li>• Choose who the question applies to</li>
+                        <li>• Spin the randomizer to see if it gets revealed</li>
+                        <li>• Build suspense and paranoia with each round!</li>
                       </>
                     ) : (
                       <>
@@ -491,13 +539,13 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
               {currentPlayer.is_host ? (
                 <Button
                   onClick={startGame}
-                  disabled={isStarting || players.length < (selectedGame === "forms_game" ? 3 : 2)}
+                  disabled={isStarting || players.length < (selectedGame === "forms_game" || selectedGame === "paranoia" ? 3 : 2)}
                   className="w-full text-lg py-6"
                   size="lg"
                 >
                   {isStarting ? (
                     "Starting Game..."
-                  ) : players.length < (selectedGame === "forms_game" ? 3 : 2) ? (
+                  ) : players.length < (selectedGame === "forms_game" || selectedGame === "paranoia" ? 3 : 2) ? (
                     `Need at least ${selectedGame === "forms_game" ? 3 : 2} players`
                   ) : (
                     <>

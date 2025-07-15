@@ -112,24 +112,36 @@ const Index = () => {
             </Card>
 
             {/* Coming Soon Games */}
-            <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-dashed border-2 border-muted-foreground/30 bg-muted/20">
-              <div className="aspect-video bg-muted/50 relative overflow-hidden flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <div className="text-2xl font-bold mb-1">🎯</div>
-                  <div className="text-sm">Coming Soon</div>
+            {/* Paranoia Game */}
+            <Card 
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-destructive/20 to-warning/20 overflow-hidden"
+              onClick={handleGameClick}
+            >
+              <div className="aspect-video bg-gradient-to-br from-destructive to-warning relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="text-4xl font-bold mb-2">🤫</div>
+                    <div className="text-sm opacity-90">Secrets & Suspense</div>
+                  </div>
+                </div>
+                <div className="absolute top-2 right-2">
+                  <span className="bg-destructive text-destructive-foreground px-2 py-1 rounded-full text-xs font-medium">
+                    NEW
+                  </span>
                 </div>
               </div>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-bold text-muted-foreground">Trivia Challenge</CardTitle>
+                <CardTitle className="text-lg font-bold">Paranoia</CardTitle>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>Quiz Game</span>
+                  <span>Whisper Game</span>
                   <span>•</span>
-                  <span>2-8 Players</span>
+                  <span>3-10 Players</span>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <CardDescription className="text-sm line-clamp-2">
-                  Test your knowledge across various categories in this fast-paced trivia game.
+                  Read secret questions, name someone, then let fate decide if the question gets revealed!
                 </CardDescription>
               </CardContent>
             </Card>
