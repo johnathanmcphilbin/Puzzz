@@ -63,7 +63,33 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
     // Load current player's responses
     const playerResponses = allResponses[currentPlayer.player_id] || {};
     setResponses(playerResponses);
-  }, [room.game_state, currentPlayer.player_id]);
+
+    // Check if all players have submitted and show results automatically
+    const submittedCount = Object.keys(allResponses).length;
+    if (submittedCount === players.length && submittedCount > 0 && !showResults && currentPlayer.is_host) {
+      showResultsAutomatically();
+    }
+  }, [room.game_state, currentPlayer.player_id, players.length]);
+
+  const showResultsAutomatically = async () => {
+    try {
+      const resultsGameState = {
+        ...gameState,
+        showResults: true
+      };
+
+      const { error } = await supabase
+        .from("rooms")
+        .update({ game_state: resultsGameState })
+        .eq("id", room.id);
+
+      if (error) {
+        console.error("Error showing results:", error);
+      }
+    } catch (error) {
+      console.error("Error showing results automatically:", error);
+    }
+  };
 
   const loadQuestions = async () => {
     if (!currentPlayer.is_host) return;
@@ -284,37 +310,52 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
 
           {/* Results */}
           <div className="space-y-6 mb-8">
-            {questions.map((question, index) => (
-              <Card key={question.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span>Question {index + 1}</span>
-                      {question.is_controversial && (
-                        <AlertTriangle className="h-4 w-4 text-warning" />
-                      )}
-                    </div>
-                    <Badge variant="outline">{question.category}</Badge>
-                  </CardTitle>
-                  <p className="text-foreground font-medium">{question.question}</p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {players
-                      .sort((a, b) => (results[question.id][b.player_id] || 0) - (results[question.id][a.player_id] || 0))
-                      .map((player) => {
-                        const votes = results[question.id][player.player_id] || 0;
-                        const percentage = players.length > 0 ? (votes / players.length) * 100 : 0;
+            {questions.map((question, index) => {
+              const questionResults = results[question.id] || {};
+              const totalVotes = Object.values(questionResults).reduce((sum: number, votes: number) => sum + votes, 0);
+              const sortedPlayers = players.sort((a, b) => (questionResults[b.player_id] || 0) - (questionResults[a.player_id] || 0));
+              const winner = sortedPlayers[0];
+              const winnerVotes = questionResults[winner?.player_id] || 0;
+              
+              return (
+                <Card key={question.id} className="animate-fade-in">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span>Question {index + 1}</span>
+                        {question.is_controversial && (
+                          <AlertTriangle className="h-4 w-4 text-warning" />
+                        )}
+                      </div>
+                      <Badge variant="outline">{question.category}</Badge>
+                    </CardTitle>
+                    <p className="text-foreground font-medium">{question.question}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {sortedPlayers.map((player, playerIndex) => {
+                        const votes = questionResults[player.player_id] || 0;
+                        const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+                        const isWinner = playerIndex === 0 && votes > 0;
                         
                         return (
                           <div key={player.player_id} className="space-y-2">
                             <div className="flex justify-between items-center">
                               <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-semibold">
-                                  {player.player_name.charAt(0).toUpperCase()}
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                                  isWinner ? 'bg-warning text-warning-foreground' : 'bg-primary text-primary-foreground'
+                                }`}>
+                                  {isWinner ? <Trophy className="h-4 w-4" /> : player.player_name.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="font-medium">{player.player_name}</span>
+                                <span className={`font-medium ${isWinner ? 'text-warning' : ''}`}>
+                                  {player.player_name}
+                                </span>
                                 {player.is_host && <Crown className="h-4 w-4 text-warning" />}
+                                {isWinner && votes > 0 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Winner
+                                  </Badge>
+                                )}
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-sm text-muted-foreground">
@@ -325,14 +366,18 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                                 </span>
                               </div>
                             </div>
-                            <Progress value={percentage} className="h-2" />
+                            <Progress 
+                              value={percentage} 
+                              className={`h-2 ${isWinner ? 'bg-warning/20' : ''}`}
+                            />
                           </div>
                         );
                       })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Host Controls */}
@@ -469,7 +514,11 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
               <CheckCircle className="h-16 w-16 text-success mx-auto mb-4" />
               <h3 className="text-2xl font-bold mb-2">Responses Submitted!</h3>
               <p className="text-muted-foreground mb-4">
-                Waiting for other players to complete their responses...
+                {submittedCount === players.length ? (
+                  "All players have submitted! Loading results..."
+                ) : (
+                  `Waiting for ${players.length - submittedCount} more player${players.length - submittedCount !== 1 ? 's' : ''} to complete their responses...`
+                )}
               </p>
               <div className="flex justify-center">
                 <div className="inline-flex items-center gap-2">
