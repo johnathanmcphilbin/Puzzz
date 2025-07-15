@@ -230,8 +230,6 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
   };
 
   const backToLobby = async () => {
-    if (!currentPlayer.is_host) return;
-
     const { error } = await supabase
       .from("rooms")
       .update({
@@ -380,19 +378,17 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
             })}
           </div>
 
-          {/* Host Controls */}
-          {currentPlayer.is_host && (
-            <div className="flex justify-center">
-              <Button
-                onClick={backToLobby}
-                className="gap-2"
-                size="lg"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Back to Lobby
-              </Button>
-            </div>
-          )}
+          {/* Back to Lobby Button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={backToLobby}
+              className="gap-2"
+              size="lg"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Back to Lobby
+            </Button>
+          </div>
         </div>
       </div>
     );

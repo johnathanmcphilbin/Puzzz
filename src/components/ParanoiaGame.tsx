@@ -613,11 +613,9 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         </Card>
 
         <div className="flex gap-4 justify-center">
-          {currentPlayer.is_host && (
-            <Button onClick={resetGame} variant="outline">
-              Back to Lobby
-            </Button>
-          )}
+          <Button onClick={resetGame} variant="outline">
+            Back to Lobby
+          </Button>
         </div>
       </div>
     );

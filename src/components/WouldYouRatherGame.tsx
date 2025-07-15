@@ -283,8 +283,6 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const backToLobby = async () => {
-    if (!currentPlayer.is_host) return;
-
     const { error } = await supabase
       .from("rooms")
       .update({
@@ -435,19 +433,17 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
             ))}
           </div>
 
-          {/* Host Controls */}
-          {currentPlayer.is_host && (
-            <div className="flex justify-center">
-              <Button
-                onClick={backToLobby}
-                className="gap-2"
-                size="lg"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Back to Lobby
-              </Button>
-            </div>
-          )}
+          {/* Back to Lobby Button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={backToLobby}
+              className="gap-2"
+              size="lg"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Back to Lobby
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -650,58 +646,60 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         )}
 
         {/* Host Controls */}
-        {currentPlayer.is_host && (
-          <div className="flex justify-center gap-4">
-            {showResults ? (
-              <>
-                <Button
-                  onClick={loadNextQuestion}
-                  disabled={isLoading}
-                  className="gap-2"
-                  size="lg"
-                >
-                  {isLoading ? (
-                    "Loading..."
-                  ) : (
-                    <>
-                      <ChevronRight className="h-4 w-4" />
-                      Next Question
-                    </>
-                  )}
-                </Button>
-                
-                <Button
-                  onClick={showEndGame}
-                  variant="secondary"
-                  className="gap-2"
-                  size="lg"
-                >
-                  <Trophy className="h-4 w-4" />
-                  End Game
-                </Button>
-              </>
-            ) : (
-              totalVotes > 0 && (
-                <Button
-                  onClick={showResultsHandler}
-                  variant="outline"
-                  className="gap-2"
-                >
-                  Show Results Now
-                </Button>
-              )
-            )}
-            
-            <Button
-              onClick={backToLobby}
-              variant="outline"
-              className="gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Back to Lobby
-            </Button>
-          </div>
-        )}
+        <div className="flex justify-center gap-4">
+          {currentPlayer.is_host && (
+            <>
+              {showResults ? (
+                <>
+                  <Button
+                    onClick={loadNextQuestion}
+                    disabled={isLoading}
+                    className="gap-2"
+                    size="lg"
+                  >
+                    {isLoading ? (
+                      "Loading..."
+                    ) : (
+                      <>
+                        <ChevronRight className="h-4 w-4" />
+                        Next Question
+                      </>
+                    )}
+                  </Button>
+                  
+                  <Button
+                    onClick={showEndGame}
+                    variant="secondary"
+                    className="gap-2"
+                    size="lg"
+                  >
+                    <Trophy className="h-4 w-4" />
+                    End Game
+                  </Button>
+                </>
+              ) : (
+                totalVotes > 0 && (
+                  <Button
+                    onClick={showResultsHandler}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    Show Results Now
+                  </Button>
+                )
+              )}
+            </>
+          )}
+          
+          <Button
+            onClick={backToLobby}
+            variant="outline"
+            className="gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Back to Lobby
+          </Button>
+        </div>
       </div>
     </div>
   );
