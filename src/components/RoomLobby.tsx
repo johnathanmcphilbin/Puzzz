@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Play, Users, Crown, LogOut } from "lucide-react";
+import { Copy, Play, Users, Crown, LogOut, ThumbsUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Room {
@@ -34,8 +34,96 @@ interface RoomLobbyProps {
 export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLobbyProps) => {
   const [isStarting, setIsStarting] = useState(false);
   const [selectedGame, setSelectedGame] = useState<string>("would_you_rather");
+  const [gameVotes, setGameVotes] = useState<{[key: string]: number}>({});
+  const [userVotes, setUserVotes] = useState<{[key: string]: boolean}>({});
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    loadGameVotes();
+    
+    // Set up real-time subscription for game votes
+    const channel = supabase
+      .channel(`game_requests_${room.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "game_requests",
+          filter: `room_id=eq.${room.id}`,
+        },
+        () => {
+          loadGameVotes();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [room.id]);
+
+  const loadGameVotes = async () => {
+    try {
+      const { data: votes, error } = await supabase
+        .from("game_requests")
+        .select("game_type, player_id")
+        .eq("room_id", room.id);
+
+      if (error) throw error;
+
+      // Count votes per game
+      const voteCounts: {[key: string]: number} = {};
+      const userGameVotes: {[key: string]: boolean} = {};
+      
+      votes?.forEach(vote => {
+        voteCounts[vote.game_type] = (voteCounts[vote.game_type] || 0) + 1;
+        if (vote.player_id === currentPlayer.player_id) {
+          userGameVotes[vote.game_type] = true;
+        }
+      });
+
+      setGameVotes(voteCounts);
+      setUserVotes(userGameVotes);
+    } catch (error) {
+      console.error("Error loading game votes:", error);
+    }
+  };
+
+  const toggleGameVote = async (gameType: string) => {
+    if (currentPlayer.is_host) return; // Hosts don't vote
+
+    try {
+      const hasVoted = userVotes[gameType];
+      
+      if (hasVoted) {
+        // Remove vote
+        await supabase
+          .from("game_requests")
+          .delete()
+          .eq("room_id", room.id)
+          .eq("player_id", currentPlayer.player_id)
+          .eq("game_type", gameType);
+      } else {
+        // Add vote
+        await supabase
+          .from("game_requests")
+          .insert({
+            room_id: room.id,
+            player_id: currentPlayer.player_id,
+            game_type: gameType,
+          });
+      }
+    } catch (error) {
+      console.error("Error toggling game vote:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update vote",
+        variant: "destructive",
+      });
+    }
+  };
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(room.room_code);
@@ -88,6 +176,12 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
   const leaveRoom = async () => {
     try {
+      // Remove player's game requests
+      await supabase
+        .from("game_requests")
+        .delete()
+        .eq("player_id", currentPlayer.player_id);
+
       // Remove player from room
       await supabase
         .from("players")
@@ -105,6 +199,12 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         // Delete game votes first
         await supabase
           .from("game_votes")
+          .delete()
+          .eq("room_id", room.id);
+
+        // Delete remaining game requests
+        await supabase
+          .from("game_requests")
           .delete()
           .eq("room_id", room.id);
 
@@ -204,71 +304,128 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           {/* Game Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Select Game</CardTitle>
+              <CardTitle>
+                {currentPlayer.is_host ? "Select Game" : "Game Requests"}
+              </CardTitle>
               <CardDescription>
-                Choose which game to play with your friends
+                {currentPlayer.is_host 
+                  ? "Choose which game to play with your friends"
+                  : "Vote for the game you want to play"
+                }
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Game Options */}
               <div className="space-y-3">
+                {/* Would You Rather Game */}
                 <div 
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                    selectedGame === "would_you_rather" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"
+                  className={`relative p-4 border rounded-lg transition-all ${
+                    currentPlayer.is_host
+                      ? `cursor-pointer ${selectedGame === "would_you_rather" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                      : "border-muted"
                   }`}
-                  onClick={() => setSelectedGame("would_you_rather")}
+                  onClick={() => currentPlayer.is_host && setSelectedGame("would_you_rather")}
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-semibold">Would You Rather</h4>
                       <p className="text-sm text-muted-foreground">Choose between two scenarios</p>
                     </div>
-                    <div className="flex gap-1">
-                      <div className="w-6 h-6 game-option-a rounded text-xs flex items-center justify-center text-white font-bold">A</div>
-                      <div className="w-6 h-6 game-option-b rounded text-xs flex items-center justify-center text-white font-bold">B</div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <div className="w-6 h-6 game-option-a rounded text-xs flex items-center justify-center text-white font-bold">A</div>
+                        <div className="w-6 h-6 game-option-b rounded text-xs flex items-center justify-center text-white font-bold">B</div>
+                      </div>
+                      {!currentPlayer.is_host && (
+                        <Button
+                          variant={userVotes["would_you_rather"] ? "default" : "outline"}
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleGameVote("would_you_rather");
+                          }}
+                          className="gap-1"
+                        >
+                          <ThumbsUp className="h-3 w-3" />
+                          {gameVotes["would_you_rather"] || 0}
+                        </Button>
+                      )}
+                      {currentPlayer.is_host && gameVotes["would_you_rather"] > 0 && (
+                        <Badge variant="secondary" className="gap-1">
+                          <ThumbsUp className="h-3 w-3" />
+                          {gameVotes["would_you_rather"]}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
 
+                {/* Forms Game */}
                 <div 
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                    selectedGame === "forms_game" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"
+                  className={`relative p-4 border rounded-lg transition-all ${
+                    currentPlayer.is_host
+                      ? `cursor-pointer ${selectedGame === "forms_game" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                      : "border-muted"
                   }`}
-                  onClick={() => setSelectedGame("forms_game")}
+                  onClick={() => currentPlayer.is_host && setSelectedGame("forms_game")}
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-semibold">Forms Game</h4>
                       <p className="text-sm text-muted-foreground">Survey-style questions about friends</p>
                     </div>
-                    <div className="text-2xl">📋</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-2xl">📋</div>
+                      {!currentPlayer.is_host && (
+                        <Button
+                          variant={userVotes["forms_game"] ? "default" : "outline"}
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleGameVote("forms_game");
+                          }}
+                          className="gap-1"
+                        >
+                          <ThumbsUp className="h-3 w-3" />
+                          {gameVotes["forms_game"] || 0}
+                        </Button>
+                      )}
+                      {currentPlayer.is_host && gameVotes["forms_game"] > 0 && (
+                        <Badge variant="secondary" className="gap-1">
+                          <ThumbsUp className="h-3 w-3" />
+                          {gameVotes["forms_game"]}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Game Instructions */}
-              <div className="p-4 bg-muted rounded-lg">
-                <h4 className="font-semibold mb-2">
-                  {selectedGame === "forms_game" ? "Forms Game Rules:" : "How to Play:"}
-                </h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  {selectedGame === "forms_game" ? (
-                    <>
-                      <li>• Answer 8 questions about your friends</li>
-                      <li>• Select who is most likely for each scenario</li>
-                      <li>• Wait for everyone to finish</li>
-                      <li>• See the results and laugh together!</li>
-                    </>
-                  ) : (
-                    <>
-                      <li>• Read the question carefully</li>
-                      <li>• Choose Option A or Option B</li>
-                      <li>• See how others voted</li>
-                      <li>• Discuss and have fun!</li>
-                    </>
-                  )}
-                </ul>
-              </div>
+              {/* Game Instructions - only show for host */}
+              {currentPlayer.is_host && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold mb-2">
+                    {selectedGame === "forms_game" ? "Forms Game Rules:" : "How to Play:"}
+                  </h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    {selectedGame === "forms_game" ? (
+                      <>
+                        <li>• Answer 8 questions about your friends</li>
+                        <li>• Select who is most likely for each scenario</li>
+                        <li>• Wait for everyone to finish</li>
+                        <li>• See the results and laugh together!</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>• Read the question carefully</li>
+                        <li>• Choose Option A or Option B</li>
+                        <li>• See how others voted</li>
+                        <li>• Discuss and have fun!</li>
+                      </>
+                    )}
+                  </ul>
+                </div>
+              )}
 
               {currentPlayer.is_host ? (
                 <Button
