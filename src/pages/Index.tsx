@@ -8,8 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 const Index = () => {
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
   const [showDialog, setShowDialog] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<string>("would_you_rather");
 
-  const handleGameClick = () => {
+  const handleGameClick = (gameType: string) => {
+    setSelectedGame(gameType);
+    setActiveTab("create");
     setShowDialog(true);
   };
 
@@ -73,7 +76,7 @@ const Index = () => {
             {/* Would You Rather Game */}
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-full"
-              onClick={handleGameClick}
+              onClick={() => handleGameClick("would_you_rather")}
             >
               <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
@@ -109,7 +112,7 @@ const Index = () => {
             {/* Forms Game */}
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden h-full"
-              onClick={handleGameClick}
+              onClick={() => handleGameClick("forms")}
             >
               <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-primary to-secondary relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
@@ -145,7 +148,7 @@ const Index = () => {
             {/* Paranoia Game */}
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-destructive/20 to-warning/20 overflow-hidden h-full"
-              onClick={handleGameClick}
+              onClick={() => handleGameClick("paranoia")}
             >
               <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-destructive to-warning relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
@@ -207,7 +210,7 @@ const Index = () => {
                 </Button>
               </div>
             </div>
-            {activeTab === "create" ? <CreateRoom /> : <JoinRoom />}
+            {activeTab === "create" ? <CreateRoom selectedGame={selectedGame} /> : <JoinRoom />}
           </div>
         </DialogContent>
       </Dialog>

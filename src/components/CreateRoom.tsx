@@ -9,7 +9,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
 
-export const CreateRoom = () => {
+interface CreateRoomProps {
+  selectedGame?: string;
+}
+
+export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProps) => {
   const [hostName, setHostName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
@@ -54,7 +58,7 @@ export const CreateRoom = () => {
           room_code: roomCode,
           name: `${trimmedName}'s Room`,
           host_id: hostId,
-          current_game: "would_you_rather",
+          current_game: selectedGame,
           game_state: { phase: "lobby", currentQuestion: null, votes: {} },
           is_active: true
         })
