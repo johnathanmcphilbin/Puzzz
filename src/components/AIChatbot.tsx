@@ -321,8 +321,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           action: 'generate_all_questions',
           customization: sanitizeCustomization(customizationText.trim()),
           roomCode
-        },
-        headers: getAuthHeaders()
+        }
       });
 
       console.log('AI function response:', { data, error });
