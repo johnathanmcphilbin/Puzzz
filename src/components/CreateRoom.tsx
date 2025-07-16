@@ -8,8 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
-import { useAuth } from "@/hooks/useAuth";
-import { validatePlayerName, sanitizeInput, validateRoomCode } from "@/utils/inputValidation";
 
 export const CreateRoom = () => {
   const [hostName, setHostName] = useState("");
@@ -17,7 +15,6 @@ export const CreateRoom = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackEvent } = useAnalyticsContext();
-  const { createSession } = useAuth();
 
   const generateRoomCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -29,94 +26,76 @@ export const CreateRoom = () => {
   };
 
   const createRoom = async () => {
-    const sanitizedName = sanitizeInput(hostName);
+    const trimmedName = hostName.trim();
     
-    if (!validatePlayerName(sanitizedName)) {
+    if (!trimmedName || trimmedName.length < 1 || trimmedName.length > 30) {
       toast({
         title: "Invalid Name",
-        description: "Please enter a valid name (1-50 characters, no special characters or inappropriate content).",
+        description: "Please enter a name between 1-30 characters.",
         variant: "destructive",
       });
       return;
     }
 
     setIsCreating(true);
+    
     try {
-      let roomCode;
-      let attempts = 0;
-      const maxAttempts = 10;
-
-      // Generate unique room code with retry logic
-      do {
-        roomCode = generateRoomCode();
-        attempts++;
-        
-        if (!validateRoomCode(roomCode)) {
-          continue;
-        }
-
-        // Check if room code already exists
-        const { data: existing } = await supabase
-          .from("rooms")
-          .select("room_code")
-          .eq("room_code", roomCode)
-          .eq("is_active", true)
-          .single();
-
-        if (!existing) break;
-      } while (attempts < maxAttempts);
-
-      if (attempts >= maxAttempts) {
-        throw new Error("Unable to generate unique room code");
-      }
-
+      // Generate room code
+      const roomCode = generateRoomCode();
       const hostId = crypto.randomUUID();
-      await createSession(hostId, sanitizedName);
-
-      // Small delay to ensure localStorage is set before navigation
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Create room
+      
+      console.log("Creating room with code:", roomCode);
+      console.log("Host ID:", hostId);
+      
+      // Create room first
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
         .insert({
           room_code: roomCode,
-          name: `${sanitizedName}'s Room`,
+          name: `${trimmedName}'s Room`,
           host_id: hostId,
           current_game: "would_you_rather",
-          game_state: { phase: "lobby", currentQuestion: null, votes: {} }
+          game_state: { phase: "lobby", currentQuestion: null, votes: {} },
+          is_active: true
         })
         .select()
         .single();
 
-      if (roomError) throw roomError;
+      if (roomError) {
+        console.error("Room creation error:", roomError);
+        throw new Error("Failed to create room");
+      }
+
+      console.log("Room created successfully:", roomData);
 
       // Add host as player
-      const { error: playerError } = await supabase
+      const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: sanitizedName,
+          player_name: trimmedName,
           player_id: hostId,
           is_host: true
-        });
-
-      if (playerError) throw playerError;
-
-      // Verify player was inserted successfully before proceeding
-      const { data: playerVerification } = await supabase
-        .from("players")
-        .select("id")
-        .eq("room_id", roomData.id)
-        .eq("player_id", hostId)
+        })
+        .select()
         .single();
 
-      if (!playerVerification) {
-        throw new Error("Failed to verify player creation");
+      if (playerError) {
+        console.error("Player creation error:", playerError);
+        // Clean up room if player creation fails
+        await supabase.from("rooms").delete().eq("id", roomData.id);
+        throw new Error("Failed to add host to room");
       }
 
+      console.log("Player created successfully:", playerData);
+
+      // Store session data
+      localStorage.setItem("puzzz_player_id", hostId);
+      localStorage.setItem("puzzz_player_name", trimmedName);
+      localStorage.setItem("puzzz_room_code", roomCode);
+
       // Track room creation
-      await trackEvent("room_created", { roomCode, hostName: sanitizedName });
+      trackEvent("room_created", { roomCode, hostName: trimmedName });
 
       toast({
         title: "Room Created!",
@@ -124,7 +103,9 @@ export const CreateRoom = () => {
         className: "bg-success text-success-foreground",
       });
 
+      // Navigate to room
       navigate(`/room/${roomCode}`);
+      
     } catch (error) {
       console.error("Error creating room:", error);
       toast({
@@ -160,12 +141,17 @@ export const CreateRoom = () => {
             onChange={(e) => setHostName(e.target.value)}
             className="text-lg py-3"
             maxLength={30}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                createRoom();
+              }
+            }}
           />
         </div>
 
         <Button 
           onClick={createRoom} 
-          disabled={isCreating}
+          disabled={isCreating || !hostName.trim()}
           className="w-full text-lg py-6 bg-primary hover:bg-primary-hover shadow-md"
           size="lg"
         >

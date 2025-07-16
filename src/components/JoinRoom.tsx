@@ -28,7 +28,10 @@ export const JoinRoom = () => {
   }, [searchParams]);
 
   const joinRoom = async () => {
-    if (!roomCode.trim() || !playerName.trim()) {
+    const trimmedRoomCode = roomCode.trim().toUpperCase();
+    const trimmedPlayerName = playerName.trim();
+
+    if (!trimmedRoomCode || !trimmedPlayerName) {
       toast({
         title: "Missing Information",
         description: "Please fill in both room code and your name.",
@@ -37,12 +40,19 @@ export const JoinRoom = () => {
       return;
     }
 
-    const sanitizedPlayerName = sanitizeInput(playerName);
-    
-    if (!validatePlayerName(sanitizedPlayerName)) {
+    if (trimmedRoomCode.length !== 6) {
+      toast({
+        title: "Invalid Room Code",
+        description: "Room code must be 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (trimmedPlayerName.length < 1 || trimmedPlayerName.length > 30) {
       toast({
         title: "Invalid Name",
-        description: "Please enter a valid name (1-50 characters, no special characters or inappropriate content).",
+        description: "Please enter a name between 1-30 characters.",
         variant: "destructive",
       });
       return;
@@ -50,15 +60,22 @@ export const JoinRoom = () => {
 
     setIsJoining(true);
     try {
+      console.log("Joining room with code:", trimmedRoomCode);
+      
       // Check if room exists and is active
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
         .select("*")
-        .eq("room_code", roomCode.toUpperCase().trim())
+        .eq("room_code", trimmedRoomCode)
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
-      if (roomError || !roomData) {
+      if (roomError) {
+        console.error("Room lookup error:", roomError);
+        throw new Error("Failed to check room");
+      }
+
+      if (!roomData) {
         toast({
           title: "Room Not Found",
           description: "Please check your room code and try again.",
@@ -67,13 +84,15 @@ export const JoinRoom = () => {
         return;
       }
 
+      console.log("Room found:", roomData);
+
       // Check if player name is already taken in this room
       const { data: existingPlayer } = await supabase
         .from("players")
         .select("player_name")
         .eq("room_id", roomData.id)
-        .eq("player_name", sanitizedPlayerName)
-        .single();
+        .eq("player_name", trimmedPlayerName)
+        .maybeSingle();
 
       if (existingPlayer) {
         toast({
@@ -87,26 +106,34 @@ export const JoinRoom = () => {
       const playerId = crypto.randomUUID();
 
       // Add player to room
-      const { error: playerError } = await supabase
+      const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: sanitizedPlayerName,
+          player_name: trimmedPlayerName,
           player_id: playerId,
           is_host: false
-        });
+        })
+        .select()
+        .single();
 
-      if (playerError) throw playerError;
+      if (playerError) {
+        console.error("Player creation error:", playerError);
+        throw new Error("Failed to join room");
+      }
 
-      // Track player join
-      await trackEvent("player_joined", { 
-        roomCode: roomCode.toUpperCase(), 
-        playerName: sanitizedPlayerName 
-      }, roomCode.toUpperCase());
+      console.log("Player created successfully:", playerData);
 
       // Store player info in localStorage
       localStorage.setItem("puzzz_player_id", playerId);
-      localStorage.setItem("puzzz_player_name", sanitizedPlayerName);
+      localStorage.setItem("puzzz_player_name", trimmedPlayerName);
+      localStorage.setItem("puzzz_room_code", trimmedRoomCode);
+
+      // Track player join
+      trackEvent("player_joined", { 
+        roomCode: trimmedRoomCode, 
+        playerName: trimmedPlayerName 
+      });
 
       toast({
         title: "Joined Room!",
@@ -114,7 +141,7 @@ export const JoinRoom = () => {
         className: "bg-success text-success-foreground",
       });
 
-      navigate(`/room/${roomCode.toUpperCase()}`);
+      navigate(`/room/${trimmedRoomCode}`);
     } catch (error) {
       console.error("Error joining room:", error);
       toast({

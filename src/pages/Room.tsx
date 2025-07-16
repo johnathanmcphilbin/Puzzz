@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +35,6 @@ export const Room = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!roomCode) {
@@ -57,43 +56,23 @@ export const Room = () => {
     }
 
     loadRoomData();
-    
-    // Cleanup on unmount
-    return () => {
-      if (cleanupRef.current) {
-        cleanupRef.current();
-      }
-    };
-  }, [roomCode]);
+  }, [roomCode, navigate, toast]);
 
   const loadRoomData = async () => {
     try {
-      // Load room data with retry logic for timing issues
-      let roomData = null;
-      let attempts = 0;
-      const maxAttempts = 3;
+      console.log("Loading room data for code:", roomCode);
       
-      while (attempts < maxAttempts && !roomData) {
-        const { data, error } = await supabase
-          .from("rooms")
-          .select("*")
-          .eq("room_code", roomCode)
-          .eq("is_active", true)
-          .maybeSingle();
+      // Load room data
+      const { data: roomData, error: roomError } = await supabase
+        .from("rooms")
+        .select("*")
+        .eq("room_code", roomCode)
+        .eq("is_active", true)
+        .maybeSingle();
 
-        if (data) {
-          roomData = data;
-          break;
-        }
-        
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-        
-        attempts++;
-        if (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+      if (roomError) {
+        console.error("Room loading error:", roomError);
+        throw new Error("Failed to load room");
       }
 
       if (!roomData) {
@@ -106,52 +85,29 @@ export const Room = () => {
         return;
       }
 
+      console.log("Room loaded successfully:", roomData);
       setRoom(roomData);
 
-      // Set up real-time subscriptions after room is loaded
-      const cleanup = setupRealtimeSubscriptions(roomData);
-      
-      // Store cleanup function for later use
-      cleanupRef.current = cleanup;
+      // Load players
+      const { data: playersData, error: playersError } = await supabase
+        .from("players")
+        .select("*")
+        .eq("room_id", roomData.id)
+        .order("joined_at", { ascending: true });
 
-      // Load players with retry logic
-      const playerId = localStorage.getItem("puzzz_player_id");
-      let playersData = null;
-      let currentPlayerFound = false;
-      attempts = 0;
-      
-      while (attempts < maxAttempts && !currentPlayerFound) {
-        const { data, error } = await supabase
-          .from("players")
-          .select("*")
-          .eq("room_id", roomData.id)
-          .order("joined_at", { ascending: true });
-
-        if (error) throw error;
-
-        playersData = data || [];
-        console.log(`Attempt ${attempts + 1}: Found ${playersData.length} players in room`, playersData);
-        console.log(`Looking for player_id: ${playerId}`);
-        
-        const player = playersData.find(p => p.player_id === playerId);
-        
-        if (player) {
-          currentPlayerFound = true;
-          setCurrentPlayer(player);
-          console.log("Player found:", player);
-        } else {
-          console.log("Player not found in players list");
-          attempts++;
-          if (attempts < maxAttempts) {
-            console.log(`Retrying in 500ms... (attempt ${attempts + 1}/${maxAttempts})`);
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-        }
+      if (playersError) {
+        console.error("Players loading error:", playersError);
+        throw new Error("Failed to load players");
       }
 
+      console.log("Players loaded successfully:", playersData);
       setPlayers(playersData || []);
 
-      if (!currentPlayerFound) {
+      // Find current player
+      const playerId = localStorage.getItem("puzzz_player_id");
+      const currentPlayerData = playersData?.find(p => p.player_id === playerId);
+      
+      if (!currentPlayerData) {
         toast({
           title: "Player Not Found",
           description: "You are not a member of this room.",
@@ -160,6 +116,12 @@ export const Room = () => {
         navigate("/");
         return;
       }
+
+      console.log("Current player found:", currentPlayerData);
+      setCurrentPlayer(currentPlayerData);
+
+      // Set up real-time subscriptions
+      setupRealtimeSubscriptions(roomData);
 
     } catch (error) {
       console.error("Error loading room data:", error);
@@ -175,21 +137,20 @@ export const Room = () => {
   };
 
   const setupRealtimeSubscriptions = (roomData: Room) => {
+    // Subscribe to room changes
     const roomChannel = supabase
       .channel(`room_${roomCode}`)
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "UPDATE",
           schema: "public",
           table: "rooms",
           filter: `room_code=eq.${roomCode}`,
         },
         (payload) => {
           console.log("Room update received:", payload);
-          if (payload.eventType === "UPDATE") {
-            setRoom(payload.new as Room);
-          }
+          setRoom(payload.new as Room);
         }
       )
       .on(
@@ -202,25 +163,22 @@ export const Room = () => {
         },
         (payload) => {
           console.log("Player update received:", payload);
-          // Reload players when any player in this room changes
           loadPlayers(roomData.id);
         }
       )
       .subscribe();
 
+    // Clean up subscription when component unmounts
     return () => {
       supabase.removeChannel(roomChannel);
     };
   };
 
-  const loadPlayers = async (roomId?: string) => {
-    const targetRoomId = roomId || room?.id;
-    if (!targetRoomId) return;
-
+  const loadPlayers = async (roomId: string) => {
     const { data: playersData } = await supabase
       .from("players")
       .select("*")
-      .eq("room_id", targetRoomId)
+      .eq("room_id", roomId)
       .order("joined_at", { ascending: true });
 
     setPlayers(playersData || []);
@@ -238,7 +196,7 @@ export const Room = () => {
   }
 
   if (!room || !currentPlayer) {
-    return null; // Will redirect in useEffect
+    return null;
   }
 
   const gamePhase = room.game_state?.phase || "lobby";
