@@ -382,7 +382,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-50 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]">
       {!isOpen ? (
         <Button
           onClick={() => setIsOpen(true)}
@@ -392,8 +392,8 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
           <Sparkles className="h-6 w-6" />
         </Button>
       ) : (
-        <Card className="w-80 h-96 flex flex-col shadow-2xl border-primary/20 animate-scale-in">
-          <CardHeader className="flex-row items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-secondary/10">
+        <Card className="w-80 sm:w-96 h-[32rem] sm:h-[36rem] flex flex-col shadow-2xl border-primary/20 animate-scale-in">
+          <CardHeader className="flex-row items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-secondary/10 border-b">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               <h3 className="font-semibold text-sm">AI Game Assistant</h3>
@@ -402,21 +402,23 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
               onClick={() => setIsOpen(false)}
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 hover:bg-background/50"
             >
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
           
-          <CardContent className="flex-1 flex flex-col p-0">
+          <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth">
               {messages.length === 0 && (
-                <div className="text-center text-muted-foreground text-sm py-4">
-                  <Sparkles className="h-8 w-8 mx-auto mb-2 text-primary/50" />
-                  <p>Hi! I'm your AI game assistant.</p>
-                  <p className="mt-1">Tell me about your group to get custom questions!</p>
-                  <p className="mt-2 text-xs italic">Try: "We are nerdy" or "We love sci-fi"</p>
+                <div className="text-center text-muted-foreground text-sm py-6">
+                  <Sparkles className="h-8 w-8 mx-auto mb-3 text-primary/50" />
+                  <p className="font-medium">Hi! I'm your AI game assistant.</p>
+                  <p className="mt-2">Tell me about your group to get custom questions!</p>
+                  <p className="mt-3 text-xs italic bg-muted/30 rounded-lg p-2">
+                    Try: "We are nerdy" or "We love sci-fi"
+                  </p>
                 </div>
               )}
               
@@ -426,21 +428,23 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] p-2 rounded-lg text-sm ${
+                    className={`max-w-[85%] p-3 rounded-lg text-sm break-words ${
                       message.isUser
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
+                        ? 'bg-primary text-primary-foreground rounded-br-sm'
+                        : 'bg-muted text-foreground rounded-bl-sm'
                     }`}
                   >
-                    {message.text}
+                    <div className="whitespace-pre-wrap leading-relaxed">
+                      {message.text}
+                    </div>
                   </div>
                 </div>
               ))}
               
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-muted p-2 rounded-lg flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="bg-muted p-3 rounded-lg rounded-bl-sm flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     <span className="text-sm text-muted-foreground">Thinking...</span>
                   </div>
                 </div>
@@ -452,12 +456,12 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
             {/* Quick Actions */}
             {customization && (
               <div className="p-3 border-t bg-muted/20">
-                <div className="flex items-center gap-1 mb-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {customization}
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="secondary" className="text-xs font-medium">
+                    Theme: {customization}
                   </Badge>
                 </div>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-2">
                   {quickActions.map((action) => (
                     <Button
                       key={action.label}
@@ -465,7 +469,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
                       disabled={isLoading}
                       variant="outline"
                       size="sm"
-                      className="text-xs h-7"
+                      className="text-xs h-8 hover:bg-primary/10"
                     >
                       {action.label}
                     </Button>
@@ -475,7 +479,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
             )}
 
             {/* Input */}
-            <div className="p-3 border-t">
+            <div className="p-3 border-t bg-background">
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
@@ -483,14 +487,14 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Tell me about your group..."
-                  className="flex-1 text-sm"
+                  className="flex-1 text-sm focus:ring-primary/50"
                   disabled={isLoading}
                 />
                 <Button
                   onClick={sendMessage}
                   disabled={!inputMessage.trim() || isLoading}
                   size="icon"
-                  className="h-9 w-9"
+                  className="h-9 w-9 shrink-0"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
