@@ -41,89 +41,34 @@ interface ParanoiaRound {
 }
 
 export const ParanoiaHostScreen = ({ room, players }: ParanoiaHostScreenProps) => {
-  const [currentQuestion, setCurrentQuestion] = useState<ParanoiaQuestion | null>(null);
-  const [currentRound, setCurrentRound] = useState<ParanoiaRound | null>(null);
+  const [currentQuestions, setCurrentQuestions] = useState<{[key: string]: ParanoiaQuestion}>({});
+  const [playerAnswers, setPlayerAnswers] = useState<{[key: string]: string}>({});
   const [roundNumber, setRoundNumber] = useState(1);
   
   const gameState = room.game_state || {};
   const phase = gameState.phase || "waiting";
 
   useEffect(() => {
-    // Load current round and question
-    if (gameState.currentRoundId) {
-      const loadRoundData = async () => {
-        try {
-          // Load round
-          const { data: roundData, error: roundError } = await supabase
-            .from("paranoia_rounds")
-            .select("*")
-            .eq("id", gameState.currentRoundId)
-            .single();
-
-          if (roundError) {
-            console.error("Error loading round:", roundError);
-          } else {
-            setCurrentRound(roundData);
-            setRoundNumber(roundData.round_number);
-
-            // Load question for this round
-            const { data: questionData, error: questionError } = await supabase
-              .from("paranoia_questions")
-              .select("*")
-              .eq("id", roundData.question_id)
-              .single();
-
-            if (questionError) {
-              console.error("Error loading question:", questionError);
-            } else {
-              setCurrentQuestion(questionData);
-            }
-          }
-        } catch (error) {
-          console.error("Error loading round data:", error);
-        }
-      };
-
-      loadRoundData();
+    // Extract data from game state
+    if (gameState.currentQuestions) {
+      setCurrentQuestions(gameState.currentQuestions);
     }
-
-    // Set round number from game state
+    
+    if (gameState.playerAnswers) {
+      setPlayerAnswers(gameState.playerAnswers);
+    }
+    
     if (gameState.roundNumber) {
       setRoundNumber(gameState.roundNumber);
     }
-
-    // Subscribe to round changes
-    const channel = supabase
-      .channel(`host-paranoia-${room.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'paranoia_rounds',
-          filter: `room_id=eq.${room.id}`
-        },
-        (payload) => {
-          console.log('Round update:', payload);
-          // Reload round data when changes occur
-          if (payload.eventType === 'UPDATE' && payload.new.id === gameState.currentRoundId) {
-            setCurrentRound(payload.new as ParanoiaRound);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [room.id, gameState.currentRoundId, gameState.roundNumber]);
+  }, [gameState]);
 
   const getPlayerName = (playerId: string) => {
     const player = players.find(p => p.player_id === playerId);
     return player ? player.player_name : "Unknown Player";
   };
 
-  if (phase === "waiting" || !currentQuestion || !currentRound) {
+  if (phase === "waiting" || Object.keys(currentQuestions).length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 p-8">
         <div className="text-center">
@@ -175,26 +120,22 @@ export const ParanoiaHostScreen = ({ room, players }: ParanoiaHostScreenProps) =
                     </span>
                   </div>
                   <p className="text-xl text-muted-foreground">
-                    {getPlayerName(currentRound.asker_player_id)} is whispering a question to{" "}
-                    <span className="font-bold text-foreground">
-                      {getPlayerName(currentRound.chosen_player_id)}
-                    </span>
+                    Players are answering their secret questions...
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2">Asking</div>
-                    <Badge variant="secondary" className="text-lg px-4 py-2">
-                      {getPlayerName(currentRound.asker_player_id)}
-                    </Badge>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2">Answering</div>
-                    <Badge variant="default" className="text-lg px-4 py-2">
-                      {getPlayerName(currentRound.chosen_player_id)}
-                    </Badge>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {players.map((player) => {
+                    const hasAnswered = playerAnswers[player.player_id];
+                    return (
+                      <div key={player.id} className="text-center">
+                        <div className="text-sm text-muted-foreground mb-2">{player.player_name}</div>
+                        <Badge variant={hasAnswered ? "default" : "outline"} className="text-lg px-4 py-2">
+                          {hasAnswered ? "✓ Answered" : "Thinking..."}
+                        </Badge>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="flex items-center justify-center space-x-8 text-lg text-muted-foreground">
@@ -224,9 +165,9 @@ export const ParanoiaHostScreen = ({ room, players }: ParanoiaHostScreenProps) =
     );
   }
 
-  if (phase === "revealing" || phase === "results" || phase === "showing_results") {
-    // Show spinning wheel animation during reveal phase
-    if (phase === "revealing") {
+  if (phase === "spinning" || phase === "revealing" || phase === "results" || phase === "showing_results") {
+    // Show spinning wheel animation during spinning phase
+    if (phase === "spinning") {
       return (
         <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 p-8">
           <div className="text-center mb-8">
@@ -257,22 +198,12 @@ export const ParanoiaHostScreen = ({ room, players }: ParanoiaHostScreenProps) =
                 </div>
                 
                 <p className="text-2xl text-muted-foreground mb-4">
-                  Will the question be revealed?
+                  Will the questions be revealed?
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                  <div className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2">Asked by</div>
-                    <Badge variant="secondary" className="text-lg px-4 py-2">
-                      {getPlayerName(currentRound.asker_player_id)}
-                    </Badge>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2">Answered by</div>
-                    <Badge variant="default" className="text-lg px-4 py-2">
-                      {getPlayerName(currentRound.chosen_player_id)}
-                    </Badge>
-                  </div>
+                <div className="text-lg text-muted-foreground">
+                  <p>Players have answered their secret questions...</p>
+                  <p>Now spinning to see which ones get revealed!</p>
                 </div>
               </CardContent>
             </Card>
@@ -298,51 +229,50 @@ export const ParanoiaHostScreen = ({ room, players }: ParanoiaHostScreenProps) =
           <Card className="bg-card/90 backdrop-blur border-2 shadow-2xl mb-8">
             <CardContent className="p-8 text-center">
               <div className="flex items-center justify-center space-x-4 mb-6">
-                {currentRound.is_revealed ? (
+                {gameState.revealedPlayer ? (
                   <Eye className="h-8 w-8 text-green-600" />
                 ) : (
                   <EyeOff className="h-8 w-8 text-muted-foreground" />
                 )}
                 <h2 className="text-3xl font-bold">
-                  {currentRound.is_revealed ? "Question Revealed!" : "Question Hidden"}
+                  {gameState.revealedPlayer ? "Question Revealed!" : "Results"}
                 </h2>
               </div>
               
               <div className="space-y-6">
-                {currentRound.is_revealed ? (
+                {gameState.revealedPlayer && currentQuestions[gameState.revealedPlayer] ? (
                   <div className="p-6 bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-lg border-2 border-green-400">
-                    <div className="text-sm text-muted-foreground mb-2">The Secret Question Was:</div>
+                    <div className="text-sm text-muted-foreground mb-2">
+                      {getPlayerName(gameState.revealedPlayer)}'s Question Was Revealed:
+                    </div>
                     <p className="text-2xl font-bold text-foreground mb-4">
-                      {currentQuestion.question}
+                      {currentQuestions[gameState.revealedPlayer].question}
                     </p>
-                    {currentQuestion.spiciness_level && (
+                    {currentQuestions[gameState.revealedPlayer].spiciness_level && (
                       <Badge variant="outline" className="text-orange-600 border-orange-300">
-                        Spiciness Level: {currentQuestion.spiciness_level}/5
+                        Spiciness Level: {currentQuestions[gameState.revealedPlayer].spiciness_level}/5
                       </Badge>
                     )}
                   </div>
                 ) : (
                   <div className="p-6 bg-gradient-to-r from-gray-500/20 to-gray-600/20 rounded-lg border-2 border-gray-400">
-                    <div className="text-sm text-muted-foreground mb-2">The Question Remains:</div>
+                    <div className="text-sm text-muted-foreground mb-2">All Questions Remain:</div>
                     <p className="text-2xl font-bold text-muted-foreground">
                       🤐 SECRET 🤐
                     </p>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2">Asked by</div>
-                    <Badge variant="secondary" className="text-lg px-4 py-2">
-                      {getPlayerName(currentRound.asker_player_id)}
-                    </Badge>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2">Answered by</div>
-                    <Badge variant="default" className="text-lg px-4 py-2">
-                      {getPlayerName(currentRound.chosen_player_id)}
-                    </Badge>
-                  </div>
+                {/* Show all player answers */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(playerAnswers).map(([playerId, answeredPlayerId]) => (
+                    <div key={playerId} className="text-center p-4 bg-muted/50 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-2">{getPlayerName(playerId)} chose:</div>
+                      <Badge variant="default" className="text-lg px-4 py-2">
+                        {getPlayerName(answeredPlayerId)}
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
