@@ -68,15 +68,35 @@ export const Room = () => {
 
   const loadRoomData = async () => {
     try {
-      // Load room data
-      const { data: roomData, error: roomError } = await supabase
-        .from("rooms")
-        .select("*")
-        .eq("room_code", roomCode)
-        .eq("is_active", true)
-        .single();
+      // Load room data with retry logic for timing issues
+      let roomData = null;
+      let attempts = 0;
+      const maxAttempts = 3;
+      
+      while (attempts < maxAttempts && !roomData) {
+        const { data, error } = await supabase
+          .from("rooms")
+          .select("*")
+          .eq("room_code", roomCode)
+          .eq("is_active", true)
+          .maybeSingle();
 
-      if (roomError || !roomData) {
+        if (data) {
+          roomData = data;
+          break;
+        }
+        
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
+      if (!roomData) {
         toast({
           title: "Room Not Found",
           description: "This room doesn't exist or has been closed.",
