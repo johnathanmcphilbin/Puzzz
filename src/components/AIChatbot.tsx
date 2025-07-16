@@ -17,15 +17,17 @@ interface Message {
 interface AIChatbotProps {
   roomCode?: string;
   currentGame?: string;
+  currentPlayer?: { id: string; player_name: string; player_id: string; is_host: boolean; } | null;
   onQuestionsGenerated?: (questions: any[], gameType: string) => void;
 }
 
-const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestionsGenerated }) => {
+const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPlayer, onQuestionsGenerated }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [customization, setCustomization] = useState('');
+  const [hasGeneratedQuestions, setHasGeneratedQuestions] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,10 +41,11 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
   }, [messages]);
 
   useEffect(() => {
-    // Load existing customization for this room
-    const loadCustomization = async () => {
+    // Load existing customization and check if questions already generated for this room
+    const loadRoomState = async () => {
       if (roomCode) {
-        const { data } = await supabase
+        // Check for existing customization
+        const { data: customizationData } = await supabase
           .from('ai_chat_customizations')
           .select('customization_text')
           .eq('room_id', roomCode)
@@ -50,13 +53,30 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
           .limit(1)
           .maybeSingle();
         
-        if (data?.customization_text) {
-          setCustomization(data.customization_text);
+        if (customizationData?.customization_text) {
+          setCustomization(customizationData.customization_text);
+        }
+
+        // Check if AI-generated questions already exist for this room
+        const [wyrCheck, formsCheck, paranoiaCheck] = await Promise.all([
+          supabase.from('would_you_rather_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1),
+          supabase.from('forms_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1),
+          supabase.from('paranoia_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1)
+        ]);
+
+        const hasExistingQuestions = (wyrCheck.data && wyrCheck.data.length > 0) ||
+                                   (formsCheck.data && formsCheck.data.length > 0) ||
+                                   (paranoiaCheck.data && paranoiaCheck.data.length > 0);
+        
+        setHasGeneratedQuestions(hasExistingQuestions);
+        
+        if (hasExistingQuestions && customizationData?.customization_text) {
+          addMessage(`This room already has custom questions generated for theme: "${customizationData.customization_text}". Only one set of questions per room is allowed.`);
         }
       }
     };
     
-    loadCustomization();
+    loadRoomState();
   }, [roomCode]);
 
   useEffect(() => {
@@ -77,6 +97,16 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
+
+    // Check if user is host for chat functionality
+    if (!currentPlayer?.is_host) {
+      toast({
+        title: "Host Only Feature",
+        description: "Only the room host can chat with the AI assistant.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const userMessage = inputMessage.trim();
     setInputMessage('');
@@ -271,6 +301,26 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
   };
 
   const generateAllCustomQuestions = async () => {
+    // Check if user is host
+    if (!currentPlayer?.is_host) {
+      toast({
+        title: "Host Only Feature",
+        description: "Only the room host can generate custom questions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if questions already generated
+    if (hasGeneratedQuestions) {
+      toast({
+        title: "Questions Already Generated",
+        description: "This room already has custom questions. Only one set per room is allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!customization.trim()) {
       toast({
         title: "Customization Needed",
@@ -362,6 +412,9 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
       // Save customization for future reference
       await saveCustomization(customization);
 
+      // Mark that questions have been generated for this room
+      setHasGeneratedQuestions(true);
+
       const totalQuestions = allQuestions.would_you_rather.length + 
                            allQuestions.forms.length + 
                            allQuestions.paranoia.length;
@@ -397,8 +450,8 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
     }
   };
 
-  // Don't render if no room code is available yet
-  if (!roomCode) {
+  // Don't render if no room code is available yet or if not host
+  if (!roomCode || !currentPlayer?.is_host) {
     return null;
   }
 
@@ -475,7 +528,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
             </div>
 
             {/* Quick Actions */}
-            {customization && (
+            {customization && !hasGeneratedQuestions && (
               <div className="p-3 border-t bg-muted/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="secondary" className="text-xs font-medium">
@@ -499,6 +552,17 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
               </div>
             )}
 
+            {/* Show message if questions already generated */}
+            {hasGeneratedQuestions && (
+              <div className="p-3 border-t bg-muted/20">
+                <div className="text-center text-xs text-muted-foreground">
+                  <Badge variant="outline" className="text-xs">
+                    ✅ Custom questions already generated for this room
+                  </Badge>
+                </div>
+              </div>
+            )}
+
             {/* Input */}
             <div className="p-3 border-t bg-background">
               <div className="flex gap-2">
@@ -507,13 +571,13 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Tell me about your group..."
+                  placeholder={hasGeneratedQuestions ? "Questions already generated for this room" : "Tell me about your group..."}
                   className="flex-1 text-sm focus:ring-primary/50"
-                  disabled={isLoading}
+                  disabled={isLoading || hasGeneratedQuestions}
                 />
                 <Button
                   onClick={sendMessage}
-                  disabled={!inputMessage.trim() || isLoading}
+                  disabled={!inputMessage.trim() || isLoading || hasGeneratedQuestions}
                   size="icon"
                   className="h-9 w-9 shrink-0"
                 >

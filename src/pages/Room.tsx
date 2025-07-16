@@ -238,6 +238,7 @@ export const Room = () => {
       <AIChatbot 
         roomCode={roomCode} 
         currentGame={currentGame}
+        currentPlayer={currentPlayer}
       />
     </div>
   );
