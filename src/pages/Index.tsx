@@ -53,7 +53,7 @@ const Index = () => {
           <Card className="mx-auto max-w-2xl mb-6 bg-card border-2 shadow-lg">
             <CardHeader className="pb-4">
               <CardTitle className="text-4xl md:text-6xl font-bold text-foreground tracking-tight">
-                Puzzz
+                puzzzz
               </CardTitle>
               <CardDescription className="text-base md:text-xl text-muted-foreground px-4">
                 The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
