@@ -54,15 +54,15 @@ serve(async (req) => {
     console.log('Starting room cleanup...');
 
     // Find rooms that are either:
-    // 1. Inactive
-    // 2. Have no players
-    // 3. Have players who joined more than 30 minutes ago and room hasn't been updated recently
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    // 1. Have no players AND were created more than 5 minutes ago (grace period)
+    // 2. Have players who joined more than 1 hour ago and room hasn't been updated recently
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
     // Get all active rooms
     const { data: rooms, error: roomsError } = await supabase
       .from('rooms')
-      .select('id, updated_at, is_active')
+      .select('id, created_at, updated_at, is_active')
       .eq('is_active', true);
 
     if (roomsError) {
@@ -86,19 +86,25 @@ serve(async (req) => {
         continue;
       }
 
-      // If no players, mark for deletion
+      const roomCreatedAt = new Date(room.created_at);
+      const roomUpdatedAt = new Date(room.updated_at);
+
+      // If no players, only delete if room was created more than 5 minutes ago (grace period)
       if (!players || players.length === 0) {
-        console.log(`Room ${room.id} has no players, marking for deletion`);
-        roomsToDelete.push(room.id);
+        if (roomCreatedAt < new Date(fiveMinutesAgo)) {
+          console.log(`Room ${room.id} has no players and is older than 5 minutes, marking for deletion`);
+          roomsToDelete.push(room.id);
+        } else {
+          console.log(`Room ${room.id} has no players but is still within grace period, keeping it`);
+        }
         continue;
       }
 
-      // Check if room is stale (no activity for 30+ minutes)
-      const roomUpdatedAt = new Date(room.updated_at);
+      // Check if room is stale (no activity for 1+ hours)
       const oldestPlayerJoinedAt = new Date(Math.min(...players.map(p => new Date(p.joined_at).getTime())));
       
-      if (roomUpdatedAt < new Date(thirtyMinutesAgo) && oldestPlayerJoinedAt < new Date(thirtyMinutesAgo)) {
-        console.log(`Room ${room.id} is stale (no activity for 30+ minutes), marking for deletion`);
+      if (roomUpdatedAt < new Date(oneHourAgo) && oldestPlayerJoinedAt < new Date(oneHourAgo)) {
+        console.log(`Room ${room.id} is stale (no activity for 1+ hours), marking for deletion`);
         roomsToDelete.push(room.id);
       }
     }
