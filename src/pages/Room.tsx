@@ -130,14 +130,20 @@ export const Room = () => {
         if (error) throw error;
 
         playersData = data || [];
+        console.log(`Attempt ${attempts + 1}: Found ${playersData.length} players in room`, playersData);
+        console.log(`Looking for player_id: ${playerId}`);
+        
         const player = playersData.find(p => p.player_id === playerId);
         
         if (player) {
           currentPlayerFound = true;
           setCurrentPlayer(player);
+          console.log("Player found:", player);
         } else {
+          console.log("Player not found in players list");
           attempts++;
           if (attempts < maxAttempts) {
+            console.log(`Retrying in 500ms... (attempt ${attempts + 1}/${maxAttempts})`);
             await new Promise(resolve => setTimeout(resolve, 500));
           }
         }
