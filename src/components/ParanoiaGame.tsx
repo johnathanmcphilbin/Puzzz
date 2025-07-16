@@ -117,9 +117,18 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         throw new Error("No questions available");
       }
 
+      // Get used question IDs from game state to avoid repeats
+      const usedQuestionIds = gameState.usedQuestionIds || [];
+      
+      // Filter out already used questions
+      const availableQuestions = questionsToUse.filter(q => !usedQuestionIds.includes(q.id));
+      
+      // If no unused questions left, reset and use all questions again
+      const finalQuestions = availableQuestions.length > 0 ? availableQuestions : questionsToUse;
+      
       // Get a random question from the available set
-      const randomIndex = Math.floor(Math.random() * questionsToUse.length);
-      const randomQuestion = questionsToUse[randomIndex];
+      const randomIndex = Math.floor(Math.random() * finalQuestions.length);
+      const randomQuestion = finalQuestions[randomIndex];
       
       setCurrentQuestion(randomQuestion);
     } catch (error) {
@@ -142,7 +151,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         maxRounds: 5,
         playerAnswers: {},
         currentQuestions: {},
-        revealedPlayer: null
+        revealedPlayer: null,
+        usedQuestionIds: [] // Reset used questions when starting a new game
       };
 
       await supabase
@@ -189,10 +199,17 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         [currentPlayer.player_id]: currentQuestion
       };
 
+      // Track used questions to prevent repeats
+      const usedQuestionIds = gameState.usedQuestionIds || [];
+      const newUsedQuestionIds = currentQuestion && !usedQuestionIds.includes(currentQuestion.id) 
+        ? [...usedQuestionIds, currentQuestion.id] 
+        : usedQuestionIds;
+
       const newGameState = {
         ...gameState,
         playerAnswers: newPlayerAnswers,
-        currentQuestions: newCurrentQuestions
+        currentQuestions: newCurrentQuestions,
+        usedQuestionIds: newUsedQuestionIds
       };
 
       // Check if all players have answered
@@ -291,7 +308,9 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         roundNumber: isGameEnded ? roundNumber : roundNumber + 1,
         playerAnswers: {},
         currentQuestions: {},
-        revealedPlayer: null
+        revealedPlayer: null,
+        // Keep usedQuestionIds to prevent repeats across rounds
+        usedQuestionIds: gameState.usedQuestionIds || []
       };
 
       await supabase
