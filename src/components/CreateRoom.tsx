@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
@@ -16,6 +17,7 @@ interface CreateRoomProps {
 export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProps) => {
   const [hostName, setHostName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [hostOnScreen, setHostOnScreen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackEvent } = useAnalyticsContext();
@@ -59,7 +61,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
           name: `${trimmedName}'s Room`,
           host_id: hostId,
           current_game: selectedGame,
-          game_state: { phase: "lobby", currentQuestion: null, votes: {} },
+          game_state: { phase: "lobby", currentQuestion: null, votes: {}, hostOnScreen },
           is_active: true
         })
         .select()
@@ -151,6 +153,17 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
               }
             }}
           />
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="hostOnScreen" 
+            checked={hostOnScreen}
+            onCheckedChange={(checked) => setHostOnScreen(checked === true)}
+          />
+          <Label htmlFor="hostOnScreen" className="text-base font-medium cursor-pointer">
+            Host on screen
+          </Label>
         </div>
 
         <Button 
