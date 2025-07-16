@@ -8,6 +8,7 @@ import { Room } from "./pages/Room";
 import { DirectJoin } from "./pages/DirectJoin";
 import NotFound from "./pages/NotFound";
 import { AnalyticsProvider } from "./providers/AnalyticsProvider";
+import AIChatbot from "./components/AIChatbot";
 
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <AIChatbot />
         </AnalyticsProvider>
       </BrowserRouter>
     </TooltipProvider>
