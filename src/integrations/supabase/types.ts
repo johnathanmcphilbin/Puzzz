@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_customizations: {
+        Row: {
+          created_at: string
+          customization_text: string
+          id: string
+          room_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customization_text: string
+          id?: string
+          room_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customization_text?: string
+          id?: string
+          room_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_customizations_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["room_code"]
+          },
+        ]
+      }
       forms_questions: {
         Row: {
           category: string | null
