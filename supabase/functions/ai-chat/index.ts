@@ -19,9 +19,9 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const { message, action, customization, gameType, players, roomCode } = await req.json();
+    const { message, action, customization, crazynessLevel, gameType, players, roomCode } = await req.json();
 
-    console.log('AI Chat request:', { message, action, customization, gameType, players, roomCode });
+    console.log('AI Chat request:', { message, action, customization, crazynessLevel, gameType, players, roomCode });
 
     let systemPrompt = '';
     let userPrompt = message;
@@ -29,7 +29,22 @@ serve(async (req) => {
     if (action === 'chat') {
       systemPrompt = `You are a helpful AI assistant for a party games app. You help users customize their gaming experience and provide fun suggestions. Keep responses conversational, friendly, and brief. If users mention preferences like "we are nerdy" or "we love sci-fi", remember these for future interactions.`;
     } else if (action === 'generate_all_questions') {
+      const crazynessDescription = crazynessLevel <= 20 ? "very mild and safe" :
+                                  crazynessLevel <= 40 ? "mild with some fun edge" :
+                                  crazynessLevel <= 60 ? "moderately spicy and entertaining" :
+                                  crazynessLevel <= 80 ? "quite dramatic and bold" :
+                                  "extremely wild, dramatic, and outrageous";
+      
       systemPrompt = `Generate questions for ALL three party games based on the customization: "${customization}". 
+      
+      CRAZINESS LEVEL: ${crazynessLevel}% (${crazynessDescription})
+      
+      Adjust the intensity and dramatization of questions based on the craziness level:
+      - 0-20%: Keep questions very mild, safe, and family-friendly
+      - 21-40%: Add some fun elements but stay mostly tame
+      - 41-60%: Make questions more entertaining with moderate spice
+      - 61-80%: Create dramatic, bold questions that push boundaries
+      - 81-100%: Go wild with outrageous, extreme, and highly dramatic scenarios
       
       You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
       {
@@ -59,8 +74,8 @@ serve(async (req) => {
         ]
       }
       
-      Make sure all questions match the theme/preferences mentioned in the customization. Return ONLY the JSON object, nothing else.`;
-      userPrompt = `Generate questions for all three party games for a group that is: ${customization}`;
+      Make sure all questions match both the theme/preferences mentioned in the customization AND the specified craziness level. Return ONLY the JSON object, nothing else.`;
+      userPrompt = `Generate questions for all three party games for a group that is: ${customization}. Craziness level: ${crazynessLevel}%`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

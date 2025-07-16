@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,6 +32,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
   const [isLoading, setIsLoading] = useState(false);
   const [customization, setCustomization] = useState('');
   const [hasGeneratedQuestions, setHasGeneratedQuestions] = useState(false);
+  const [crazynessLevel, setCrazynessLevel] = useState([50]); // 0-100 scale
   const { toast } = useToast();
   const { getAuthHeaders } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -320,6 +323,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           message: '',
           action: 'generate_all_questions',
           customization: sanitizeCustomization(customizationText.trim()),
+          crazynessLevel: crazynessLevel[0],
           roomCode
         }
       });
@@ -561,6 +565,27 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                   <Badge variant="outline" className="text-xs">
                     ✅ Custom questions already generated for this room
                   </Badge>
+                </div>
+              </div>
+            )}
+
+            {/* Craziness Meter */}
+            {!hasGeneratedQuestions && (
+              <div className="p-3 border-t bg-muted/30 space-y-3">
+                <Label className="text-sm font-medium">
+                  Craziness Level: {crazynessLevel[0]}%
+                </Label>
+                <Slider
+                  value={crazynessLevel}
+                  onValueChange={setCrazynessLevel}
+                  max={100}
+                  min={0}
+                  step={10}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Mild & Tame</span>
+                  <span>Wild & Dramatic</span>
                 </div>
               </div>
             )}
