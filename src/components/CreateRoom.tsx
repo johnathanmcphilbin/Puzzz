@@ -34,7 +34,7 @@ export const CreateRoom = () => {
     if (!validatePlayerName(sanitizedName)) {
       toast({
         title: "Invalid Name",
-        description: "Please enter a valid name (1-50 characters, no special characters).",
+        description: "Please enter a valid name (1-50 characters, no special characters or inappropriate content).",
         variant: "destructive",
       });
       return;

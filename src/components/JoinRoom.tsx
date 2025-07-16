@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, UserPlus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
+import { validatePlayerName, sanitizeInput } from "@/utils/inputValidation";
 
 export const JoinRoom = () => {
   const [roomCode, setRoomCode] = useState("");
@@ -31,6 +32,17 @@ export const JoinRoom = () => {
       toast({
         title: "Missing Information",
         description: "Please fill in both room code and your name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const sanitizedPlayerName = sanitizeInput(playerName);
+    
+    if (!validatePlayerName(sanitizedPlayerName)) {
+      toast({
+        title: "Invalid Name",
+        description: "Please enter a valid name (1-50 characters, no special characters or inappropriate content).",
         variant: "destructive",
       });
       return;
@@ -60,7 +72,7 @@ export const JoinRoom = () => {
         .from("players")
         .select("player_name")
         .eq("room_id", roomData.id)
-        .eq("player_name", playerName.trim())
+        .eq("player_name", sanitizedPlayerName)
         .single();
 
       if (existingPlayer) {
@@ -79,7 +91,7 @@ export const JoinRoom = () => {
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: playerName.trim(),
+          player_name: sanitizedPlayerName,
           player_id: playerId,
           is_host: false
         });
@@ -89,12 +101,12 @@ export const JoinRoom = () => {
       // Track player join
       await trackEvent("player_joined", { 
         roomCode: roomCode.toUpperCase(), 
-        playerName: playerName.trim() 
+        playerName: sanitizedPlayerName 
       }, roomCode.toUpperCase());
 
       // Store player info in localStorage
       localStorage.setItem("puzzz_player_id", playerId);
-      localStorage.setItem("puzzz_player_name", playerName.trim());
+      localStorage.setItem("puzzz_player_name", sanitizedPlayerName);
 
       toast({
         title: "Joined Room!",
