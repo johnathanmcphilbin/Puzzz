@@ -96,22 +96,26 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
 
     setIsLoading(true);
     try {
-      // Get questions prioritizing AI-generated ones for this room
-      const { data: aiQuestionsData } = await supabase
-        .from("forms_questions")
-        .select("*")
-        .eq("category", `AI-Generated (${room.room_code})`);
-
+      // Get questions prioritizing AI-generated ones from room's game_state
+      const gameStateData = room.game_state as Record<string, any>;
+      const aiQuestions = gameStateData?.aiQuestions?.forms;
+      
       let questionsToUse = [];
       
-      if (aiQuestionsData && aiQuestionsData.length >= 8) {
-        // Use AI-generated questions if we have enough
-        questionsToUse = aiQuestionsData;
+      if (aiQuestions && aiQuestions.length >= 8) {
+        // Use AI-generated questions from room's game_state
+        questionsToUse = aiQuestions.map((q: any, index: number) => ({
+          id: `ai-forms-${index}`,
+          question: q.question,
+          category: `AI-Generated (${room.room_code})`,
+          is_controversial: false
+        }));
       } else {
-        // Fall back to general questions, mixed with AI if available
+        // Fall back to general questions from database
         const { data: generalQuestionsData } = await supabase
           .from("forms_questions")
-          .select("*");
+          .select("*")
+          .eq("category", "general");
         
         questionsToUse = generalQuestionsData || [];
       }

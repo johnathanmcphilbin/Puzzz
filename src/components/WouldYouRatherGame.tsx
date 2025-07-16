@@ -109,23 +109,26 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         gameHistory.push(currentQuestionResult);
       }
 
-      // Get questions prioritizing AI-generated ones for this room
-      const { data: aiQuestionsData } = await supabase
-        .from("would_you_rather_questions")
-        .select("*")
-        .eq("category", `AI-Generated (${room.room_code})`);
-
+      // Get questions prioritizing AI-generated ones from room's game_state
+      const gameStateData = room.game_state as Record<string, any>;
+      const aiQuestions = gameStateData?.aiQuestions?.would_you_rather;
+      
       let questionsToUse = [];
       
-      if (aiQuestionsData && aiQuestionsData.length > 0) {
-        // Use AI-generated questions if available
-        questionsToUse = aiQuestionsData;
+      if (aiQuestions && aiQuestions.length > 0) {
+        // Use AI-generated questions from room's game_state
+        questionsToUse = aiQuestions.map((q: any, index: number) => ({
+          id: `ai-wyr-${index}`,
+          option_a: q.option_a,
+          option_b: q.option_b,
+          category: `AI-Generated (${room.room_code})`
+        }));
       } else {
-        // Fall back to general questions
+        // Fall back to general questions from database
         const { data: generalQuestionsData } = await supabase
           .from("would_you_rather_questions")
           .select("*")
-          .neq("category", `AI-Generated (${room.room_code})`);
+          .eq("category", "general");
         
         questionsToUse = generalQuestionsData || [];
       }
