@@ -60,6 +60,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   useEffect(() => {
     if (room.current_game === "paranoia" && phase === "answering" && !currentQuestion) {
+      // Each player loads their own question
       loadQuestion();
     }
   }, [room.current_game, phase]);
