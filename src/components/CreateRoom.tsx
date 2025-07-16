@@ -73,6 +73,9 @@ export const CreateRoom = () => {
       const hostId = crypto.randomUUID();
       await createSession(hostId, sanitizedName);
 
+      // Small delay to ensure localStorage is set before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Create room
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
