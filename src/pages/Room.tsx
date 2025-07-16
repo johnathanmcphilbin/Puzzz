@@ -114,23 +114,38 @@ export const Room = () => {
       // Store cleanup function for later use
       cleanupRef.current = cleanup;
 
-      // Load players
-      const { data: playersData, error: playersError } = await supabase
-        .from("players")
-        .select("*")
-        .eq("room_id", roomData.id)
-        .order("joined_at", { ascending: true });
+      // Load players with retry logic
+      const playerId = localStorage.getItem("puzzz_player_id");
+      let playersData = null;
+      let currentPlayerFound = false;
+      attempts = 0;
+      
+      while (attempts < maxAttempts && !currentPlayerFound) {
+        const { data, error } = await supabase
+          .from("players")
+          .select("*")
+          .eq("room_id", roomData.id)
+          .order("joined_at", { ascending: true });
 
-      if (playersError) throw playersError;
+        if (error) throw error;
+
+        playersData = data || [];
+        const player = playersData.find(p => p.player_id === playerId);
+        
+        if (player) {
+          currentPlayerFound = true;
+          setCurrentPlayer(player);
+        } else {
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+      }
 
       setPlayers(playersData || []);
 
-      // Find current player
-      const playerId = localStorage.getItem("puzzz_player_id");
-      const player = playersData?.find(p => p.player_id === playerId);
-      setCurrentPlayer(player || null);
-
-      if (!player) {
+      if (!currentPlayerFound) {
         toast({
           title: "Player Not Found",
           description: "You are not a member of this room.",
