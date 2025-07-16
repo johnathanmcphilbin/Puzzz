@@ -19,55 +19,9 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Basic rate limiting check
-    const userAgent = req.headers.get('user-agent') || '';
-    const xForwardedFor = req.headers.get('x-forwarded-for') || '';
-    
-    // Simple rate limiting (could be enhanced with Redis)
-    const rateLimitKey = `${userAgent}-${xForwardedFor}`;
-    
-    const body = await req.text();
-    let requestData;
-    
-    try {
-      requestData = JSON.parse(body);
-    } catch (e) {
-      return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const { message, action, customization, gameType, players, roomCode } = await req.json();
 
-    // Validate required fields
-    const { message, action, customization, gameType, players, roomCode } = requestData;
-    
-    if (!roomCode || typeof roomCode !== 'string') {
-      return new Response(JSON.stringify({ error: 'Room code is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Input validation
-    if (message && typeof message !== 'string') {
-      return new Response(JSON.stringify({ error: 'Invalid message format' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (customization && typeof customization !== 'string') {
-      return new Response(JSON.stringify({ error: 'Invalid customization format' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Sanitize inputs
-    const sanitizedMessage = message ? message.slice(0, 1000) : '';
-    const sanitizedCustomization = customization ? customization.slice(0, 500) : '';
-
-    console.log('AI Chat request:', { message, action, customization, gameType, players });
+    console.log('AI Chat request:', { message, action, customization, gameType, players, roomCode });
 
     let systemPrompt = '';
     let userPrompt = message;
@@ -116,7 +70,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
