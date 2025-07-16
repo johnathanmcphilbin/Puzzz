@@ -124,11 +124,13 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
     }
   };
 
-  const saveCustomQuestions = async (gameType: string, questions: any[]) => {
+  const saveAllCustomQuestions = async (allQuestions: any) => {
     try {
-      // Save questions to appropriate table based on game type
-      if (gameType === 'would-you-rather') {
-        const questionsToInsert = questions.map(q => ({
+      console.log('Saving questions for room:', roomCode, allQuestions);
+      
+      // Save Would You Rather questions
+      if (allQuestions.would_you_rather && allQuestions.would_you_rather.length > 0) {
+        const wyrQuestions = allQuestions.would_you_rather.map((q: any) => ({
           option_a: q.option_a,
           option_b: q.option_b,
           category: `AI-Generated (${roomCode})`
@@ -140,13 +142,17 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
           .delete()
           .eq('category', `AI-Generated (${roomCode})`);
           
-        const { error } = await supabase
+        const { error: wyrError } = await supabase
           .from('would_you_rather_questions')
-          .insert(questionsToInsert);
+          .insert(wyrQuestions);
         
-        if (error) throw error;
-      } else if (gameType === 'forms') {
-        const questionsToInsert = questions.map(q => ({
+        if (wyrError) throw wyrError;
+        console.log('Saved would you rather questions:', wyrQuestions.length);
+      }
+
+      // Save Forms questions
+      if (allQuestions.forms && allQuestions.forms.length > 0) {
+        const formsQuestions = allQuestions.forms.map((q: any) => ({
           question: q.question,
           category: `AI-Generated (${roomCode})`,
           is_controversial: false
@@ -158,13 +164,17 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
           .delete()
           .eq('category', `AI-Generated (${roomCode})`);
           
-        const { error } = await supabase
+        const { error: formsError } = await supabase
           .from('forms_questions')
-          .insert(questionsToInsert);
+          .insert(formsQuestions);
         
-        if (error) throw error;
-      } else if (gameType === 'paranoia') {
-        const questionsToInsert = questions.map(q => ({
+        if (formsError) throw formsError;
+        console.log('Saved forms questions:', formsQuestions.length);
+      }
+
+      // Save Paranoia questions
+      if (allQuestions.paranoia && allQuestions.paranoia.length > 0) {
+        const paranoiaQuestions = allQuestions.paranoia.map((q: any) => ({
           question: q.question,
           category: `AI-Generated (${roomCode})`,
           spiciness_level: 3
@@ -176,18 +186,20 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
           .delete()
           .eq('category', `AI-Generated (${roomCode})`);
           
-        const { error } = await supabase
+        const { error: paranoiaError } = await supabase
           .from('paranoia_questions')
-          .insert(questionsToInsert);
+          .insert(paranoiaQuestions);
         
-        if (error) throw error;
+        if (paranoiaError) throw paranoiaError;
+        console.log('Saved paranoia questions:', paranoiaQuestions.length);
       }
     } catch (error) {
-      console.error('Error saving custom questions:', error);
+      console.error('Error saving all custom questions:', error);
+      throw error;
     }
   };
 
-  const generateCustomQuestions = async (gameType: string) => {
+  const generateAllCustomQuestions = async () => {
     if (!customization) {
       toast({
         title: "Customization Needed",
@@ -198,36 +210,53 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
     }
 
     setIsLoading(true);
-    addMessage(`Generating custom ${gameType.replace('-', ' ')} questions based on: "${customization}"`, true);
+    addMessage(`Generating custom questions for all games based on: "${customization}"`, true);
 
     try {
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message: '',
-          action: 'generate_questions',
+          action: 'generate_all_questions',
           customization,
-          gameType,
           roomCode
         }
       });
 
       if (error) throw error;
 
-      const questions = JSON.parse(data.response);
-      addMessage(`Generated ${questions.length} custom questions! You can use them in your ${gameType.replace('-', ' ')} game.`);
+      console.log('Raw AI response:', data.response);
       
-      // Store the custom questions in the database for this room
-      if (roomCode && questions.length > 0) {
-        await saveCustomQuestions(gameType, questions);
+      // Clean the response by removing markdown code blocks if present
+      let cleanedResponse = data.response.trim();
+      if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      // Parse the JSON response
+      let allQuestions;
+      try {
+        allQuestions = JSON.parse(cleanedResponse);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Cleaned response:', cleanedResponse);
+        throw new Error('Failed to parse AI response');
       }
 
-      if (onQuestionsGenerated) {
-        onQuestionsGenerated(questions, gameType);
+      // Save all question types to database
+      if (roomCode && allQuestions) {
+        await saveAllCustomQuestions(allQuestions);
       }
+
+      const totalQuestions = (allQuestions.would_you_rather?.length || 0) + 
+                           (allQuestions.forms?.length || 0) + 
+                           (allQuestions.paranoia?.length || 0);
+
+      addMessage(`Generated ${totalQuestions} custom questions for all your games! They're now active in your room.`);
 
       toast({
         title: "Questions Generated!",
-        description: `Created ${questions.length} custom questions and activated them for your room.`,
+        description: `Created custom questions for all games and activated them for your room.`,
       });
     } catch (error) {
       console.error('Question generation error:', error);
@@ -243,9 +272,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
   };
 
   const quickActions = [
-    { label: 'Would You Rather', action: () => generateCustomQuestions('would-you-rather') },
-    { label: 'Forms Questions', action: () => generateCustomQuestions('forms') },
-    { label: 'Paranoia Questions', action: () => generateCustomQuestions('paranoia') },
+    { label: 'Generate Custom Questions', action: () => generateAllCustomQuestions() },
   ];
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

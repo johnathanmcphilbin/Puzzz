@@ -28,17 +28,39 @@ serve(async (req) => {
 
     if (action === 'chat') {
       systemPrompt = `You are a helpful AI assistant for a party games app. You help users customize their gaming experience and provide fun suggestions. Keep responses conversational, friendly, and brief. If users mention preferences like "we are nerdy" or "we love sci-fi", remember these for future interactions.`;
-    } else if (action === 'generate_questions') {
-      if (gameType === 'would-you-rather') {
-        systemPrompt = `Generate creative "Would You Rather" questions based on the customization: "${customization}". Return ONLY a JSON array of objects with "option_a" and "option_b" properties. Generate 5 questions that match the theme/preferences mentioned.`;
-        userPrompt = `Generate 5 would you rather questions for a group that is: ${customization}`;
-      } else if (gameType === 'forms') {
-        systemPrompt = `Generate personal questions for the "Forms Game" based on the customization: "${customization}". Return ONLY a JSON array of objects with "question" property. Generate 5 questions that help people learn about each other and match the theme/preferences mentioned.`;
-        userPrompt = `Generate 5 personal questions for a group that is: ${customization}`;
-      } else if (gameType === 'paranoia') {
-        systemPrompt = `Generate "Paranoia" questions based on the customization: "${customization}". These should be questions like "Who is most likely to..." Return ONLY a JSON array of objects with "question" property. Generate 5 questions that match the theme/preferences mentioned.`;
-        userPrompt = `Generate 5 paranoia questions (who is most likely to...) for a group that is: ${customization}`;
+    } else if (action === 'generate_all_questions') {
+      systemPrompt = `Generate questions for ALL three party games based on the customization: "${customization}". 
+      
+      You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
+      {
+        "would_you_rather": [
+          {"option_a": "...", "option_b": "..."},
+          {"option_a": "...", "option_b": "..."},
+          {"option_a": "...", "option_b": "..."},
+          {"option_a": "...", "option_b": "..."},
+          {"option_a": "...", "option_b": "..."}
+        ],
+        "forms": [
+          {"question": "..."},
+          {"question": "..."},
+          {"question": "..."},
+          {"question": "..."},
+          {"question": "..."},
+          {"question": "..."},
+          {"question": "..."},
+          {"question": "..."}
+        ],
+        "paranoia": [
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."}
+        ]
       }
+      
+      Make sure all questions match the theme/preferences mentioned in the customization. Return ONLY the JSON object, nothing else.`;
+      userPrompt = `Generate questions for all three party games for a group that is: ${customization}`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
