@@ -109,12 +109,28 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         gameHistory.push(currentQuestionResult);
       }
 
-      // Get a random question
-      const { data: questionsData } = await supabase
+      // Get questions prioritizing AI-generated ones for this room
+      const { data: aiQuestionsData } = await supabase
         .from("would_you_rather_questions")
-        .select("*");
+        .select("*")
+        .eq("category", `AI-Generated (${room.room_code})`);
 
-      if (!questionsData || questionsData.length === 0) {
+      let questionsToUse = [];
+      
+      if (aiQuestionsData && aiQuestionsData.length > 0) {
+        // Use AI-generated questions if available
+        questionsToUse = aiQuestionsData;
+      } else {
+        // Fall back to general questions
+        const { data: generalQuestionsData } = await supabase
+          .from("would_you_rather_questions")
+          .select("*")
+          .neq("category", `AI-Generated (${room.room_code})`);
+        
+        questionsToUse = generalQuestionsData || [];
+      }
+
+      if (questionsToUse.length === 0) {
         toast({
           title: "No Questions Available",
           description: "No questions found in the database",
@@ -123,7 +139,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         return;
       }
 
-      const randomQuestion = questionsData[Math.floor(Math.random() * questionsData.length)];
+      const randomQuestion = questionsToUse[Math.floor(Math.random() * questionsToUse.length)];
 
       // Update room with new question and history
       const newGameState = {

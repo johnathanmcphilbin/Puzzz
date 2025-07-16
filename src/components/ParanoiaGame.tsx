@@ -91,31 +91,36 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const loadQuestion = async () => {
     try {
-      // First get the count of all questions
-      const { count } = await supabase
+      // First try to get AI-generated questions for this room
+      const { data: aiQuestionsData } = await supabase
         .from("paranoia_questions")
-        .select("*", { count: "exact", head: true });
+        .select("*")
+        .eq("category", `AI-Generated (${room.room_code})`);
+
+      let questionsToUse = [];
       
-      if (!count || count === 0) {
+      if (aiQuestionsData && aiQuestionsData.length > 0) {
+        // Use AI-generated questions if available
+        questionsToUse = aiQuestionsData;
+      } else {
+        // Fall back to general questions
+        const { data: generalQuestionsData } = await supabase
+          .from("paranoia_questions")
+          .select("*")
+          .neq("category", `AI-Generated (${room.room_code})`);
+        
+        questionsToUse = generalQuestionsData || [];
+      }
+      
+      if (questionsToUse.length === 0) {
         throw new Error("No questions available");
       }
 
-      // Get a random offset
-      const randomOffset = Math.floor(Math.random() * count);
+      // Get a random question from the available set
+      const randomIndex = Math.floor(Math.random() * questionsToUse.length);
+      const randomQuestion = questionsToUse[randomIndex];
       
-      // Get the question at that offset
-      const { data, error } = await supabase
-        .from("paranoia_questions")
-        .select("*")
-        .range(randomOffset, randomOffset)
-        .limit(1);
-
-      if (error) throw error;
-      if (data && data.length > 0) {
-        setCurrentQuestion(data[0]);
-      } else {
-        throw new Error("No question found");
-      }
+      setCurrentQuestion(randomQuestion);
     } catch (error) {
       console.error("Error loading question:", error);
       toast({

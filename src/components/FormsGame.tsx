@@ -96,12 +96,27 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
 
     setIsLoading(true);
     try {
-      // Get random 8 questions from the database
-      const { data: questionsData } = await supabase
+      // Get questions prioritizing AI-generated ones for this room
+      const { data: aiQuestionsData } = await supabase
         .from("forms_questions")
-        .select("*");
+        .select("*")
+        .eq("category", `AI-Generated (${room.room_code})`);
 
-      if (!questionsData || questionsData.length === 0) {
+      let questionsToUse = [];
+      
+      if (aiQuestionsData && aiQuestionsData.length >= 8) {
+        // Use AI-generated questions if we have enough
+        questionsToUse = aiQuestionsData;
+      } else {
+        // Fall back to general questions, mixed with AI if available
+        const { data: generalQuestionsData } = await supabase
+          .from("forms_questions")
+          .select("*");
+        
+        questionsToUse = generalQuestionsData || [];
+      }
+
+      if (questionsToUse.length === 0) {
         toast({
           title: "No Questions Available",
           description: "No forms questions found in the database",
@@ -111,7 +126,7 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
       }
 
       // Shuffle and take 8 questions
-      const shuffled = questionsData.sort(() => 0.5 - Math.random());
+      const shuffled = questionsToUse.sort(() => 0.5 - Math.random());
       const selectedQuestions = shuffled.slice(0, 8);
 
       // Update room with questions

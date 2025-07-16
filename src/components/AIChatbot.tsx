@@ -39,6 +39,27 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
   }, [messages]);
 
   useEffect(() => {
+    // Load existing customization for this room
+    const loadCustomization = async () => {
+      if (roomCode) {
+        const { data } = await supabase
+          .from('ai_chat_customizations')
+          .select('customization_text')
+          .eq('room_id', roomCode)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (data?.customization_text) {
+          setCustomization(data.customization_text);
+        }
+      }
+    };
+    
+    loadCustomization();
+  }, [roomCode]);
+
+  useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
@@ -77,13 +98,14 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
 
       // Check if user is setting customization
       if (userMessage.toLowerCase().includes('we are') || userMessage.toLowerCase().includes('we like') || userMessage.toLowerCase().includes('we love')) {
-        setCustomization(userMessage);
+        const newCustomization = userMessage;
+        setCustomization(newCustomization);
         
         // Save to database if in a room
         if (roomCode) {
           await supabase.from('ai_chat_customizations').insert({
             room_id: roomCode,
-            customization_text: userMessage
+            customization_text: newCustomization
           });
         }
       }
@@ -99,6 +121,69 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const saveCustomQuestions = async (gameType: string, questions: any[]) => {
+    try {
+      // Save questions to appropriate table based on game type
+      if (gameType === 'would-you-rather') {
+        const questionsToInsert = questions.map(q => ({
+          option_a: q.option_a,
+          option_b: q.option_b,
+          category: `AI-Generated (${roomCode})`
+        }));
+        
+        // Delete old AI questions for this room first
+        await supabase
+          .from('would_you_rather_questions')
+          .delete()
+          .eq('category', `AI-Generated (${roomCode})`);
+          
+        const { error } = await supabase
+          .from('would_you_rather_questions')
+          .insert(questionsToInsert);
+        
+        if (error) throw error;
+      } else if (gameType === 'forms') {
+        const questionsToInsert = questions.map(q => ({
+          question: q.question,
+          category: `AI-Generated (${roomCode})`,
+          is_controversial: false
+        }));
+        
+        // Delete old AI questions for this room first
+        await supabase
+          .from('forms_questions')
+          .delete()
+          .eq('category', `AI-Generated (${roomCode})`);
+          
+        const { error } = await supabase
+          .from('forms_questions')
+          .insert(questionsToInsert);
+        
+        if (error) throw error;
+      } else if (gameType === 'paranoia') {
+        const questionsToInsert = questions.map(q => ({
+          question: q.question,
+          category: `AI-Generated (${roomCode})`,
+          spiciness_level: 3
+        }));
+        
+        // Delete old AI questions for this room first
+        await supabase
+          .from('paranoia_questions')
+          .delete()
+          .eq('category', `AI-Generated (${roomCode})`);
+          
+        const { error } = await supabase
+          .from('paranoia_questions')
+          .insert(questionsToInsert);
+        
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error('Error saving custom questions:', error);
     }
   };
 
@@ -131,13 +216,18 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
       const questions = JSON.parse(data.response);
       addMessage(`Generated ${questions.length} custom questions! You can use them in your ${gameType.replace('-', ' ')} game.`);
       
+      // Store the custom questions in the database for this room
+      if (roomCode && questions.length > 0) {
+        await saveCustomQuestions(gameType, questions);
+      }
+
       if (onQuestionsGenerated) {
         onQuestionsGenerated(questions, gameType);
       }
 
       toast({
         title: "Questions Generated!",
-        description: `Created ${questions.length} custom questions for your game.`,
+        description: `Created ${questions.length} custom questions and activated them for your room.`,
       });
     } catch (error) {
       console.error('Question generation error:', error);
@@ -170,7 +260,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
       {!isOpen ? (
         <Button
           onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse"
+          className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300"
           size="icon"
         >
           <Sparkles className="h-6 w-6" />

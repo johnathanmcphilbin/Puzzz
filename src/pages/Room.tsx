@@ -6,6 +6,7 @@ import { RoomLobby } from "@/components/RoomLobby";
 import { WouldYouRatherGame } from "@/components/WouldYouRatherGame";
 import { FormsGame } from "@/components/FormsGame";
 import { ParanoiaGame } from "@/components/ParanoiaGame";
+import AIChatbot from "@/components/AIChatbot";
 import { Loader2 } from "lucide-react";
 
 interface Room {
@@ -233,6 +234,11 @@ export const Room = () => {
           onUpdateRoom={setRoom}
         />
       )}
+      
+      <AIChatbot 
+        roomCode={roomCode} 
+        currentGame={currentGame}
+      />
     </div>
   );
 };
