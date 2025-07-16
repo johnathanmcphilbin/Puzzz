@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import { Room } from "./pages/Room";
 import { DirectJoin } from "./pages/DirectJoin";
+import { HostScreen } from "./pages/HostScreen";
 import NotFound from "./pages/NotFound";
 import { AnalyticsProvider } from "./providers/AnalyticsProvider";
 import AIChatbot from "./components/AIChatbot";
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/join" element={<Index />} />
             <Route path="/join/:roomCode" element={<DirectJoin />} />
             <Route path="/room/:roomCode" element={<Room />} />
+            <Route path="/host/:roomCode" element={<HostScreen />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

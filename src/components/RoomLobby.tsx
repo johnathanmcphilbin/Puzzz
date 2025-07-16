@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Play, Users, Crown, LogOut, ThumbsUp, QrCode } from "lucide-react";
+import { Copy, Play, Users, Crown, LogOut, ThumbsUp, QrCode, Monitor } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 
@@ -405,6 +405,31 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           </Card>
         </div>
 
+        {/* Host Screen Link */}
+        {(room.game_state as any)?.hostOnScreen && (
+          <div className="flex justify-center mb-8">
+            <Card className="w-fit border-primary/20 bg-primary/5">
+              <CardContent className="p-4 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Monitor className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold">Host Screen Available</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Display live game progress on a big screen
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`/host/${room.room_code}`, '_blank')}
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  <Monitor className="h-4 w-4 mr-2" />
+                  Open Host Screen
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Players List */}
