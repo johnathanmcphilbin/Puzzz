@@ -128,6 +128,11 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
     try {
       console.log('Saving questions for room:', roomCode, 'Questions data:', allQuestions);
       
+      if (!roomCode) {
+        console.error('No room code provided to saveAllCustomQuestions');
+        throw new Error('Room code is required to save questions');
+      }
+      
       // First get the room ID from room code
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
@@ -260,6 +265,8 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
       } catch (error) {
         console.error('Error saving customization:', error);
       }
+    } else {
+      console.warn('Cannot save customization: no room code provided');
     }
   };
 
@@ -268,6 +275,15 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
       toast({
         title: "Customization Needed",
         description: "Please tell me about your group first (e.g., 'we are nerdy', 'we love sci-fi')",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!roomCode) {
+      toast({
+        title: "Room Error",
+        description: "No room code found. Please refresh and try again.",
         variant: "destructive",
       });
       return;
