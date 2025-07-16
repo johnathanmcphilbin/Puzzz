@@ -160,7 +160,7 @@ export const WouldYouRatherHostScreen = ({ room, players }: WouldYouRatherHostSc
     );
   }
 
-  if (phase === "results") {
+  if (phase === "results" || phase === "showing_results") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-8">
         <div className="text-center mb-8">
