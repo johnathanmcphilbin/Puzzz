@@ -171,7 +171,7 @@ export const FormsHostScreen = ({ room, players }: FormsHostScreenProps) => {
     );
   }
 
-  if (phase === "results") {
+  if (phase === "results" || phase === "showing_results") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-green-50 dark:from-yellow-950 dark:to-green-950 p-8">
         <div className="text-center mb-8">

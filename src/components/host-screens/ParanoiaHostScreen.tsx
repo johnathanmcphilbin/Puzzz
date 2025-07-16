@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Eye, EyeOff, Clock, MessageSquare } from "lucide-react";
+import { Users, Eye, EyeOff, Clock, MessageSquare, Zap } from "lucide-react";
 
 interface Room {
   id: string;
@@ -224,7 +224,63 @@ export const ParanoiaHostScreen = ({ room, players }: ParanoiaHostScreenProps) =
     );
   }
 
-  if (phase === "revealing" || phase === "results") {
+  if (phase === "revealing" || phase === "results" || phase === "showing_results") {
+    // Show spinning wheel animation during reveal phase
+    if (phase === "revealing") {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-6xl font-bold text-primary mb-4">Paranoia</h1>
+            <div className="flex items-center justify-center space-x-4 text-2xl text-muted-foreground">
+              <span>Room: {room.room_code}</span>
+              <span>•</span>
+              <span>Round {roundNumber}</span>
+            </div>
+          </div>
+
+          <div className="max-w-4xl mx-auto text-center">
+            <Card className="bg-card/90 backdrop-blur border-2 shadow-2xl">
+              <CardContent className="p-12">
+                <div className="flex items-center justify-center space-x-4 mb-8">
+                  <Zap className="h-12 w-12 text-yellow-500 animate-pulse" />
+                  <h2 className="text-4xl font-bold">Spinning the Wheel!</h2>
+                </div>
+                
+                {/* Spinning Wheel Animation */}
+                <div className="flex justify-center mb-8">
+                  <div className="relative">
+                    <div className="w-32 h-32 border-8 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-2xl text-muted-foreground mb-4">
+                  Will the question be revealed?
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground mb-2">Asked by</div>
+                    <Badge variant="secondary" className="text-lg px-4 py-2">
+                      {getPlayerName(currentRound.asker_player_id)}
+                    </Badge>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground mb-2">Answered by</div>
+                    <Badge variant="default" className="text-lg px-4 py-2">
+                      {getPlayerName(currentRound.chosen_player_id)}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-purple-50 dark:from-green-950 dark:to-purple-950 p-8">
         {/* Header */}
