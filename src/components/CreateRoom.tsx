@@ -103,6 +103,18 @@ export const CreateRoom = () => {
 
       if (playerError) throw playerError;
 
+      // Verify player was inserted successfully before proceeding
+      const { data: playerVerification } = await supabase
+        .from("players")
+        .select("id")
+        .eq("room_id", roomData.id)
+        .eq("player_id", hostId)
+        .single();
+
+      if (!playerVerification) {
+        throw new Error("Failed to verify player creation");
+      }
+
       // Track room creation
       await trackEvent("room_created", { roomCode, hostName: sanitizedName });
 
