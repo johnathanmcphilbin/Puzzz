@@ -325,7 +325,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      validate_player_name: {
+        Args: { name: string }
+        Returns: boolean
+      }
+      validate_room_code: {
+        Args: { code: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
+import { useAuth } from "@/hooks/useAuth";
+import { validatePlayerName, sanitizeInput, validateRoomCode } from "@/utils/inputValidation";
 
 export const CreateRoom = () => {
   const [hostName, setHostName] = useState("");
@@ -15,6 +17,7 @@ export const CreateRoom = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackEvent } = useAnalyticsContext();
+  const { createSession } = useAuth();
 
   const generateRoomCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -26,10 +29,12 @@ export const CreateRoom = () => {
   };
 
   const createRoom = async () => {
-    if (!hostName.trim()) {
+    const sanitizedName = sanitizeInput(hostName);
+    
+    if (!validatePlayerName(sanitizedName)) {
       toast({
-        title: "Missing Information",
-        description: "Please enter your name.",
+        title: "Invalid Name",
+        description: "Please enter a valid name (1-50 characters, no special characters).",
         variant: "destructive",
       });
       return;
@@ -37,15 +42,43 @@ export const CreateRoom = () => {
 
     setIsCreating(true);
     try {
-      const roomCode = generateRoomCode();
+      let roomCode;
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      // Generate unique room code with retry logic
+      do {
+        roomCode = generateRoomCode();
+        attempts++;
+        
+        if (!validateRoomCode(roomCode)) {
+          continue;
+        }
+
+        // Check if room code already exists
+        const { data: existing } = await supabase
+          .from("rooms")
+          .select("room_code")
+          .eq("room_code", roomCode)
+          .eq("is_active", true)
+          .single();
+
+        if (!existing) break;
+      } while (attempts < maxAttempts);
+
+      if (attempts >= maxAttempts) {
+        throw new Error("Unable to generate unique room code");
+      }
+
       const hostId = crypto.randomUUID();
+      await createSession(hostId, sanitizedName);
 
       // Create room
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
         .insert({
           room_code: roomCode,
-          name: `${hostName.trim()}'s Room`,
+          name: `${sanitizedName}'s Room`,
           host_id: hostId,
           current_game: "would_you_rather",
           game_state: { phase: "lobby", currentQuestion: null, votes: {} }
@@ -60,7 +93,7 @@ export const CreateRoom = () => {
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: hostName.trim(),
+          player_name: sanitizedName,
           player_id: hostId,
           is_host: true
         });
@@ -68,11 +101,7 @@ export const CreateRoom = () => {
       if (playerError) throw playerError;
 
       // Track room creation
-      await trackEvent("room_created", { roomCode, hostName: hostName.trim() });
-
-      // Store host info in localStorage
-      localStorage.setItem("puzzz_player_id", hostId);
-      localStorage.setItem("puzzz_player_name", hostName.trim());
+      await trackEvent("room_created", { roomCode, hostName: sanitizedName });
 
       toast({
         title: "Room Created!",

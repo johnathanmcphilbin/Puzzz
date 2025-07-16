@@ -29,8 +29,9 @@ serve(async (req) => {
     const hasValidSecret = requestData.secret === cleanupSecret;
     
     // Check if request is from authenticated user with service role
-    const hasValidAuth = authHeader && authHeader.includes('service_role');
+    const hasValidAuth = authHeader && authHeader.startsWith('Bearer ') && authHeader.includes('service_role');
     
+    // More secure validation - both checks must be more robust
     if (!hasValidSecret && !hasValidAuth) {
       console.error('Unauthorized cleanup attempt');
       return new Response(

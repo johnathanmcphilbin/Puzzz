@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { sanitizeMessage, sanitizeCustomization } from '@/utils/inputValidation';
 
 interface Message {
   id: string;
@@ -29,6 +31,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
   const [customization, setCustomization] = useState('');
   const [hasGeneratedQuestions, setHasGeneratedQuestions] = useState(false);
   const { toast } = useToast();
+  const { getAuthHeaders } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -121,20 +124,21 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
       return;
     }
 
-    const userMessage = inputMessage.trim();
+    const userMessage = sanitizeMessage(inputMessage);
     setInputMessage('');
     addMessage(userMessage, true);
     setIsLoading(true);
 
     try {
       // Set customization and automatically start generating questions
-      setCustomization(userMessage);
+      const sanitizedCustomization = sanitizeCustomization(userMessage);
+      setCustomization(sanitizedCustomization);
       
       // Save customization to database
       if (roomCode) {
         await supabase.from('ai_chat_customizations').insert({
           room_id: roomCode,
-          customization_text: userMessage
+          customization_text: sanitizedCustomization
         });
       }
 
@@ -142,7 +146,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
       addMessage(`Perfect! I'll now generate custom questions for all your games based on: "${userMessage}"`);
       
       // Automatically start generating questions
-      await generateQuestionsFromCustomization(userMessage);
+      await generateQuestionsFromCustomization(sanitizedCustomization);
       
     } catch (error) {
       console.error('Chat error:', error);
@@ -315,9 +319,10 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         body: {
           message: '',
           action: 'generate_all_questions',
-          customization: customizationText.trim(),
+          customization: sanitizeCustomization(customizationText.trim()),
           roomCode
-        }
+        },
+        headers: getAuthHeaders()
       });
 
       console.log('AI function response:', { data, error });
