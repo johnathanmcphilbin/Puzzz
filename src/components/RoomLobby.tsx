@@ -35,7 +35,7 @@ interface RoomLobbyProps {
 
 export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLobbyProps) => {
   const [isStarting, setIsStarting] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<string>("would_you_rather");
+  const [selectedGame, setSelectedGame] = useState<string>(room.current_game || "would_you_rather");
   const [gameVotes, setGameVotes] = useState<{[key: string]: number}>({});
   const [userVotes, setUserVotes] = useState<{[key: string]: boolean}>({});
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
