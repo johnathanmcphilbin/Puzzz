@@ -24,7 +24,9 @@ const normalizeForFilter = (text: string): string => {
   
   // Replace common substitutions
   for (const [sub, original] of Object.entries(CHAR_SUBSTITUTIONS)) {
-    normalized = normalized.replace(new RegExp(sub, 'g'), original);
+    // Escape special regex characters
+    const escapedSub = sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    normalized = normalized.replace(new RegExp(escapedSub, 'g'), original);
   }
   
   // Remove spaces, dots, underscores, and dashes
