@@ -63,16 +63,16 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           setCustomization(customizationData.customization_text);
         }
 
-        // Check if AI-generated questions already exist for this room
-        const [wyrCheck, formsCheck, paranoiaCheck] = await Promise.all([
-          supabase.from('would_you_rather_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1),
-          supabase.from('forms_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1),
-          supabase.from('paranoia_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1)
-        ]);
+        // Check if AI-generated questions already exist in room's game_state
+        const { data: roomData } = await supabase
+          .from('rooms')
+          .select('game_state')
+          .eq('room_code', roomCode)
+          .single();
 
-        const hasExistingQuestions = (wyrCheck.data && wyrCheck.data.length > 0) ||
-                                   (formsCheck.data && formsCheck.data.length > 0) ||
-                                   (paranoiaCheck.data && paranoiaCheck.data.length > 0);
+        const gameState = roomData?.game_state as Record<string, any>;
+        const hasExistingQuestions = gameState?.aiQuestions && 
+          gameState.aiQuestions.generatedAt;
         
         setHasGeneratedQuestions(hasExistingQuestions);
         
@@ -166,130 +166,50 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
 
   const saveAllCustomQuestions = async (allQuestions: any) => {
     try {
-      console.log('Saving questions for room:', roomCode, 'Questions data:', allQuestions);
+      console.log('Starting to save custom questions to room game_state for room:', roomCode);
       
       if (!roomCode) {
         console.error('No room code provided to saveAllCustomQuestions');
         throw new Error('Room code is required to save questions');
       }
       
-      // First get the room ID from room code
+      // First get current room data
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('id')
+        .select('game_state, id')
         .eq('room_code', roomCode)
         .single();
       
       if (roomError) {
-        console.error('Error fetching room:', roomError);
-        throw new Error(`Could not find room with code ${roomCode}`);
+        console.error('Error fetching room data:', roomError);
+        throw roomError;
       }
       
-      const roomId = roomData.id;
-      console.log('Room ID found:', roomId);
-
-      // Use a transaction-like approach by wrapping in try-catch
-      const operations = [];
-
-      // Save Would You Rather questions
-      if (allQuestions.would_you_rather && allQuestions.would_you_rather.length > 0) {
-        console.log('Processing would you rather questions:', allQuestions.would_you_rather.length);
-        
-        const wyrQuestions = allQuestions.would_you_rather.map((q: any) => ({
-          option_a: q.option_a,
-          option_b: q.option_b,
-          category: `AI-Generated (${roomCode})`
-        }));
-        
-        // Delete old AI questions for this room first
-        const { error: deleteError } = await supabase
-          .from('would_you_rather_questions')
-          .delete()
-          .eq('category', `AI-Generated (${roomCode})`);
-        
-        if (deleteError) {
-          console.error('Error deleting old would you rather questions:', deleteError);
+      // Update the room's game_state with AI-generated questions
+      const currentGameState = roomData.game_state as Record<string, any> || {};
+      const updatedGameState = {
+        ...currentGameState,
+        aiQuestions: {
+          would_you_rather: allQuestions.would_you_rather || [],
+          forms: allQuestions.forms || [],
+          paranoia: allQuestions.paranoia || [],
+          generatedAt: new Date().toISOString()
         }
-          
-        const { data: insertedWYR, error: wyrError } = await supabase
-          .from('would_you_rather_questions')
-          .insert(wyrQuestions)
-          .select();
-        
-        if (wyrError) {
-          console.error('Error inserting would you rather questions:', wyrError);
-          throw wyrError;
-        }
-        console.log('Successfully saved would you rather questions:', insertedWYR?.length);
-      }
-
-      // Save Forms questions
-      if (allQuestions.forms && allQuestions.forms.length > 0) {
-        console.log('Processing forms questions:', allQuestions.forms.length);
-        
-        const formsQuestions = allQuestions.forms.map((q: any) => ({
-          question: q.question,
-          category: `AI-Generated (${roomCode})`,
-          is_controversial: false
-        }));
-        
-        // Delete old AI questions for this room first
-        const { error: deleteError } = await supabase
-          .from('forms_questions')
-          .delete()
-          .eq('category', `AI-Generated (${roomCode})`);
-        
-        if (deleteError) {
-          console.error('Error deleting old forms questions:', deleteError);
-        }
-          
-        const { data: insertedForms, error: formsError } = await supabase
-          .from('forms_questions')
-          .insert(formsQuestions)
-          .select();
-        
-        if (formsError) {
-          console.error('Error inserting forms questions:', formsError);
-          throw formsError;
-        }
-        console.log('Successfully saved forms questions:', insertedForms?.length);
-      }
-
-      // Save Paranoia questions
-      if (allQuestions.paranoia && allQuestions.paranoia.length > 0) {
-        console.log('Processing paranoia questions:', allQuestions.paranoia.length);
-        
-        const paranoiaQuestions = allQuestions.paranoia.map((q: any) => ({
-          question: q.question,
-          category: `AI-Generated (${roomCode})`,
-          spiciness_level: 3
-        }));
-        
-        // Delete old AI questions for this room first
-        const { error: deleteError } = await supabase
-          .from('paranoia_questions')
-          .delete()
-          .eq('category', `AI-Generated (${roomCode})`);
-        
-        if (deleteError) {
-          console.error('Error deleting old paranoia questions:', deleteError);
-        }
-          
-        const { data: insertedParanoia, error: paranoiaError } = await supabase
-          .from('paranoia_questions')
-          .insert(paranoiaQuestions)
-          .select();
-        
-        if (paranoiaError) {
-          console.error('Error inserting paranoia questions:', paranoiaError);
-          throw paranoiaError;
-        }
-        console.log('Successfully saved paranoia questions:', insertedParanoia?.length);
+      };
+      
+      const { error: updateError } = await supabase
+        .from('rooms')
+        .update({ game_state: updatedGameState })
+        .eq('id', roomData.id);
+      
+      if (updateError) {
+        console.error('Error updating room with AI questions:', updateError);
+        throw updateError;
       }
       
-      console.log('All questions saved successfully for room:', roomCode);
+      console.log('AI questions saved successfully to room game_state:', roomCode);
     } catch (error) {
-      console.error('Error saving all custom questions:', error);
+      console.error('Error saving custom questions to room:', error);
       throw error;
     }
   };
