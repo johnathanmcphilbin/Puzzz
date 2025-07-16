@@ -397,6 +397,11 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, onQuestion
     }
   };
 
+  // Don't render if no room code is available yet
+  if (!roomCode) {
+    return null;
+  }
+
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]">
       {!isOpen ? (
