@@ -131,12 +131,24 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       }
 
       if (questionsToUse.length === 0) {
-        toast({
-          title: "No Questions Available",
-          description: "No questions found in the database",
-          variant: "destructive",
-        });
-        return;
+        // Create some default questions if none exist
+        const defaultQuestions = [
+          { option_a: "Have the ability to fly", option_b: "Have the ability to read minds" },
+          { option_a: "Always be 10 minutes late", option_b: "Always be 20 minutes early" },
+          { option_a: "Have unlimited money", option_b: "Have unlimited time" },
+          { option_a: "Live without music", option_b: "Live without movies" },
+          { option_a: "Be famous but poor", option_b: "Be rich but unknown" }
+        ];
+        
+        const randomDefault = defaultQuestions[Math.floor(Math.random() * defaultQuestions.length)];
+        const defaultQuestion = {
+          id: `default-${Date.now()}`,
+          option_a: randomDefault.option_a,
+          option_b: randomDefault.option_b,
+          category: "default"
+        };
+        
+        questionsToUse = [defaultQuestion];
       }
 
       const randomQuestion = questionsToUse[Math.floor(Math.random() * questionsToUse.length)];
