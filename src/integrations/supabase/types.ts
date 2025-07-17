@@ -250,15 +250,7 @@ export type Database = {
           player_name?: string
           room_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "players_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       rooms: {
         Row: {

@@ -49,105 +49,42 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
       const roomCode = generateRoomCode();
       const hostId = crypto.randomUUID();
       
-      console.log("🚀 Starting room creation process");
+      console.log("🚀 Starting room creation with atomic function");
       console.log("Room code:", roomCode);
       console.log("Host name:", trimmedName);
       console.log("Host ID:", hostId);
       
-      // Step 1: Create the room
-      console.log("📝 Creating room...");
-      const { data: roomData, error: roomError } = await supabase
-        .from("rooms")
-        .insert({
-          room_code: roomCode,
-          name: `${trimmedName}'s Room`,
-          host_id: hostId,
-          current_game: selectedGame,
-          game_state: { 
-            phase: "lobby", 
-            currentQuestion: null, 
-            votes: {}, 
-            hostOnScreen 
-          },
-          is_active: true
-        })
-        .select()
-        .single();
-
-      if (roomError) {
-        console.error("❌ Room creation failed:", roomError);
-        throw new Error(`Room creation failed: ${roomError.message}`);
-      }
-
-      console.log("✅ Room created:", roomData);
-
-      // Step 1.5: Immediate verification that room exists
-      console.log("🔍 Immediately checking if room exists...");
-      const { data: immediateCheck, error: immediateError } = await supabase
-        .from("rooms")
-        .select("id, room_code")
-        .eq("id", roomData.id);
-        
-      console.log("🔍 Immediate room check result:", { immediateCheck, immediateError });
-      
-      if (!immediateCheck || immediateCheck.length === 0) {
-        throw new Error("Room disappeared immediately after creation!");
-      }
-
-      // Step 2: Add the host as a player
-      console.log("👤 Adding host as player...");
-      console.log("👤 Player data being inserted:", {
-        room_id: roomData.id,
-        player_name: trimmedName,
-        player_id: hostId,
-        is_host: true
+      // Use the atomic database function to create room and player together
+      const { data: result, error } = await supabase.rpc('create_room_with_host', {
+        room_code_param: roomCode,
+        room_name_param: `${trimmedName}'s Room`,
+        host_id_param: hostId,
+        host_name_param: trimmedName,
+        current_game_param: selectedGame,
+        game_state_param: { 
+          phase: "lobby", 
+          currentQuestion: null, 
+          votes: {}, 
+          hostOnScreen 
+        }
       });
-      
-      const { data: playerData, error: playerError } = await supabase
-        .from("players")
-        .insert({
-          room_id: roomData.id,
-          player_name: trimmedName,
-          player_id: hostId,
-          is_host: true
-        })
-        .select()
-        .single();
 
-      if (playerError) {
-        console.error("❌ Player creation failed:", playerError);
-        // Clean up the room
-        await supabase.from("rooms").delete().eq("id", roomData.id);
-        throw new Error(`Player creation failed: ${playerError.message}`);
+      if (error) {
+        console.error("❌ Room creation failed:", error);
+        throw new Error(`Room creation failed: ${error.message}`);
       }
 
-      console.log("✅ Host player created:", playerData);
+      console.log("✅ Room and player created successfully:", result);
 
-      // Step 3: Verify everything was created correctly
-      console.log("🔍 Verifying room creation...");
-      const { data: verifyRoom, error: verifyError } = await supabase
-        .from("rooms")
-        .select("*")
-        .eq("room_code", roomCode)
-        .single();
-
-      if (verifyError || !verifyRoom) {
-        console.error("❌ Room verification failed:", verifyError);
-        throw new Error("Room verification failed");
-      }
-
-      console.log("✅ Room verified successfully:", verifyRoom);
-
-      // Step 4: Store session data
-      console.log("💾 Storing session data...");
+      // Store session data
       localStorage.setItem("puzzz_player_id", hostId);
       localStorage.setItem("puzzz_player_name", trimmedName);
       localStorage.setItem("puzzz_room_code", roomCode);
 
-      // Step 5: Track the event
+      // Track the event
       trackEvent("room_created", { roomCode, hostName: trimmedName });
 
-      // Step 6: Show success message
+      // Show success message
       toast({
         title: "Room Created!",
         description: `Room created with code ${roomCode}`,
@@ -155,7 +92,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       console.log("🎉 Room creation complete! Navigating to room...");
 
-      // Step 7: Navigate to the room
+      // Navigate to the room
       navigate(`/room/${roomCode}`);
       
     } catch (error) {
