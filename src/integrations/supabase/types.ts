@@ -33,15 +33,7 @@ export type Database = {
           id?: string
           room_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "ai_chat_customizations_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["room_code"]
-          },
-        ]
+        Relationships: []
       }
       forms_questions: {
         Row: {
@@ -151,13 +143,6 @@ export type Database = {
             referencedRelation: "would_you_rather_questions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "game_votes_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
-          },
         ]
       }
       paranoia_questions: {
@@ -229,7 +214,7 @@ export type Database = {
         Row: {
           id: string
           is_host: boolean | null
-          joined_at: string
+          joined_at: string | null
           player_id: string
           player_name: string
           room_id: string
@@ -237,7 +222,7 @@ export type Database = {
         Insert: {
           id?: string
           is_host?: boolean | null
-          joined_at?: string
+          joined_at?: string | null
           player_id: string
           player_name: string
           room_id: string
@@ -245,24 +230,16 @@ export type Database = {
         Update: {
           id?: string
           is_host?: boolean | null
-          joined_at?: string
+          joined_at?: string | null
           player_id?: string
           player_name?: string
           room_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "players_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       rooms: {
         Row: {
-          created_at: string
+          created_at: string | null
           current_game: string | null
           game_state: Json | null
           host_id: string
@@ -270,10 +247,10 @@ export type Database = {
           is_active: boolean | null
           name: string
           room_code: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           current_game?: string | null
           game_state?: Json | null
           host_id: string
@@ -281,10 +258,10 @@ export type Database = {
           is_active?: boolean | null
           name: string
           room_code: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           current_game?: string | null
           game_state?: Json | null
           host_id?: string
@@ -292,7 +269,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           room_code?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -325,6 +302,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      get_current_player_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_player_in_room: {
+        Args: { room_uuid: string }
+        Returns: boolean
+      }
+      is_room_host: {
+        Args: { room_uuid: string }
+        Returns: boolean
+      }
+      sanitize_input: {
+        Args: { input_text: string }
+        Returns: string
+      }
       validate_player_name: {
         Args: { name: string }
         Returns: boolean
