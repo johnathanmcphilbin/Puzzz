@@ -129,7 +129,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     setIsLoading(true);
 
     try {
-      // Set customization and automatically start generating questions
+      // Set customization and call chat endpoint
       const sanitizedCustomization = userMessage;
       setCustomization(sanitizedCustomization);
       
@@ -141,14 +141,21 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         });
       }
 
+      // Call the AI chat endpoint
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: {
+          action: 'chat',
+          message: userMessage,
+        }
+      });
+
+      if (error || !data?.response) {
+        throw new Error(error?.message || 'Failed to get AI response');
+      }
+
       // Show response message
-      addMessage(`Thanks! I'll use "${userMessage}" as inspiration for custom questions.`);
-      
-      // Wait a moment then add another message
-      setTimeout(() => {
-        addMessage("To generate custom questions for all games, click the button below.");
-        setIsLoading(false);
-      }, 1000);
+      addMessage(data.response);
+      setIsLoading(false);
       
     } catch (error) {
       console.error('Chat error:', error);
@@ -205,18 +212,60 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     addMessage(`Generating custom questions for all games based on: "${customization}"`, true);
 
     try {
-      // Simulate question generation - in real implementation we'd call an edge function
-      setTimeout(() => {
-        setHasGeneratedQuestions(true);
-        addMessage("✅ Generated custom questions for all your games! They're now active in your room.");
+      // Call the AI edge function to generate custom questions
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: {
+          action: 'generate_all_questions',
+          customization,
+          crazynessLevel: crazynessLevel[0],
+          gameType: currentGame,
+          roomCode
+        }
+      });
+
+      if (error || !data?.response) {
+        throw new Error(error?.message || 'Failed to generate questions');
+      }
+
+      // Parse the response which should contain questions for all games
+      const questions = JSON.parse(data.response);
+      
+      // Insert generated questions into respective tables
+      const [wyrError, formsError, paranoiaError] = await Promise.all([
+        supabase.from('would_you_rather_questions').insert(
+          questions.would_you_rather.map((q: any) => ({
+            option_a: q.option_a,
+            option_b: q.option_b,
+            category: `AI-Generated (${roomCode})`
+          }))
+        ),
+        supabase.from('forms_questions').insert(
+          questions.forms.map((q: any) => ({
+            question: q.question,
+            category: `AI-Generated (${roomCode})`
+          }))
+        ),
+        supabase.from('paranoia_questions').insert(
+          questions.paranoia.map((q: any) => ({
+            question: q.question,
+            category: `AI-Generated (${roomCode})`
+          }))
+        )
+      ]);
+
+      if (wyrError || formsError || paranoiaError) {
+        throw new Error('Failed to save generated questions');
+      }
+
+      setHasGeneratedQuestions(true);
+      addMessage("✅ Generated custom questions for all your games! They're now active in your room.");
+      
+      toast({
+        title: "Questions Generated!",
+        description: "Custom questions have been created for all games",
+      });
         
-        toast({
-          title: "Questions Generated!",
-          description: "Custom questions have been created for all games",
-        });
-        
-        setIsLoading(false);
-      }, 2000);
+      setIsLoading(false);
     } catch (error) {
       console.error("Error generating questions:", error);
       addMessage("❌ Sorry, I had trouble generating questions. Please try again.");
