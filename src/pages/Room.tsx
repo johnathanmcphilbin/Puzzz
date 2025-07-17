@@ -9,7 +9,7 @@ import { FormsGame } from "@/components/FormsGame";
 import { ParanoiaGame } from "@/components/ParanoiaGame";
 import AIChatbot from "@/components/AIChatbot";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+
 
 interface Room {
   id: string;
@@ -32,7 +32,7 @@ export const Room = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAuthenticated, playerId, playerName, clearSession } = useAuth();
+  const storedPlayerId = localStorage.getItem('puzzz_player_id');
   
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -45,11 +45,13 @@ export const Room = () => {
       return;
     }
 
-    // Check authentication
-    if (!isAuthenticated || !playerId || !playerName) {
+    // Simple localStorage check - just like before
+    const storedPlayerName = localStorage.getItem('puzzz_player_name');
+    
+    if (!storedPlayerId || !storedPlayerName) {
       toast({
-        title: "Access Denied",
-        description: "Please join the room properly.",
+        title: "Session Expired",
+        description: "Please join the room again.",
         variant: "destructive",
       });
       navigate("/");
@@ -57,7 +59,7 @@ export const Room = () => {
     }
 
     loadRoomData();
-  }, [roomCode, navigate, toast, isAuthenticated, playerId, playerName]);
+  }, [roomCode, navigate, toast]);
 
   const loadRoomData = async () => {
     try {
@@ -81,7 +83,7 @@ export const Room = () => {
             description: "You are not a member of this room.",
             variant: "destructive",
           });
-          clearSession();
+          localStorage.clear();
           navigate("/");
           return;
         }
@@ -119,7 +121,7 @@ export const Room = () => {
             description: "You are not a member of this room.",
             variant: "destructive",
           });
-          clearSession();
+          localStorage.clear();
           navigate("/");
           return;
         }
@@ -131,7 +133,7 @@ export const Room = () => {
       setPlayers(playersData || []);
 
       // Find current player
-      const currentPlayerData = playersData?.find(p => p.player_id === playerId);
+      const currentPlayerData = playersData?.find(p => p.player_id === storedPlayerId);
       
       if (!currentPlayerData) {
         toast({
@@ -139,7 +141,7 @@ export const Room = () => {
           description: "You are not a member of this room.",
           variant: "destructive",
         });
-        clearSession();
+        localStorage.clear();
         navigate("/");
         return;
       }

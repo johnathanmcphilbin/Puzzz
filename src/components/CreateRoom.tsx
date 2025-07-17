@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
-import { useAuth } from "@/hooks/useAuth";
+
 
 interface CreateRoomProps {
   selectedGame?: string;
@@ -23,7 +23,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackEvent } = useAnalyticsContext();
-  const { createSession } = useAuth();
+  
 
   const generateRoomCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -77,8 +77,9 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       console.log("Room created successfully:", roomData);
 
-      // Create session for the host
-      await createSession(hostId, trimmedName);
+      // Store player info in localStorage like before
+      localStorage.setItem('puzzz_player_id', hostId);
+      localStorage.setItem('puzzz_player_name', trimmedName);
 
       // Add host as player
       const { data: playerData, error: playerError } = await supabase

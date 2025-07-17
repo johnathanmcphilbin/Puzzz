@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, UserPlus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
-import { useAuth } from "@/hooks/useAuth";
+
 import { validatePlayerName, validateRoomCode } from "@/utils/inputValidation";
 
 export const JoinRoom = () => {
@@ -20,7 +20,7 @@ export const JoinRoom = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { trackEvent } = useAnalyticsContext();
-  const { createSession } = useAuth();
+  
 
   // Check for room code in URL parameters (from QR code)
   useEffect(() => {
@@ -121,8 +121,9 @@ export const JoinRoom = () => {
 
       const playerId = crypto.randomUUID();
 
-      // Create session first
-      await createSession(playerId, trimmedPlayerName);
+      // Store player info in localStorage like before
+      localStorage.setItem('puzzz_player_id', playerId);
+      localStorage.setItem('puzzz_player_name', trimmedPlayerName);
 
       // Add player to room
       const { data: playerData, error: playerError } = await supabase
