@@ -38,6 +38,7 @@ export const Room = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cleanup, setCleanup] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     if (!roomCode) {
@@ -60,6 +61,15 @@ export const Room = () => {
 
     loadRoomData();
   }, [roomCode, navigate, toast]);
+
+  // Clean up subscriptions when component unmounts
+  useEffect(() => {
+    return () => {
+      if (cleanup) {
+        cleanup();
+      }
+    };
+  }, [cleanup]);
 
   const loadRoomData = async () => {
     try {
@@ -149,8 +159,9 @@ export const Room = () => {
       console.log("Current player found:", currentPlayerData);
       setCurrentPlayer(currentPlayerData);
 
-      // Set up real-time subscriptions
-      setupRealtimeSubscriptions(roomData);
+      // Set up real-time subscriptions after data is loaded
+      const cleanupFn = setupRealtimeSubscriptions(roomData);
+      setCleanup(() => cleanupFn);
 
     } catch (error) {
       console.error("Error loading room data:", error);
@@ -203,13 +214,6 @@ export const Room = () => {
     };
   };
 
-  useEffect(() => {
-    if (room) {
-      const cleanup = setupRealtimeSubscriptions(room);
-      return cleanup;
-    }
-  }, [room?.id, roomCode]);
-
   const loadPlayers = async (roomId: string) => {
     const { data: playersData } = await supabase
       .from("players")
@@ -218,6 +222,14 @@ export const Room = () => {
       .order("joined_at", { ascending: true });
 
     setPlayers(playersData || []);
+    
+    // Update current player info if it changed
+    if (playersData && storedPlayerId) {
+      const updatedCurrentPlayer = playersData.find(p => p.player_id === storedPlayerId);
+      if (updatedCurrentPlayer) {
+        setCurrentPlayer(updatedCurrentPlayer);
+      }
+    }
   };
 
   if (loading) {
