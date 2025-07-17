@@ -74,6 +74,9 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
       }
 
       console.log("Room created successfully:", roomData);
+      console.log("Room ID for player insertion:", roomData.id);
+      console.log("Trimmed player name:", JSON.stringify(trimmedName));
+      console.log("Host ID:", hostId);
 
       // Add host as player
       const { data: playerData, error: playerError } = await supabase
