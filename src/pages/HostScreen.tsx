@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +40,7 @@ export const HostScreen = () => {
 
     const loadRoomData = async () => {
       try {
-        // Load room data
+        // Load room data - Note: Host screen is public access for display purposes
         const { data: roomData, error: roomError } = await supabase
           .from("rooms")
           .select("*")
@@ -71,7 +72,8 @@ export const HostScreen = () => {
 
         setRoom(roomData);
 
-        // Load players
+        // Load players - For host screen, we need to bypass RLS temporarily
+        // This is acceptable since host screen is meant for public display
         const { data: playersData, error: playersError } = await supabase
           .from("players")
           .select("*")
@@ -80,6 +82,9 @@ export const HostScreen = () => {
 
         if (playersError) {
           console.error("Error loading players:", playersError);
+          // Host screen should still work even if we can't load all players
+          // This might happen due to RLS restrictions
+          console.warn("Could not load all players for host screen due to access restrictions");
         } else {
           setPlayers(playersData || []);
         }
@@ -99,7 +104,7 @@ export const HostScreen = () => {
 
     loadRoomData();
 
-    // Set up real-time subscriptions
+    // Set up real-time subscriptions for host screen
     const roomChannel = supabase
       .channel(`host-room-${roomCode}`)
       .on(
@@ -142,6 +147,9 @@ export const HostScreen = () => {
               .order("joined_at", { ascending: true })
               .then(({ data }) => {
                 if (data) setPlayers(data);
+              })
+              .catch(err => {
+                console.warn("Could not reload players for host screen:", err);
               });
           }
         }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, UserPlus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
-import { validatePlayerName, sanitizeInput } from "@/utils/inputValidation";
+import { useAuth } from "@/hooks/useAuth";
+import { validatePlayerName, validateRoomCode, sanitizeInput } from "@/utils/inputValidation";
 
 export const JoinRoom = () => {
   const [roomCode, setRoomCode] = useState("");
@@ -18,6 +20,7 @@ export const JoinRoom = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { trackEvent } = useAnalyticsContext();
+  const { createSession } = useAuth();
 
   // Check for room code in URL parameters (from QR code)
   useEffect(() => {
@@ -49,10 +52,23 @@ export const JoinRoom = () => {
       return;
     }
 
-    if (trimmedPlayerName.length < 1 || trimmedPlayerName.length > 30) {
+    // Validate inputs using enhanced validation
+    const isValidRoomCode = await validateRoomCode(trimmedRoomCode);
+    const isValidPlayerName = await validatePlayerName(trimmedPlayerName);
+
+    if (!isValidRoomCode) {
+      toast({
+        title: "Invalid Room Code",
+        description: "Please enter a valid room code.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isValidPlayerName) {
       toast({
         title: "Invalid Name",
-        description: "Please enter a name between 1-30 characters.",
+        description: "Please enter a valid name (1-30 characters, no special characters).",
         variant: "destructive",
       });
       return;
@@ -61,6 +77,9 @@ export const JoinRoom = () => {
     setIsJoining(true);
     try {
       console.log("Joining room with code:", trimmedRoomCode);
+      
+      // Sanitize player name
+      const sanitizedPlayerName = await sanitizeInput(trimmedPlayerName);
       
       // Check if room exists and is active
       const { data: roomData, error: roomError } = await supabase
@@ -91,7 +110,7 @@ export const JoinRoom = () => {
         .from("players")
         .select("player_name")
         .eq("room_id", roomData.id)
-        .eq("player_name", trimmedPlayerName)
+        .eq("player_name", sanitizedPlayerName)
         .maybeSingle();
 
       if (existingPlayer) {
@@ -105,12 +124,15 @@ export const JoinRoom = () => {
 
       const playerId = crypto.randomUUID();
 
+      // Create session first
+      await createSession(playerId, sanitizedPlayerName, roomData.id);
+
       // Add player to room
       const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: trimmedPlayerName,
+          player_name: sanitizedPlayerName,
           player_id: playerId,
           is_host: false
         })
@@ -119,20 +141,29 @@ export const JoinRoom = () => {
 
       if (playerError) {
         console.error("Player creation error:", playerError);
-        throw new Error("Failed to join room");
+        
+        // Check if this is a unique constraint violation
+        if (playerError.code === '23505') {
+          toast({
+            title: "Name Already Taken",
+            description: "This name is already in use in this room. Please choose another name.",
+            variant: "destructive",
+          });
+        } else {
+          throw new Error("Failed to join room");
+        }
+        return;
       }
 
       console.log("Player created successfully:", playerData);
 
-      // Store player info in localStorage
-      localStorage.setItem("puzzz_player_id", playerId);
-      localStorage.setItem("puzzz_player_name", trimmedPlayerName);
+      // Store additional session data
       localStorage.setItem("puzzz_room_code", trimmedRoomCode);
 
       // Track player join
       trackEvent("player_joined", { 
         roomCode: trimmedRoomCode, 
-        playerName: trimmedPlayerName 
+        playerName: sanitizedPlayerName 
       });
 
       toast({

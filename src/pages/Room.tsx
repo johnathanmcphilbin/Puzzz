@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,7 @@ import { FormsGame } from "@/components/FormsGame";
 import { ParanoiaGame } from "@/components/ParanoiaGame";
 import AIChatbot from "@/components/AIChatbot";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Room {
   id: string;
@@ -30,6 +32,7 @@ export const Room = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAuthenticated, playerId, playerName, clearSession } = useAuth();
   
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -42,10 +45,8 @@ export const Room = () => {
       return;
     }
 
-    const playerId = localStorage.getItem("puzzz_player_id");
-    const playerName = localStorage.getItem("puzzz_player_name");
-
-    if (!playerId || !playerName) {
+    // Check authentication
+    if (!isAuthenticated || !playerId || !playerName) {
       toast({
         title: "Access Denied",
         description: "Please join the room properly.",
@@ -56,13 +57,13 @@ export const Room = () => {
     }
 
     loadRoomData();
-  }, [roomCode, navigate, toast]);
+  }, [roomCode, navigate, toast, isAuthenticated, playerId, playerName]);
 
   const loadRoomData = async () => {
     try {
       console.log("Loading room data for code:", roomCode);
       
-      // Load room data
+      // Load room data - RLS will now restrict access to rooms the player is in
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
         .select("*")
@@ -72,6 +73,19 @@ export const Room = () => {
 
       if (roomError) {
         console.error("Room loading error:", roomError);
+        
+        // If access is denied due to RLS, the player is not in the room
+        if (roomError.code === 'PGRST116' || roomError.message?.includes('RLS')) {
+          toast({
+            title: "Access Denied",
+            description: "You are not a member of this room.",
+            variant: "destructive",
+          });
+          clearSession();
+          navigate("/");
+          return;
+        }
+        
         throw new Error("Failed to load room");
       }
 
@@ -88,7 +102,7 @@ export const Room = () => {
       console.log("Room loaded successfully:", roomData);
       setRoom(roomData);
 
-      // Load players
+      // Load players - RLS will restrict to players in the same room
       const { data: playersData, error: playersError } = await supabase
         .from("players")
         .select("*")
@@ -97,6 +111,19 @@ export const Room = () => {
 
       if (playersError) {
         console.error("Players loading error:", playersError);
+        
+        // If RLS blocks access, the player is not in this room
+        if (playersError.code === 'PGRST116' || playersError.message?.includes('RLS')) {
+          toast({
+            title: "Access Denied",
+            description: "You are not a member of this room.",
+            variant: "destructive",
+          });
+          clearSession();
+          navigate("/");
+          return;
+        }
+        
         throw new Error("Failed to load players");
       }
 
@@ -104,7 +131,6 @@ export const Room = () => {
       setPlayers(playersData || []);
 
       // Find current player
-      const playerId = localStorage.getItem("puzzz_player_id");
       const currentPlayerData = playersData?.find(p => p.player_id === playerId);
       
       if (!currentPlayerData) {
@@ -113,6 +139,7 @@ export const Room = () => {
           description: "You are not a member of this room.",
           variant: "destructive",
         });
+        clearSession();
         navigate("/");
         return;
       }

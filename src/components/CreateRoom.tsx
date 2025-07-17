@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
+import { useAuth } from "@/hooks/useAuth";
+import { sanitizeInput } from "@/utils/inputValidation";
 
 interface CreateRoomProps {
   selectedGame?: string;
@@ -21,6 +24,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackEvent } = useAnalyticsContext();
+  const { createSession } = useAuth();
 
   const generateRoomCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -46,7 +50,10 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
     setIsCreating(true);
     
     try {
-      // Generate room code
+      // Sanitize the host name
+      const sanitizedName = await sanitizeInput(trimmedName);
+      
+      // Generate room code and host ID
       const roomCode = generateRoomCode();
       const hostId = crypto.randomUUID();
       
@@ -58,7 +65,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
         .from("rooms")
         .insert({
           room_code: roomCode,
-          name: `${trimmedName}'s Room`,
+          name: `${sanitizedName}'s Room`,
           host_id: hostId,
           current_game: selectedGame,
           game_state: { phase: "lobby", currentQuestion: null, votes: {}, hostOnScreen },
@@ -74,12 +81,15 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       console.log("Room created successfully:", roomData);
 
+      // Create session for the host
+      await createSession(hostId, sanitizedName, roomData.id);
+
       // Add host as player
       const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: trimmedName,
+          player_name: sanitizedName,
           player_id: hostId,
           is_host: true
         })
@@ -95,13 +105,11 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       console.log("Player created successfully:", playerData);
 
-      // Store session data
-      localStorage.setItem("puzzz_player_id", hostId);
-      localStorage.setItem("puzzz_player_name", trimmedName);
+      // Store additional session data
       localStorage.setItem("puzzz_room_code", roomCode);
 
       // Track room creation
-      trackEvent("room_created", { roomCode, hostName: trimmedName });
+      trackEvent("room_created", { roomCode, hostName: sanitizedName });
 
       toast({
         title: "Room Created!",
