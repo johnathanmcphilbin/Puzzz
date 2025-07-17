@@ -14,45 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
-      ai_chat_customizations: {
-        Row: {
-          created_at: string
-          customization_text: string
-          id: string
-          room_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          customization_text: string
-          id?: string
-          room_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          customization_text?: string
-          id?: string
-          room_id?: string | null
-        }
-        Relationships: []
-      }
       forms_questions: {
         Row: {
           category: string | null
-          created_at: string
+          created_at: string | null
           id: string
           is_controversial: boolean | null
           question: string
         }
         Insert: {
           category?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_controversial?: boolean | null
           question: string
         }
         Update: {
           category?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_controversial?: boolean | null
           question?: string
@@ -63,84 +42,107 @@ export type Database = {
         Row: {
           id: string
           player_id: string
-          question_id: string
-          responded_at: string
-          room_id: string
+          question_id: string | null
+          responded_at: string | null
+          room_id: string | null
           selected_player_id: string
         }
         Insert: {
           id?: string
           player_id: string
-          question_id: string
-          responded_at?: string
-          room_id: string
+          question_id?: string | null
+          responded_at?: string | null
+          room_id?: string | null
           selected_player_id: string
         }
         Update: {
           id?: string
           player_id?: string
-          question_id?: string
-          responded_at?: string
-          room_id?: string
+          question_id?: string | null
+          responded_at?: string | null
+          room_id?: string | null
           selected_player_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "forms_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "forms_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forms_responses_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       game_requests: {
         Row: {
-          created_at: string
+          created_at: string | null
           game_type: string
           id: string
           player_id: string
-          room_id: string
+          room_id: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           game_type: string
           id?: string
           player_id: string
-          room_id: string
+          room_id?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           game_type?: string
           id?: string
           player_id?: string
-          room_id?: string
+          room_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "game_requests_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       game_votes: {
         Row: {
           id: string
           player_id: string
           question_id: string
-          room_id: string
+          room_id: string | null
           vote: string
-          voted_at: string
+          voted_at: string | null
         }
         Insert: {
           id?: string
           player_id: string
           question_id: string
-          room_id: string
+          room_id?: string | null
           vote: string
-          voted_at?: string
+          voted_at?: string | null
         }
         Update: {
           id?: string
           player_id?: string
           question_id?: string
-          room_id?: string
+          room_id?: string | null
           vote?: string
-          voted_at?: string
+          voted_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "game_votes_question_id_fkey"
-            columns: ["question_id"]
+            foreignKeyName: "game_votes_room_id_fkey"
+            columns: ["room_id"]
             isOneToOne: false
-            referencedRelation: "would_you_rather_questions"
+            referencedRelation: "rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -148,21 +150,21 @@ export type Database = {
       paranoia_questions: {
         Row: {
           category: string | null
-          created_at: string
+          created_at: string | null
           id: string
           question: string
           spiciness_level: number | null
         }
         Insert: {
           category?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           question: string
           spiciness_level?: number | null
         }
         Update: {
           category?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           question?: string
           spiciness_level?: number | null
@@ -173,31 +175,31 @@ export type Database = {
         Row: {
           asker_player_id: string
           chosen_player_id: string
-          created_at: string
+          created_at: string | null
           id: string
           is_revealed: boolean | null
-          question_id: string
-          room_id: string
+          question_id: string | null
+          room_id: string | null
           round_number: number
         }
         Insert: {
           asker_player_id: string
           chosen_player_id: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_revealed?: boolean | null
-          question_id: string
-          room_id: string
+          question_id?: string | null
+          room_id?: string | null
           round_number: number
         }
         Update: {
           asker_player_id?: string
           chosen_player_id?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_revealed?: boolean | null
-          question_id?: string
-          room_id?: string
+          question_id?: string | null
+          room_id?: string | null
           round_number?: number
         }
         Relationships: [
@@ -206,6 +208,13 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "paranoia_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paranoia_rounds_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -217,7 +226,7 @@ export type Database = {
           joined_at: string | null
           player_id: string
           player_name: string
-          room_id: string
+          room_id: string | null
         }
         Insert: {
           id?: string
@@ -225,7 +234,7 @@ export type Database = {
           joined_at?: string | null
           player_id: string
           player_name: string
-          room_id: string
+          room_id?: string | null
         }
         Update: {
           id?: string
@@ -233,9 +242,17 @@ export type Database = {
           joined_at?: string | null
           player_id?: string
           player_name?: string
-          room_id?: string
+          room_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rooms: {
         Row: {
@@ -276,21 +293,21 @@ export type Database = {
       would_you_rather_questions: {
         Row: {
           category: string | null
-          created_at: string
+          created_at: string | null
           id: string
           option_a: string
           option_b: string
         }
         Insert: {
           category?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           option_a: string
           option_b: string
         }
         Update: {
           category?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           option_a?: string
           option_b?: string
@@ -302,34 +319,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_current_player_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      is_player_in_room: {
-        Args: { room_uuid: string }
-        Returns: boolean
-      }
-      is_room_host: {
-        Args: { room_uuid: string }
-        Returns: boolean
-      }
-      sanitize_input: {
-        Args: { input_text: string }
-        Returns: string
-      }
-      validate_player_name: {
-        Args: { name: string }
-        Returns: boolean
-      }
-      validate_room_code: {
-        Args: { code: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
