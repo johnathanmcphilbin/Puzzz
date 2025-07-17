@@ -81,8 +81,28 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       console.log("✅ Room created:", roomData);
 
+      // Step 1.5: Immediate verification that room exists
+      console.log("🔍 Immediately checking if room exists...");
+      const { data: immediateCheck, error: immediateError } = await supabase
+        .from("rooms")
+        .select("id, room_code")
+        .eq("id", roomData.id);
+        
+      console.log("🔍 Immediate room check result:", { immediateCheck, immediateError });
+      
+      if (!immediateCheck || immediateCheck.length === 0) {
+        throw new Error("Room disappeared immediately after creation!");
+      }
+
       // Step 2: Add the host as a player
       console.log("👤 Adding host as player...");
+      console.log("👤 Player data being inserted:", {
+        room_id: roomData.id,
+        player_name: trimmedName,
+        player_id: hostId,
+        is_host: true
+      });
+      
       const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert({
