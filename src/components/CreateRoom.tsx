@@ -53,62 +53,29 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
       console.log("Creating room with code:", roomCode);
       console.log("Host ID:", hostId);
       
-      // Create room first
-      const { data: roomData, error: roomError } = await supabase
-        .from("rooms")
-        .insert({
-          room_code: roomCode,
-          name: `${trimmedName}'s Room`,
-          host_id: hostId,
-          current_game: selectedGame,
-          game_state: { phase: "lobby", currentQuestion: null, votes: {}, hostOnScreen },
-          is_active: true
-        })
-        .select()
-        .single();
+      // Use RPC call to create room and player atomically
+      const { data: result, error: rpcError } = await supabase.rpc('create_room_with_host', {
+        room_code_param: roomCode,
+        room_name_param: `${trimmedName}'s Room`,
+        host_id_param: hostId,
+        host_name_param: trimmedName,
+        current_game_param: selectedGame,
+        game_state_param: { phase: "lobby", currentQuestion: null, votes: {}, hostOnScreen }
+      });
 
-      if (roomError) {
-        console.error("Room creation error:", roomError);
-        console.error("Room error details:", JSON.stringify(roomError, null, 2));
-        throw new Error(`Failed to create room: ${roomError.message || roomError.details}`);
+      if (rpcError) {
+        console.error("RPC error:", rpcError);
+        // Fallback to manual approach
+        return await createRoomManually();
       }
 
-      console.log("Room created successfully:", roomData);
-      console.log("Room ID for player insertion:", roomData.id);
-      console.log("Trimmed player name:", JSON.stringify(trimmedName));
-      console.log("Host ID:", hostId);
+      console.log("Room and player created successfully via RPC:", result);
+      const roomData = result?.room_data;
+      const playerData = result?.player_data;
 
-      // Verify room exists before adding player
-      const { data: roomCheck, error: roomCheckError } = await supabase
-        .from("rooms")
-        .select("id, room_code")
-        .eq("id", roomData.id)
-        .single();
-      
-      console.log("Room verification:", roomCheck, roomCheckError);
-
-      // Add host as player
-      const { data: playerData, error: playerError } = await supabase
-        .from("players")
-        .insert({
-          room_id: roomData.id,
-          player_name: trimmedName,
-          player_id: hostId,
-          is_host: true
-        })
-        .select()
-        .single();
-
-      if (playerError) {
-        console.error("Player creation error:", playerError);
-        console.error("Player error details:", JSON.stringify(playerError, null, 2));
-        console.error("Room data used for player:", { roomId: roomData.id, playerName: trimmedName, hostId });
-        // Clean up room if player creation fails
-        await supabase.from("rooms").delete().eq("id", roomData.id);
-        throw new Error(`Failed to add host to room: ${playerError.message || playerError.details}`);
+      if (!roomData || !playerData) {
+        throw new Error("Failed to get room or player data from RPC");
       }
-
-      console.log("Player created successfully:", playerData);
 
       // Store session data
       localStorage.setItem("puzzz_player_id", hostId);
