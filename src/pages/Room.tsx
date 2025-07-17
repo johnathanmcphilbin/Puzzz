@@ -61,21 +61,36 @@ export const Room = () => {
   const loadRoomData = async () => {
     try {
       console.log("Loading room data for code:", roomCode);
+      console.log("Checking localStorage - playerId:", localStorage.getItem("puzzz_player_id"));
+      console.log("Checking localStorage - playerName:", localStorage.getItem("puzzz_player_name"));
+      
+      // Add small delay to ensure room is fully created
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Load room data
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
         .select("*")
         .eq("room_code", roomCode)
-        .eq("is_active", true)
-        .maybeSingle();
+        .eq("is_active", true);
+
+      console.log("Room query result:", { roomData, roomError });
+      console.log("Room data length:", roomData?.length);
 
       if (roomError) {
         console.error("Room loading error:", roomError);
         throw new Error("Failed to load room");
       }
 
-      if (!roomData) {
+      const room = roomData?.[0];
+      if (!room) {
+        console.log("No room found - checking all rooms with this code:");
+        const { data: allRooms } = await supabase
+          .from("rooms")
+          .select("*")
+          .eq("room_code", roomCode);
+        console.log("All rooms with code:", allRooms);
+        
         toast({
           title: "Room Not Found",
           description: "This room doesn't exist or has been closed.",
@@ -85,14 +100,14 @@ export const Room = () => {
         return;
       }
 
-      console.log("Room loaded successfully:", roomData);
-      setRoom(roomData);
+      console.log("Room loaded successfully:", room);
+      setRoom(room);
 
       // Load players
       const { data: playersData, error: playersError } = await supabase
         .from("players")
         .select("*")
-        .eq("room_id", roomData.id)
+        .eq("room_id", room.id)
         .order("joined_at", { ascending: true });
 
       if (playersError) {
@@ -121,7 +136,7 @@ export const Room = () => {
       setCurrentPlayer(currentPlayerData);
 
       // Set up real-time subscriptions
-      setupRealtimeSubscriptions(roomData);
+      setupRealtimeSubscriptions(room);
 
     } catch (error) {
       console.error("Error loading room data:", error);
