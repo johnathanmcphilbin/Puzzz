@@ -92,26 +92,23 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const loadQuestion = async () => {
     try {
-      // First try to get AI-generated questions from room's game_state
-      const gameStateData = room.game_state as Record<string, any>;
-      const aiQuestions = gameStateData?.aiQuestions?.paranoia;
-      
+      // First try to get AI-generated questions for this room
+      const { data: aiQuestionsData } = await supabase
+        .from("paranoia_questions")
+        .select("*")
+        .eq("category", `AI-Generated (${room.room_code})`);
+
       let questionsToUse = [];
       
-      if (aiQuestions && aiQuestions.length > 0) {
-        // Use AI-generated questions from room's game_state
-        questionsToUse = aiQuestions.map((q: any, index: number) => ({
-          id: `ai-paranoia-${index}`,
-          question: q.question,
-          category: `AI-Generated (${room.room_code})`,
-          spiciness_level: 3
-        }));
+      if (aiQuestionsData && aiQuestionsData.length > 0) {
+        // Use AI-generated questions if available
+        questionsToUse = aiQuestionsData;
       } else {
-        // Fall back to general questions from database
+        // Fall back to general questions
         const { data: generalQuestionsData } = await supabase
           .from("paranoia_questions")
           .select("*")
-          .eq("category", "general");
+          .neq("category", `AI-Generated (${room.room_code})`);
         
         questionsToUse = generalQuestionsData || [];
       }

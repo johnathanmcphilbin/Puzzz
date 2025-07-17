@@ -46,16 +46,14 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
     setIsCreating(true);
     
     try {
+      // Generate room code
       const roomCode = generateRoomCode();
       const hostId = crypto.randomUUID();
       
-      console.log("🚀 Starting simple room creation");
-      console.log("Room code:", roomCode);
-      console.log("Host name:", trimmedName);
+      console.log("Creating room with code:", roomCode);
       console.log("Host ID:", hostId);
       
-      // Step 1: Create the room
-      console.log("📝 Creating room...");
+      // Create room first
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
         .insert({
@@ -63,26 +61,20 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
           name: `${trimmedName}'s Room`,
           host_id: hostId,
           current_game: selectedGame,
-          game_state: { 
-            phase: "lobby", 
-            currentQuestion: null, 
-            votes: {}, 
-            hostOnScreen 
-          },
+          game_state: { phase: "lobby", currentQuestion: null, votes: {}, hostOnScreen },
           is_active: true
         })
         .select()
         .single();
 
       if (roomError) {
-        console.error("❌ Room creation failed:", roomError);
-        throw new Error(`Room creation failed: ${roomError.message}`);
+        console.error("Room creation error:", roomError);
+        throw new Error("Failed to create room");
       }
 
-      console.log("✅ Room created:", roomData);
+      console.log("Room created successfully:", roomData);
 
-      // Step 2: Add the host as a player (no foreign key constraint)
-      console.log("👤 Adding host as player...");
+      // Add host as player
       const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert({
@@ -95,38 +87,36 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
         .single();
 
       if (playerError) {
-        console.error("❌ Player creation failed:", playerError);
-        // Clean up the room
+        console.error("Player creation error:", playerError);
+        // Clean up room if player creation fails
         await supabase.from("rooms").delete().eq("id", roomData.id);
-        throw new Error(`Player creation failed: ${playerError.message}`);
+        throw new Error("Failed to add host to room");
       }
 
-      console.log("✅ Host player created:", playerData);
+      console.log("Player created successfully:", playerData);
 
       // Store session data
       localStorage.setItem("puzzz_player_id", hostId);
       localStorage.setItem("puzzz_player_name", trimmedName);
       localStorage.setItem("puzzz_room_code", roomCode);
 
-      // Track the event
+      // Track room creation
       trackEvent("room_created", { roomCode, hostName: trimmedName });
 
-      // Show success message
       toast({
         title: "Room Created!",
         description: `Room created with code ${roomCode}`,
+        className: "bg-success text-success-foreground",
       });
 
-      console.log("🎉 Room creation complete! Navigating to room...");
-
-      // Navigate to the room
+      // Navigate to room
       navigate(`/room/${roomCode}`);
       
     } catch (error) {
-      console.error("💥 Room creation process failed:", error);
+      console.error("Error creating room:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create room. Please try again.",
+        description: "Failed to create room. Please try again.",
         variant: "destructive",
       });
     } finally {
