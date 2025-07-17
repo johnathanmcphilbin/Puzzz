@@ -131,6 +131,16 @@
            shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105;
   }
   
+  /* Forms Game Colors */
+  .forms-primary {
+    @apply bg-[hsl(var(--primary))];
+  }
+  
+  /* Paranoia Game Colors */
+  .paranoia-primary {
+    @apply bg-[hsl(var(--destructive))];
+  }
+  
   /* Room Code Display */
   .room-code {
     @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] 

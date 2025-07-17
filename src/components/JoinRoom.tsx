@@ -1,84 +1,69 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { Loader2, UserPlus } from "lucide-react";
-import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
-import { validatePlayerName, sanitizeInput } from "@/utils/inputValidation";
 
-export const JoinRoom = () => {
+interface JoinRoomProps {
+  onClose?: () => void;
+}
+
+export const JoinRoom = ({ onClose }: JoinRoomProps) => {
   const [roomCode, setRoomCode] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [isJoining, setIsJoining] = useState(false);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { trackEvent } = useAnalyticsContext();
+  const navigate = useNavigate();
 
-  // Check for room code in URL parameters (from QR code)
-  useEffect(() => {
-    const urlRoomCode = searchParams.get("room");
-    if (urlRoomCode) {
-      setRoomCode(urlRoomCode.toUpperCase());
-    }
-  }, [searchParams]);
-
-  const joinRoom = async () => {
-    const trimmedRoomCode = roomCode.trim().toUpperCase();
-    const trimmedPlayerName = playerName.trim();
-
-    if (!trimmedRoomCode || !trimmedPlayerName) {
+  const joinRoom = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!roomCode.trim() || !playerName.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please fill in both room code and your name.",
+        description: "Please fill in all fields",
         variant: "destructive",
       });
       return;
     }
 
-    if (trimmedRoomCode.length !== 6) {
+    const cleanedRoomCode = roomCode.trim().toUpperCase();
+    
+    if (cleanedRoomCode.length !== 6) {
       toast({
         title: "Invalid Room Code",
-        description: "Room code must be 6 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (trimmedPlayerName.length < 1 || trimmedPlayerName.length > 30) {
-      toast({
-        title: "Invalid Name",
-        description: "Please enter a name between 1-30 characters.",
+        description: "Room code must be 6 characters long",
         variant: "destructive",
       });
       return;
     }
 
     setIsJoining(true);
+    
     try {
-      console.log("Joining room with code:", trimmedRoomCode);
-      
+      console.log("Attempting to join room:", cleanedRoomCode);
+
       // Check if room exists and is active
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
         .select("*")
-        .eq("room_code", trimmedRoomCode)
+        .eq("room_code", cleanedRoomCode)
         .eq("is_active", true)
         .maybeSingle();
 
       if (roomError) {
         console.error("Room lookup error:", roomError);
-        throw new Error("Failed to check room");
+        throw new Error("Failed to find room");
       }
 
       if (!roomData) {
         toast({
           title: "Room Not Found",
-          description: "Please check your room code and try again.",
+          description: "The room code you entered doesn't exist or has been closed",
           variant: "destructive",
         });
         return;
@@ -87,66 +72,61 @@ export const JoinRoom = () => {
       console.log("Room found:", roomData);
 
       // Check if player name is already taken in this room
-      const { data: existingPlayer } = await supabase
+      const { data: existingPlayers } = await supabase
         .from("players")
         .select("player_name")
-        .eq("room_id", roomData.id)
-        .eq("player_name", trimmedPlayerName)
-        .maybeSingle();
+        .eq("room_id", roomData.id);
 
-      if (existingPlayer) {
+      const playerNames = existingPlayers?.map(p => p.player_name.toLowerCase()) || [];
+      if (playerNames.includes(playerName.trim().toLowerCase())) {
         toast({
           title: "Name Taken",
-          description: "This name is already taken in this room. Please choose another.",
+          description: "This name is already taken in this room. Please choose a different name.",
           variant: "destructive",
         });
         return;
       }
 
+      // Generate player ID and add to room
       const playerId = crypto.randomUUID();
 
-      // Add player to room
       const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: trimmedPlayerName,
           player_id: playerId,
+          player_name: playerName.trim(),
           is_host: false
         })
         .select()
         .single();
 
       if (playerError) {
-        console.error("Player creation error:", playerError);
+        console.error("Player join error:", playerError);
         throw new Error("Failed to join room");
       }
 
-      console.log("Player created successfully:", playerData);
+      console.log("Player joined successfully:", playerData);
 
       // Store player info in localStorage
       localStorage.setItem("puzzz_player_id", playerId);
-      localStorage.setItem("puzzz_player_name", trimmedPlayerName);
-      localStorage.setItem("puzzz_room_code", trimmedRoomCode);
-
-      // Track player join
-      trackEvent("player_joined", { 
-        roomCode: trimmedRoomCode, 
-        playerName: trimmedPlayerName 
-      });
+      localStorage.setItem("puzzz_player_name", playerName.trim());
 
       toast({
         title: "Joined Room!",
-        description: `Welcome to "${roomData.name}"`,
+        description: `Successfully joined ${roomData.name}`,
         className: "bg-success text-success-foreground",
       });
 
-      navigate(`/room/${trimmedRoomCode}`);
-    } catch (error) {
+      // Navigate to room
+      navigate(`/room/${cleanedRoomCode}`);
+      onClose?.();
+
+    } catch (error: any) {
       console.error("Error joining room:", error);
       toast({
         title: "Error",
-        description: "Failed to join room. Please try again.",
+        description: error.message || "Failed to join room",
         variant: "destructive",
       });
     } finally {
@@ -155,63 +135,63 @@ export const JoinRoom = () => {
   };
 
   return (
-    <Card className="w-full max-w-lg shadow-lg">
+    <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
-        <div className="mx-auto mb-4 p-3 bg-accent/10 rounded-full w-fit">
-          <UserPlus className="h-8 w-8 text-accent" />
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <UserPlus className="h-5 w-5 text-primary" />
+          <CardTitle>Join Room</CardTitle>
         </div>
-        <CardTitle className="text-2xl">Join Room</CardTitle>
-        <CardDescription className="text-base">
-          Enter a room code to join your friends
+        <CardDescription>
+          Enter a room code to join an existing game
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="roomCode" className="text-base font-medium">
-            Room Code
-          </Label>
-          <Input
-            id="roomCode"
-            placeholder="Enter 6-digit room code..."
-            value={roomCode}
-            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-            className="text-lg py-3 text-center font-mono tracking-wider"
-            maxLength={6}
-          />
-        </div>
+      <CardContent>
+        <form onSubmit={joinRoom} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="roomCode">Room Code</Label>
+            <Input
+              id="roomCode"
+              type="text"
+              placeholder="Enter 6-character room code"
+              value={roomCode}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              maxLength={6}
+              disabled={isJoining}
+              className="text-center text-lg font-mono tracking-wider"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="playerName">Your Name</Label>
+            <Input
+              id="playerName"
+              type="text"
+              placeholder="Enter your name"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              maxLength={20}
+              disabled={isJoining}
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="playerName" className="text-base font-medium">
-            Your Name
-          </Label>
-          <Input
-            id="playerName"
-            placeholder="Enter your name..."
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            className="text-lg py-3"
-            maxLength={30}
-          />
-        </div>
-
-        <Button 
-          onClick={joinRoom} 
-          disabled={isJoining}
-          className="w-full text-lg py-6 bg-accent hover:bg-accent/90 shadow-md"
-          size="lg"
-        >
-          {isJoining ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Joining Room...
-            </>
-          ) : (
-            <>
-              <UserPlus className="mr-2 h-5 w-5" />
-              Join Room
-            </>
-          )}
-        </Button>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isJoining}
+          >
+            {isJoining ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Joining Room...
+              </>
+            ) : (
+              <>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Join Room
+              </>
+            )}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

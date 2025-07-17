@@ -1,41 +1,42 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus } from "lucide-react";
-import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
+import { useNavigate } from "react-router-dom";
+import { Loader2, Crown, Users } from "lucide-react";
 
 interface CreateRoomProps {
-  selectedGame?: string;
+  selectedGame: string;
+  onClose?: () => void;
 }
 
-export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProps) => {
-  const [hostName, setHostName] = useState("");
+export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
+  const [roomName, setRoomName] = useState("");
+  const [playerName, setPlayerName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const { trackEvent } = useAnalyticsContext();
+  const navigate = useNavigate();
 
   const generateRoomCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
     for (let i = 0; i < 6; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
   };
 
-  const createRoom = async () => {
-    const trimmedName = hostName.trim();
+  const createRoom = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (!trimmedName || trimmedName.length < 1 || trimmedName.length > 30) {
+    if (!roomName.trim() || !playerName.trim()) {
       toast({
-        title: "Invalid Name",
-        description: "Please enter a name between 1-30 characters.",
+        title: "Missing Information",
+        description: "Please fill in all fields",
         variant: "destructive",
       });
       return;
@@ -44,22 +45,25 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
     setIsCreating(true);
     
     try {
-      // Generate room code
       const roomCode = generateRoomCode();
       const hostId = crypto.randomUUID();
-      
+
       console.log("Creating room with code:", roomCode);
       console.log("Host ID:", hostId);
-      
-      // Create room first
+
+      // Create room
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
         .insert({
           room_code: roomCode,
-          name: `${trimmedName}'s Room`,
+          name: roomName.trim(),
           host_id: hostId,
           current_game: selectedGame,
-          game_state: { phase: "lobby", currentQuestion: null, votes: {} },
+          game_state: {
+            phase: "lobby",
+            votes: {},
+            currentQuestion: null
+          },
           is_active: true
         })
         .select()
@@ -67,7 +71,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       if (roomError) {
         console.error("Room creation error:", roomError);
-        throw new Error("Failed to create room");
+        throw roomError;
       }
 
       console.log("Room created successfully:", roomData);
@@ -77,8 +81,8 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: trimmedName,
           player_id: hostId,
+          player_name: playerName.trim(),
           is_host: true
         })
         .select()
@@ -86,35 +90,30 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       if (playerError) {
         console.error("Player creation error:", playerError);
-        // Clean up room if player creation fails
-        await supabase.from("rooms").delete().eq("id", roomData.id);
-        throw new Error("Failed to add host to room");
+        throw playerError;
       }
 
       console.log("Player created successfully:", playerData);
 
-      // Store session data
+      // Store player info in localStorage
       localStorage.setItem("puzzz_player_id", hostId);
-      localStorage.setItem("puzzz_player_name", trimmedName);
-      localStorage.setItem("puzzz_room_code", roomCode);
-
-      // Track room creation
-      trackEvent("room_created", { roomCode, hostName: trimmedName });
+      localStorage.setItem("puzzz_player_name", playerName.trim());
 
       toast({
         title: "Room Created!",
-        description: `Room created with code ${roomCode}`,
+        description: `Room ${roomCode} has been created successfully`,
         className: "bg-success text-success-foreground",
       });
 
       // Navigate to room
       navigate(`/room/${roomCode}`);
-      
-    } catch (error) {
+      onClose?.();
+
+    } catch (error: any) {
       console.error("Error creating room:", error);
       toast({
         title: "Error",
-        description: "Failed to create room. Please try again.",
+        description: error.message || "Failed to create room",
         variant: "destructive",
       });
     } finally {
@@ -122,55 +121,82 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
     }
   };
 
-  return (
-    <Card className="w-full max-w-lg shadow-lg">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-          <Plus className="h-8 w-8 text-primary" />
-        </div>
-        <CardTitle className="text-2xl">Create New Room</CardTitle>
-        <CardDescription className="text-base">
-          Start a new game session for you and your friends
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="hostName" className="text-base font-medium">
-            Your Name
-          </Label>
-          <Input
-            id="hostName"
-            placeholder="Enter your name..."
-            value={hostName}
-            onChange={(e) => setHostName(e.target.value)}
-            className="text-lg py-3"
-            maxLength={30}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                createRoom();
-              }
-            }}
-          />
-        </div>
+  const getGameTitle = (gameType: string) => {
+    switch (gameType) {
+      case "would_you_rather":
+        return "Would You Rather";
+      case "forms_game":
+        return "Forms Game";
+      case "paranoia":
+        return "Paranoia";
+      default:
+        return gameType;
+    }
+  };
 
-        <Button 
-          onClick={createRoom} 
-          disabled={isCreating || !hostName.trim()}
-          className="w-full text-lg py-6 bg-primary hover:bg-primary-hover shadow-md"
-          size="lg"
-        >
-          {isCreating ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Creating Room...
-            </>
-          ) : (
-            <>
-              <Plus className="mr-2 h-5 w-5" />
-              Create Room
-            </>
-          )}
-        </Button>
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="text-center">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Crown className="h-5 w-5 text-warning" />
+          <CardTitle>Create Room</CardTitle>
+        </div>
+        <CardDescription>
+          Set up a new game room for your friends
+        </CardDescription>
+        <div className="flex items-center justify-center gap-2 mt-3">
+          <Badge variant="outline" className="gap-1">
+            <Users className="h-3 w-3" />
+            {getGameTitle(selectedGame)}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={createRoom} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="roomName">Room Name</Label>
+            <Input
+              id="roomName"
+              type="text"
+              placeholder="Enter room name"
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value)}
+              maxLength={50}
+              disabled={isCreating}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="playerName">Your Name</Label>
+            <Input
+              id="playerName"
+              type="text"
+              placeholder="Enter your name"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              maxLength={20}
+              disabled={isCreating}
+            />
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isCreating}
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Room...
+              </>
+            ) : (
+              <>
+                <Crown className="mr-2 h-4 w-4" />
+                Create Room
+              </>
+            )}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

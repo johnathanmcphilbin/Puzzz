@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_customizations: {
+        Row: {
+          created_at: string | null
+          customization_text: string
+          id: string
+          room_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customization_text: string
+          id?: string
+          room_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customization_text?: string
+          id?: string
+          room_id?: string
+        }
+        Relationships: []
+      }
       forms_questions: {
         Row: {
           category: string | null

@@ -29,6 +29,7 @@ interface Question {
   option_a: string;
   option_b: string;
   category: string;
+  created_at?: string;
 }
 
 interface WouldYouRatherGameProps {
@@ -109,19 +110,22 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
             id: "default-1",
             option_a: "Have the ability to fly",
             option_b: "Have the ability to read minds",
-            category: "default"
+            category: "default",
+            created_at: new Date().toISOString()
           },
           {
             id: "default-2", 
             option_a: "Always be 10 minutes late",
             option_b: "Always be 20 minutes early",
-            category: "default"
+            category: "default",
+            created_at: new Date().toISOString()
           },
           {
             id: "default-3",
             option_a: "Live in a world without music",
             option_b: "Live in a world without movies",
-            category: "default"
+            category: "default",
+            created_at: new Date().toISOString()
           }
         ];
         questions.push(...defaultQuestions);
