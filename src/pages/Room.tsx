@@ -203,6 +203,13 @@ export const Room = () => {
     };
   };
 
+  useEffect(() => {
+    if (room) {
+      const cleanup = setupRealtimeSubscriptions(room);
+      return cleanup;
+    }
+  }, [room?.id, roomCode]);
+
   const loadPlayers = async (roomId: string) => {
     const { data: playersData } = await supabase
       .from("players")
