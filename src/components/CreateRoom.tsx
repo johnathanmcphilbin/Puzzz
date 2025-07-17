@@ -49,32 +49,59 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
       const roomCode = generateRoomCode();
       const hostId = crypto.randomUUID();
       
-      console.log("🚀 Starting room creation with atomic function");
+      console.log("🚀 Starting simple room creation");
       console.log("Room code:", roomCode);
       console.log("Host name:", trimmedName);
       console.log("Host ID:", hostId);
       
-      // Use the atomic database function to create room and player together
-      const { data: result, error } = await supabase.rpc('create_room_with_host', {
-        room_code_param: roomCode,
-        room_name_param: `${trimmedName}'s Room`,
-        host_id_param: hostId,
-        host_name_param: trimmedName,
-        current_game_param: selectedGame,
-        game_state_param: { 
-          phase: "lobby", 
-          currentQuestion: null, 
-          votes: {}, 
-          hostOnScreen 
-        }
-      });
+      // Step 1: Create the room
+      console.log("📝 Creating room...");
+      const { data: roomData, error: roomError } = await supabase
+        .from("rooms")
+        .insert({
+          room_code: roomCode,
+          name: `${trimmedName}'s Room`,
+          host_id: hostId,
+          current_game: selectedGame,
+          game_state: { 
+            phase: "lobby", 
+            currentQuestion: null, 
+            votes: {}, 
+            hostOnScreen 
+          },
+          is_active: true
+        })
+        .select()
+        .single();
 
-      if (error) {
-        console.error("❌ Room creation failed:", error);
-        throw new Error(`Room creation failed: ${error.message}`);
+      if (roomError) {
+        console.error("❌ Room creation failed:", roomError);
+        throw new Error(`Room creation failed: ${roomError.message}`);
       }
 
-      console.log("✅ Room and player created successfully:", result);
+      console.log("✅ Room created:", roomData);
+
+      // Step 2: Add the host as a player (no foreign key constraint)
+      console.log("👤 Adding host as player...");
+      const { data: playerData, error: playerError } = await supabase
+        .from("players")
+        .insert({
+          room_id: roomData.id,
+          player_name: trimmedName,
+          player_id: hostId,
+          is_host: true
+        })
+        .select()
+        .single();
+
+      if (playerError) {
+        console.error("❌ Player creation failed:", playerError);
+        // Clean up the room
+        await supabase.from("rooms").delete().eq("id", roomData.id);
+        throw new Error(`Player creation failed: ${playerError.message}`);
+      }
+
+      console.log("✅ Host player created:", playerData);
 
       // Store session data
       localStorage.setItem("puzzz_player_id", hostId);
