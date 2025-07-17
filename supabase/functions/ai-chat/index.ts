@@ -78,6 +78,12 @@ serve(async (req) => {
       userPrompt = `Generate questions for all three party games for a group that is: ${customization}. Craziness level: ${crazynessLevel}%`;
     }
 
+    console.log('Sending request to OpenAI:', {
+      action,
+      userPrompt,
+      systemPrompt
+    });
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -96,7 +102,13 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const error = await response.json().catch(() => ({}));
+      console.error('OpenAI API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error
+      });
+      throw new Error(`OpenAI API error: ${response.status} - ${error.error?.message || response.statusText}`);
     }
 
     const data = await response.json();

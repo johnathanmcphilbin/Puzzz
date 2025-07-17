@@ -227,45 +227,52 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         throw new Error(error?.message || 'Failed to generate questions');
       }
 
-      // Parse the response which should contain questions for all games
-      const questions = JSON.parse(data.response);
-      
-      // Insert generated questions into respective tables
-      const [wyrError, formsError, paranoiaError] = await Promise.all([
-        supabase.from('would_you_rather_questions').insert(
-          questions.would_you_rather.map((q: any) => ({
+      try {
+        const generatedQuestions = JSON.parse(data.response);
+        console.log('Generated questions:', generatedQuestions);
+
+        // Insert generated questions into respective tables
+        const { error: wyrError } = await supabase.from('would_you_rather_questions').insert(
+          generatedQuestions.would_you_rather.map((q: any) => ({
             option_a: q.option_a,
             option_b: q.option_b,
             category: `AI-Generated (${roomCode})`
           }))
-        ),
-        supabase.from('forms_questions').insert(
-          questions.forms.map((q: any) => ({
+        );
+
+        const { error: formsError } = await supabase.from('forms_questions').insert(
+          generatedQuestions.forms.map((q: any) => ({
             question: q.question,
             category: `AI-Generated (${roomCode})`
           }))
-        ),
-        supabase.from('paranoia_questions').insert(
-          questions.paranoia.map((q: any) => ({
+        );
+
+        const { error: paranoiaError } = await supabase.from('paranoia_questions').insert(
+          generatedQuestions.paranoia.map((q: any) => ({
             question: q.question,
             category: `AI-Generated (${roomCode})`
           }))
-        )
-      ]);
+        );
 
-      if (wyrError || formsError || paranoiaError) {
-        throw new Error('Failed to save generated questions');
-      }
+        console.log('Insert errors:', { wyrError, formsError, paranoiaError });
 
-      setHasGeneratedQuestions(true);
-      addMessage("✅ Generated custom questions for all your games! They're now active in your room.");
-      
-      toast({
-        title: "Questions Generated!",
-        description: "Custom questions have been created for all games",
-      });
+        if (wyrError || formsError || paranoiaError) {
+          throw new Error(`Failed to save generated questions: ${wyrError?.message || formsError?.message || paranoiaError?.message}`);
+        }
+
+        setHasGeneratedQuestions(true);
+        addMessage("✅ Generated custom questions for all your games! They're now active in your room.");
         
-      setIsLoading(false);
+        toast({
+          title: "Questions Generated!",
+          description: "Custom questions have been created for all games",
+        });
+          
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error parsing or saving questions:', error);
+        throw new Error(`Failed to process questions: ${error.message}`);
+      }
     } catch (error) {
       console.error("Error generating questions:", error);
       addMessage("❌ Sorry, I had trouble generating questions. Please try again.");
