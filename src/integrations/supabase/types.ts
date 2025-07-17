@@ -210,36 +210,6 @@ export type Database = {
           },
         ]
       }
-      player_sessions: {
-        Row: {
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          is_active: boolean | null
-          player_id: string
-          room_id: string
-          session_token: string
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          player_id: string
-          room_id: string
-          session_token: string
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          player_id?: string
-          room_id?: string
-          session_token?: string
-        }
-        Relationships: []
-      }
       players: {
         Row: {
           id: string
@@ -358,10 +328,6 @@ export type Database = {
       }
       validate_room_code: {
         Args: { code: string }
-        Returns: boolean
-      }
-      validate_session: {
-        Args: { p_player_id: string; p_session_token: string }
         Returns: boolean
       }
     }
