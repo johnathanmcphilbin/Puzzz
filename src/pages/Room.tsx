@@ -193,7 +193,14 @@ export const Room = () => {
         (payload) => {
           console.log("Room update received:", payload);
           if (payload.new) {
-            setRoom(payload.new as Room);
+            const updatedRoom = payload.new as Room;
+            console.log("Updated room state:", updatedRoom);
+            setRoom(updatedRoom);
+            
+            // Force a re-render by updating the room state
+            if (updatedRoom.game_state?.phase && updatedRoom.game_state.phase !== "lobby") {
+              console.log("Game started! Phase:", updatedRoom.game_state.phase);
+            }
           }
         }
       )

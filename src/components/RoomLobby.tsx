@@ -210,26 +210,39 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
     setIsStarting(true);
     try {
-      const { error } = await supabase
+      const gameState = selectedGame === "paranoia" ? {
+        phase: "waiting",
+        currentPlayerIndex: 0,
+        roundNumber: 1,
+        maxRounds: 10
+      } : { 
+        phase: "playing", 
+        currentQuestion: null, 
+        questionIndex: 0,
+        votes: {},
+        showResults: false
+      };
+
+      console.log("Starting game with state:", gameState);
+      
+      const { data: updatedRoom, error } = await supabase
         .from("rooms")
         .update({
           current_game: selectedGame,
-          game_state: selectedGame === "paranoia" ? {
-            phase: "waiting",
-            currentPlayerIndex: 0,
-            roundNumber: 1,
-            maxRounds: 10
-          } : { 
-            phase: "playing", 
-            currentQuestion: null, 
-            questionIndex: 0,
-            votes: {},
-            showResults: false
-          }
+          game_state: gameState
         })
-        .eq("id", room.id);
+        .eq("id", room.id)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      console.log("Game started successfully, updated room:", updatedRoom);
+      
+      // Update the room state immediately
+      if (updatedRoom) {
+        onUpdateRoom(updatedRoom);
+      }
 
       const gameTitle = selectedGame === "forms_game" ? "Forms Game" : 
                         selectedGame === "paranoia" ? "Paranoia" : "Would You Rather";
