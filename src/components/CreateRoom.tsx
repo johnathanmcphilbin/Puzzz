@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
 import { useAuth } from "@/hooks/useAuth";
-import { sanitizeInput } from "@/utils/inputValidation";
 
 interface CreateRoomProps {
   selectedGame?: string;
@@ -50,9 +49,6 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
     setIsCreating(true);
     
     try {
-      // Sanitize the host name
-      const sanitizedName = await sanitizeInput(trimmedName);
-      
       // Generate room code and host ID
       const roomCode = generateRoomCode();
       const hostId = crypto.randomUUID();
@@ -65,7 +61,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
         .from("rooms")
         .insert({
           room_code: roomCode,
-          name: `${sanitizedName}'s Room`,
+          name: `${trimmedName}'s Room`,
           host_id: hostId,
           current_game: selectedGame,
           game_state: { phase: "lobby", currentQuestion: null, votes: {}, hostOnScreen },
@@ -82,14 +78,14 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
       console.log("Room created successfully:", roomData);
 
       // Create session for the host
-      await createSession(hostId, sanitizedName, roomData.id);
+      await createSession(hostId, trimmedName);
 
       // Add host as player
       const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: sanitizedName,
+          player_name: trimmedName,
           player_id: hostId,
           is_host: true
         })
@@ -109,7 +105,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
       localStorage.setItem("puzzz_room_code", roomCode);
 
       // Track room creation
-      trackEvent("room_created", { roomCode, hostName: sanitizedName });
+      trackEvent("room_created", { roomCode, hostName: trimmedName });
 
       toast({
         title: "Room Created!",

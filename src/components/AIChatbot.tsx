@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { sanitizeMessage, sanitizeCustomization } from '@/utils/inputValidation';
 
 interface Message {
   id: string;
@@ -127,21 +127,20 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
       return;
     }
 
-    const userMessage = sanitizeMessage(inputMessage);
+    const userMessage = inputMessage.trim();
     setInputMessage('');
     addMessage(userMessage, true);
     setIsLoading(true);
 
     try {
       // Set customization and automatically start generating questions
-      const sanitizedCustomization = sanitizeCustomization(userMessage);
-      setCustomization(sanitizedCustomization);
+      setCustomization(userMessage);
       
       // Save customization to database
       if (roomCode) {
         await supabase.from('ai_chat_customizations').insert({
           room_id: roomCode,
-          customization_text: sanitizedCustomization
+          customization_text: userMessage
         });
       }
 
@@ -149,7 +148,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
       addMessage(`Perfect! I'll now generate custom questions for all your games based on: "${userMessage}"`);
       
       // Automatically start generating questions
-      await generateQuestionsFromCustomization(sanitizedCustomization);
+      await generateQuestionsFromCustomization(userMessage);
       
     } catch (error) {
       console.error('Chat error:', error);
@@ -242,7 +241,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         body: {
           message: '',
           action: 'generate_all_questions',
-          customization: sanitizeCustomization(customizationText.trim()),
+          customization: customizationText.trim(),
           crazynessLevel: crazynessLevel[0],
           roomCode
         }

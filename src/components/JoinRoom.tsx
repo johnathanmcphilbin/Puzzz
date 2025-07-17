@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, UserPlus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
 import { useAuth } from "@/hooks/useAuth";
-import { validatePlayerName, validateRoomCode, sanitizeInput } from "@/utils/inputValidation";
+import { validatePlayerName, validateRoomCode } from "@/utils/inputValidation";
 
 export const JoinRoom = () => {
   const [roomCode, setRoomCode] = useState("");
@@ -78,9 +78,6 @@ export const JoinRoom = () => {
     try {
       console.log("Joining room with code:", trimmedRoomCode);
       
-      // Sanitize player name
-      const sanitizedPlayerName = await sanitizeInput(trimmedPlayerName);
-      
       // Check if room exists and is active
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
@@ -110,7 +107,7 @@ export const JoinRoom = () => {
         .from("players")
         .select("player_name")
         .eq("room_id", roomData.id)
-        .eq("player_name", sanitizedPlayerName)
+        .eq("player_name", trimmedPlayerName)
         .maybeSingle();
 
       if (existingPlayer) {
@@ -125,14 +122,14 @@ export const JoinRoom = () => {
       const playerId = crypto.randomUUID();
 
       // Create session first
-      await createSession(playerId, sanitizedPlayerName, roomData.id);
+      await createSession(playerId, trimmedPlayerName);
 
       // Add player to room
       const { data: playerData, error: playerError } = await supabase
         .from("players")
         .insert({
           room_id: roomData.id,
-          player_name: sanitizedPlayerName,
+          player_name: trimmedPlayerName,
           player_id: playerId,
           is_host: false
         })
@@ -163,7 +160,7 @@ export const JoinRoom = () => {
       // Track player join
       trackEvent("player_joined", { 
         roomCode: trimmedRoomCode, 
-        playerName: sanitizedPlayerName 
+        playerName: trimmedPlayerName 
       });
 
       toast({
