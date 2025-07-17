@@ -325,6 +325,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_room_with_host: {
+        Args: {
+          room_code_param: string
+          room_name_param: string
+          host_id_param: string
+          host_name_param: string
+          current_game_param?: string
+          game_state_param?: Json
+        }
+        Returns: Json
+      }
       validate_player_name: {
         Args: { name: string }
         Returns: boolean

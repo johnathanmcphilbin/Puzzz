@@ -53,28 +53,29 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
       console.log("Creating room with code:", roomCode);
       console.log("Host ID:", hostId);
       
-      // Use RPC call to create room and player atomically
-      const { data: result, error: rpcError } = await supabase.rpc('create_room_with_host', {
-        room_code_param: roomCode,
-        room_name_param: `${trimmedName}'s Room`,
-        host_id_param: hostId,
-        host_name_param: trimmedName,
-        current_game_param: selectedGame,
-        game_state_param: { phase: "lobby", currentQuestion: null, votes: {}, hostOnScreen }
-      });
+      // Use database function to create room and player atomically
+      const { data: result, error: rpcError } = await supabase
+        .rpc('create_room_with_host', {
+          room_code_param: roomCode,
+          room_name_param: `${trimmedName}'s Room`,
+          host_id_param: hostId,
+          host_name_param: trimmedName,
+          current_game_param: selectedGame,
+          game_state_param: { phase: "lobby", currentQuestion: null, votes: {}, hostOnScreen }
+        });
 
       if (rpcError) {
         console.error("RPC error:", rpcError);
-        // Fallback to manual approach
-        return await createRoomManually();
+        throw new Error(`Failed to create room: ${rpcError.message}`);
       }
 
-      console.log("Room and player created successfully via RPC:", result);
-      const roomData = result?.room_data;
-      const playerData = result?.player_data;
+      console.log("Room and player created successfully:", result);
+      
+      const roomData = (result as any)?.room_data;
+      const playerData = (result as any)?.player_data;
 
       if (!roomData || !playerData) {
-        throw new Error("Failed to get room or player data from RPC");
+        throw new Error("Failed to get room or player data");
       }
 
       // Store session data
