@@ -1,6 +1,3 @@
-
-import { supabase } from "@/integrations/supabase/client";
-
 // Input validation utilities to prevent XSS and injection attacks
 
 // List of banned words and inappropriate content
@@ -47,29 +44,11 @@ const containsBannedWord = (text: string): boolean => {
   });
 };
 
-export const validateRoomCode = async (code: string): Promise<boolean> => {
-  // Use database validation function
-  try {
-    const { data, error } = await supabase.rpc('validate_room_code', { code });
-    return data && !error;
-  } catch (error) {
-    console.error('Room code validation error:', error);
-    return /^[A-Z0-9]{6}$/.test(code); // Fallback to client validation
-  }
+export const validateRoomCode = (code: string): boolean => {
+  return /^[A-Z0-9]{6}$/.test(code);
 };
 
-export const validatePlayerName = async (name: string): Promise<boolean> => {
-  // Use database validation function
-  try {
-    const { data, error } = await supabase.rpc('validate_player_name', { name });
-    if (data !== null && !error) {
-      return data;
-    }
-  } catch (error) {
-    console.error('Player name validation error:', error);
-  }
-  
-  // Fallback to client validation
+export const validatePlayerName = (name: string): boolean => {
   const trimmed = name.trim();
   return (
     trimmed.length >= 1 && 
@@ -79,26 +58,18 @@ export const validatePlayerName = async (name: string): Promise<boolean> => {
   );
 };
 
-export const sanitizeInput = async (input: string): Promise<string> => {
-  // Use database sanitization function when possible
-  try {
-    const { data, error } = await supabase.rpc('sanitize_input', { input_text: input });
-    if (data && !error) {
-      return data;
-    }
-  } catch (error) {
-    console.error('Database sanitization error:', error);
-  }
-  
-  // Fallback to client sanitization
+export const sanitizeInput = (input: string): string => {
   return input
     .replace(/[<>"`';&]/g, '')
     .trim()
     .slice(0, 1000);
 };
 
-export const sanitizeMessage = async (message: string): Promise<string> => {
-  return sanitizeInput(message);
+export const sanitizeMessage = (message: string): string => {
+  return message
+    .replace(/[<>"`';&]/g, '')
+    .trim()
+    .slice(0, 1000);
 };
 
 export const validateEmail = (email: string): boolean => {
@@ -106,31 +77,9 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email) && email.length <= 254;
 };
 
-export const sanitizeCustomization = async (customization: string): Promise<string> => {
-  const sanitized = await sanitizeInput(customization);
-  return sanitized.slice(0, 500);
-};
-
-// Enhanced security functions
-export const isSecurePassword = (password: string): boolean => {
-  return password.length >= 8 && 
-         /[A-Z]/.test(password) && 
-         /[a-z]/.test(password) && 
-         /[0-9]/.test(password);
-};
-
-export const validateSessionToken = async (playerId: string, sessionToken: string): Promise<boolean> => {
-  // Simplified validation - just check if player exists in database
-  try {
-    const { data, error } = await supabase
-      .from('players')
-      .select('id')
-      .eq('player_id', playerId)
-      .maybeSingle();
-    
-    return data && !error;
-  } catch (error) {
-    console.error('Session validation error:', error);
-    return false;
-  }
+export const sanitizeCustomization = (customization: string): string => {
+  return customization
+    .replace(/[<>"`';&]/g, '')
+    .trim()
+    .slice(0, 500);
 };

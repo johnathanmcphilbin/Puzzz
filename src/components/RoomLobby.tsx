@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Play, Users, Crown, LogOut, ThumbsUp, QrCode, Monitor } from "lucide-react";
+import { Copy, Play, Users, Crown, LogOut, ThumbsUp, QrCode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 
@@ -210,49 +210,26 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
     setIsStarting(true);
     try {
-      const gameState = selectedGame === "paranoia" ? {
-        phase: "waiting",
-        currentPlayerIndex: 0,
-        roundNumber: 1,
-        maxRounds: 10
-      } : { 
-        phase: "playing", 
-        currentQuestion: null, 
-        questionIndex: 0,
-        votes: {},
-        showResults: false
-      };
-
-      console.log("Starting game with state:", gameState);
-      
-      try {
-        // First update the room in database
-        const { error: updateError } = await supabase
-          .from("rooms")
-          .update({
-            current_game: selectedGame,
-            game_state: gameState
-          })
-          .eq("id", room.id);
-  
-        if (updateError) throw updateError;
-        
-        console.log("Room updated in database, updating local state");
-        
-        // Then update the local state immediately without waiting for subscription
-        const updatedRoom = {
-          ...room,
+      const { error } = await supabase
+        .from("rooms")
+        .update({
           current_game: selectedGame,
-          game_state: gameState
-        };
-        
-        onUpdateRoom(updatedRoom);
-        
-        console.log("Game started successfully, local state updated:", updatedRoom);
-      } catch (err) {
-        console.error("Error starting game:", err);
-        throw err;
-      }
+          game_state: selectedGame === "paranoia" ? {
+            phase: "waiting",
+            currentPlayerIndex: 0,
+            roundNumber: 1,
+            maxRounds: 10
+          } : { 
+            phase: "playing", 
+            currentQuestion: null, 
+            questionIndex: 0,
+            votes: {},
+            showResults: false
+          }
+        })
+        .eq("id", room.id);
+
+      if (error) throw error;
 
       const gameTitle = selectedGame === "forms_game" ? "Forms Game" : 
                         selectedGame === "paranoia" ? "Paranoia" : "Would You Rather";
@@ -428,31 +405,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           </Card>
         </div>
 
-        {/* Host Screen Link */}
-        {(room.game_state as any)?.hostOnScreen && (
-          <div className="flex justify-center mb-8">
-            <Card className="w-fit border-primary/20 bg-primary/5">
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Monitor className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold">Host Screen Available</h3>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Display live game progress on a big screen
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(`/host/${room.room_code}`, '_blank')}
-                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                >
-                  <Monitor className="h-4 w-4 mr-2" />
-                  Open Host Screen
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Players List */}

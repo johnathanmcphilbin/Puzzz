@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +8,6 @@ import { FormsGame } from "@/components/FormsGame";
 import { ParanoiaGame } from "@/components/ParanoiaGame";
 import AIChatbot from "@/components/AIChatbot";
 import { Loader2 } from "lucide-react";
-
 
 interface Room {
   id: string;
@@ -32,13 +30,11 @@ export const Room = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const storedPlayerId = localStorage.getItem('puzzz_player_id');
   
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const [cleanup, setCleanup] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     if (!roomCode) {
@@ -46,13 +42,13 @@ export const Room = () => {
       return;
     }
 
-    // Simple localStorage check - just like before
-    const storedPlayerName = localStorage.getItem('puzzz_player_name');
-    
-    if (!storedPlayerId || !storedPlayerName) {
+    const playerId = localStorage.getItem("puzzz_player_id");
+    const playerName = localStorage.getItem("puzzz_player_name");
+
+    if (!playerId || !playerName) {
       toast({
-        title: "Session Expired",
-        description: "Please join the room again.",
+        title: "Access Denied",
+        description: "Please join the room properly.",
         variant: "destructive",
       });
       navigate("/");
@@ -62,20 +58,11 @@ export const Room = () => {
     loadRoomData();
   }, [roomCode, navigate, toast]);
 
-  // Clean up subscriptions when component unmounts
-  useEffect(() => {
-    return () => {
-      if (cleanup) {
-        cleanup();
-      }
-    };
-  }, [cleanup]);
-
   const loadRoomData = async () => {
     try {
       console.log("Loading room data for code:", roomCode);
       
-      // Load room data - RLS will now restrict access to rooms the player is in
+      // Load room data
       const { data: roomData, error: roomError } = await supabase
         .from("rooms")
         .select("*")
@@ -85,19 +72,6 @@ export const Room = () => {
 
       if (roomError) {
         console.error("Room loading error:", roomError);
-        
-        // If access is denied due to RLS, the player is not in the room
-        if (roomError.code === 'PGRST116' || roomError.message?.includes('RLS')) {
-          toast({
-            title: "Access Denied",
-            description: "You are not a member of this room.",
-            variant: "destructive",
-          });
-          localStorage.clear();
-          navigate("/");
-          return;
-        }
-        
         throw new Error("Failed to load room");
       }
 
@@ -114,7 +88,7 @@ export const Room = () => {
       console.log("Room loaded successfully:", roomData);
       setRoom(roomData);
 
-      // Load players - RLS will restrict to players in the same room
+      // Load players
       const { data: playersData, error: playersError } = await supabase
         .from("players")
         .select("*")
@@ -123,19 +97,6 @@ export const Room = () => {
 
       if (playersError) {
         console.error("Players loading error:", playersError);
-        
-        // If RLS blocks access, the player is not in this room
-        if (playersError.code === 'PGRST116' || playersError.message?.includes('RLS')) {
-          toast({
-            title: "Access Denied",
-            description: "You are not a member of this room.",
-            variant: "destructive",
-          });
-          localStorage.clear();
-          navigate("/");
-          return;
-        }
-        
         throw new Error("Failed to load players");
       }
 
@@ -143,7 +104,8 @@ export const Room = () => {
       setPlayers(playersData || []);
 
       // Find current player
-      const currentPlayerData = playersData?.find(p => p.player_id === storedPlayerId);
+      const playerId = localStorage.getItem("puzzz_player_id");
+      const currentPlayerData = playersData?.find(p => p.player_id === playerId);
       
       if (!currentPlayerData) {
         toast({
@@ -151,7 +113,6 @@ export const Room = () => {
           description: "You are not a member of this room.",
           variant: "destructive",
         });
-        localStorage.clear();
         navigate("/");
         return;
       }
@@ -159,9 +120,8 @@ export const Room = () => {
       console.log("Current player found:", currentPlayerData);
       setCurrentPlayer(currentPlayerData);
 
-      // Set up real-time subscriptions after data is loaded
-      const cleanupFn = setupRealtimeSubscriptions(roomData);
-      setCleanup(() => cleanupFn);
+      // Set up real-time subscriptions
+      setupRealtimeSubscriptions(roomData);
 
     } catch (error) {
       console.error("Error loading room data:", error);
@@ -177,31 +137,20 @@ export const Room = () => {
   };
 
   const setupRealtimeSubscriptions = (roomData: Room) => {
-    console.log("Setting up real-time subscriptions for room:", roomData.id);
-    
     // Subscribe to room changes
     const roomChannel = supabase
-      .channel(`room_${roomData.id}`)
+      .channel(`room_${roomCode}`)
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
           table: "rooms",
-          filter: `id=eq.${roomData.id}`,
+          filter: `room_code=eq.${roomCode}`,
         },
         (payload) => {
           console.log("Room update received:", payload);
-          if (payload.new) {
-            const updatedRoom = payload.new as Room;
-            console.log("Updated room state:", updatedRoom);
-            setRoom(updatedRoom);
-            
-            // Force a re-render by updating the room state
-            if (updatedRoom.game_state?.phase && updatedRoom.game_state.phase !== "lobby") {
-              console.log("Game started! Phase:", updatedRoom.game_state.phase);
-            }
-          }
+          setRoom(payload.new as Room);
         }
       )
       .on(
@@ -217,13 +166,10 @@ export const Room = () => {
           loadPlayers(roomData.id);
         }
       )
-      .subscribe((status) => {
-        console.log("Real-time subscription status:", status);
-      });
+      .subscribe();
 
     // Clean up subscription when component unmounts
     return () => {
-      console.log("Cleaning up real-time subscriptions");
       supabase.removeChannel(roomChannel);
     };
   };
@@ -236,14 +182,6 @@ export const Room = () => {
       .order("joined_at", { ascending: true });
 
     setPlayers(playersData || []);
-    
-    // Update current player info if it changed
-    if (playersData && storedPlayerId) {
-      const updatedCurrentPlayer = playersData.find(p => p.player_id === storedPlayerId);
-      if (updatedCurrentPlayer) {
-        setCurrentPlayer(updatedCurrentPlayer);
-      }
-    }
   };
 
   if (loading) {
@@ -263,8 +201,6 @@ export const Room = () => {
 
   const gamePhase = room.game_state?.phase || "lobby";
   const currentGame = room.current_game || "would_you_rather";
-  
-  console.log("Room state:", { gamePhase, currentGame, gameState: room.game_state });
 
   return (
     <div className="min-h-screen gradient-bg">

@@ -131,24 +131,12 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       }
 
       if (questionsToUse.length === 0) {
-        // Create some default questions if none exist
-        const defaultQuestions = [
-          { option_a: "Have the ability to fly", option_b: "Have the ability to read minds" },
-          { option_a: "Always be 10 minutes late", option_b: "Always be 20 minutes early" },
-          { option_a: "Have unlimited money", option_b: "Have unlimited time" },
-          { option_a: "Live without music", option_b: "Live without movies" },
-          { option_a: "Be famous but poor", option_b: "Be rich but unknown" }
-        ];
-        
-        const randomDefault = defaultQuestions[Math.floor(Math.random() * defaultQuestions.length)];
-        const defaultQuestion = {
-          id: `default-${Date.now()}`,
-          option_a: randomDefault.option_a,
-          option_b: randomDefault.option_b,
-          category: "default"
-        };
-        
-        questionsToUse = [defaultQuestion];
+        toast({
+          title: "No Questions Available",
+          description: "No questions found in the database",
+          variant: "destructive",
+        });
+        return;
       }
 
       const randomQuestion = questionsToUse[Math.floor(Math.random() * questionsToUse.length)];
@@ -163,16 +151,10 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         gameHistory: gameHistory
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("rooms")
         .update({ game_state: newGameState })
-        .eq("id", room.id)
-        .select();
-        
-      // Update local room state if available
-      if (data?.[0]) {
-        onUpdateRoom(data[0]);
-      }
+        .eq("id", room.id);
 
       if (error) throw error;
 
@@ -224,20 +206,10 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         votes: newVotes
       };
 
-      try {
-        await supabase
-          .from("rooms")
-          .update({ game_state: updatedGameState })
-          .eq("id", room.id);
-          
-        // Update the local state immediately without waiting for subscription
-        onUpdateRoom({
-          ...room,
-          game_state: updatedGameState
-        });
-      } catch (error) {
-        console.error("Error updating room state with vote:", error);
-      }
+      await supabase
+        .from("rooms")
+        .update({ game_state: updatedGameState })
+        .eq("id", room.id);
 
       toast({
         title: "Vote Recorded!",
@@ -278,20 +250,10 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       showResults: true
     };
 
-    try {
-      await supabase
-        .from("rooms")
-        .update({ game_state: updatedGameState })
-        .eq("id", room.id);
-        
-      // Update the local state immediately without waiting for subscription
-      onUpdateRoom({
-        ...room,
-        game_state: updatedGameState
-      });
-    } catch (error) {
-      console.error("Error showing results:", error);
-    }
+    await supabase
+      .from("rooms")
+      .update({ game_state: updatedGameState })
+      .eq("id", room.id);
   };
 
   const showEndGame = async () => {
@@ -317,15 +279,10 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       gameHistory: gameHistory
     };
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("rooms")
       .update({ game_state: endGameState })
-      .eq("id", room.id)
-      .select();
-      
-    if (data?.[0]) {
-      onUpdateRoom(data[0]);
-    }
+      .eq("id", room.id);
 
     if (error) {
       toast({
@@ -342,17 +299,12 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const backToLobby = async () => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("rooms")
       .update({
         game_state: { phase: "lobby", currentQuestion: null, votes: {} }
       })
-      .eq("id", room.id)
-      .select();
-      
-    if (data?.[0]) {
-      onUpdateRoom(data[0]);
-    }
+      .eq("id", room.id);
 
     if (error) {
       toast({

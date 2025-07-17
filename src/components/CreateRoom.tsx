@@ -1,16 +1,13 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus } from "lucide-react";
 import { useAnalyticsContext } from "@/providers/AnalyticsProvider";
-
 
 interface CreateRoomProps {
   selectedGame?: string;
@@ -19,11 +16,9 @@ interface CreateRoomProps {
 export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProps) => {
   const [hostName, setHostName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const [hostOnScreen, setHostOnScreen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackEvent } = useAnalyticsContext();
-  
 
   const generateRoomCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -49,7 +44,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
     setIsCreating(true);
     
     try {
-      // Generate room code and host ID
+      // Generate room code
       const roomCode = generateRoomCode();
       const hostId = crypto.randomUUID();
       
@@ -64,7 +59,7 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
           name: `${trimmedName}'s Room`,
           host_id: hostId,
           current_game: selectedGame,
-          game_state: { phase: "lobby", currentQuestion: null, votes: {}, hostOnScreen },
+          game_state: { phase: "lobby", currentQuestion: null, votes: {} },
           is_active: true
         })
         .select()
@@ -76,10 +71,6 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
       }
 
       console.log("Room created successfully:", roomData);
-
-      // Store player info in localStorage like before
-      localStorage.setItem('puzzz_player_id', hostId);
-      localStorage.setItem('puzzz_player_name', trimmedName);
 
       // Add host as player
       const { data: playerData, error: playerError } = await supabase
@@ -102,7 +93,9 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       console.log("Player created successfully:", playerData);
 
-      // Store additional session data
+      // Store session data
+      localStorage.setItem("puzzz_player_id", hostId);
+      localStorage.setItem("puzzz_player_name", trimmedName);
       localStorage.setItem("puzzz_room_code", roomCode);
 
       // Track room creation
@@ -158,17 +151,6 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
               }
             }}
           />
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="hostOnScreen" 
-            checked={hostOnScreen}
-            onCheckedChange={(checked) => setHostOnScreen(checked === true)}
-          />
-          <Label htmlFor="hostOnScreen" className="text-base font-medium cursor-pointer">
-            Host on screen
-          </Label>
         </div>
 
         <Button 
