@@ -136,21 +136,21 @@ export const HostScreen = () => {
           table: 'players',
           filter: `room_id=eq.${room?.id}`
         },
-        (payload) => {
+        async (payload) => {
           console.log('Players update:', payload);
           // Reload players when changes occur
           if (room) {
-            supabase
-              .from("players")
-              .select("*")
-              .eq("room_id", room.id)
-              .order("joined_at", { ascending: true })
-              .then(({ data }) => {
-                if (data) setPlayers(data);
-              })
-              .catch(err => {
-                console.warn("Could not reload players for host screen:", err);
-              });
+            try {
+              const { data } = await supabase
+                .from("players")
+                .select("*")
+                .eq("room_id", room.id)
+                .order("joined_at", { ascending: true });
+              
+              if (data) setPlayers(data);
+            } catch (err) {
+              console.warn("Could not reload players for host screen:", err);
+            }
           }
         }
       )
