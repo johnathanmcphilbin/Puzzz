@@ -69,7 +69,8 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       if (roomError) {
         console.error("Room creation error:", roomError);
-        throw new Error("Failed to create room");
+        console.error("Room error details:", JSON.stringify(roomError, null, 2));
+        throw new Error(`Failed to create room: ${roomError.message || roomError.details}`);
       }
 
       console.log("Room created successfully:", roomData);
@@ -88,9 +89,11 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
 
       if (playerError) {
         console.error("Player creation error:", playerError);
+        console.error("Player error details:", JSON.stringify(playerError, null, 2));
+        console.error("Room data used for player:", { roomId: roomData.id, playerName: trimmedName, hostId });
         // Clean up room if player creation fails
         await supabase.from("rooms").delete().eq("id", roomData.id);
-        throw new Error("Failed to add host to room");
+        throw new Error(`Failed to add host to room: ${playerError.message || playerError.details}`);
       }
 
       console.log("Player created successfully:", playerData);
