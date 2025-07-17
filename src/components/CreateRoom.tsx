@@ -15,7 +15,7 @@ interface CreateRoomProps {
 }
 
 export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
-  const [roomName, setRoomName] = useState("");
+  
   const [playerName, setPlayerName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
@@ -33,10 +33,10 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
   const createRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!roomName.trim() || !playerName.trim()) {
+    if (!playerName.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all fields",
+        description: "Please enter your name",
         variant: "destructive",
       });
       return;
@@ -56,7 +56,7 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
         .from("rooms")
         .insert({
           room_code: roomCode,
-          name: roomName.trim(),
+          name: `${playerName.trim()}'s Room`,
           host_id: hostId,
           current_game: selectedGame,
           game_state: {
@@ -153,19 +153,6 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={createRoom} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="roomName">Room Name</Label>
-            <Input
-              id="roomName"
-              type="text"
-              placeholder="Enter room name"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-              maxLength={50}
-              disabled={isCreating}
-            />
-          </div>
-          
           <div className="space-y-2">
             <Label htmlFor="playerName">Your Name</Label>
             <Input
