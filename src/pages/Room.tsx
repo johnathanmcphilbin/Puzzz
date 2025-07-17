@@ -177,20 +177,24 @@ export const Room = () => {
   };
 
   const setupRealtimeSubscriptions = (roomData: Room) => {
+    console.log("Setting up real-time subscriptions for room:", roomData.id);
+    
     // Subscribe to room changes
     const roomChannel = supabase
-      .channel(`room_${roomCode}`)
+      .channel(`room_${roomData.id}`)
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
           table: "rooms",
-          filter: `room_code=eq.${roomCode}`,
+          filter: `id=eq.${roomData.id}`,
         },
         (payload) => {
           console.log("Room update received:", payload);
-          setRoom(payload.new as Room);
+          if (payload.new) {
+            setRoom(payload.new as Room);
+          }
         }
       )
       .on(
@@ -206,10 +210,13 @@ export const Room = () => {
           loadPlayers(roomData.id);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Real-time subscription status:", status);
+      });
 
     // Clean up subscription when component unmounts
     return () => {
+      console.log("Cleaning up real-time subscriptions");
       supabase.removeChannel(roomChannel);
     };
   };
