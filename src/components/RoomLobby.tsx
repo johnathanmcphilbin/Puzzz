@@ -225,23 +225,33 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
       console.log("Starting game with state:", gameState);
       
-      const { data: updatedRoom, error } = await supabase
-        .from("rooms")
-        .update({
+      try {
+        // First update the room in database
+        const { error: updateError } = await supabase
+          .from("rooms")
+          .update({
+            current_game: selectedGame,
+            game_state: gameState
+          })
+          .eq("id", room.id);
+  
+        if (updateError) throw updateError;
+        
+        console.log("Room updated in database, updating local state");
+        
+        // Then update the local state immediately without waiting for subscription
+        const updatedRoom = {
+          ...room,
           current_game: selectedGame,
           game_state: gameState
-        })
-        .eq("id", room.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      console.log("Game started successfully, updated room:", updatedRoom);
-      
-      // Update the room state immediately
-      if (updatedRoom) {
+        };
+        
         onUpdateRoom(updatedRoom);
+        
+        console.log("Game started successfully, local state updated:", updatedRoom);
+      } catch (err) {
+        console.error("Error starting game:", err);
+        throw err;
       }
 
       const gameTitle = selectedGame === "forms_game" ? "Forms Game" : 

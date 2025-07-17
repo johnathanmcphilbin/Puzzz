@@ -163,10 +163,16 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         gameHistory: gameHistory
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("rooms")
         .update({ game_state: newGameState })
-        .eq("id", room.id);
+        .eq("id", room.id)
+        .select();
+        
+      // Update local room state if available
+      if (data?.[0]) {
+        onUpdateRoom(data[0]);
+      }
 
       if (error) throw error;
 
@@ -218,10 +224,20 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         votes: newVotes
       };
 
-      await supabase
-        .from("rooms")
-        .update({ game_state: updatedGameState })
-        .eq("id", room.id);
+      try {
+        await supabase
+          .from("rooms")
+          .update({ game_state: updatedGameState })
+          .eq("id", room.id);
+          
+        // Update the local state immediately without waiting for subscription
+        onUpdateRoom({
+          ...room,
+          game_state: updatedGameState
+        });
+      } catch (error) {
+        console.error("Error updating room state with vote:", error);
+      }
 
       toast({
         title: "Vote Recorded!",
@@ -262,10 +278,20 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       showResults: true
     };
 
-    await supabase
-      .from("rooms")
-      .update({ game_state: updatedGameState })
-      .eq("id", room.id);
+    try {
+      await supabase
+        .from("rooms")
+        .update({ game_state: updatedGameState })
+        .eq("id", room.id);
+        
+      // Update the local state immediately without waiting for subscription
+      onUpdateRoom({
+        ...room,
+        game_state: updatedGameState
+      });
+    } catch (error) {
+      console.error("Error showing results:", error);
+    }
   };
 
   const showEndGame = async () => {
@@ -291,10 +317,15 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       gameHistory: gameHistory
     };
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("rooms")
       .update({ game_state: endGameState })
-      .eq("id", room.id);
+      .eq("id", room.id)
+      .select();
+      
+    if (data?.[0]) {
+      onUpdateRoom(data[0]);
+    }
 
     if (error) {
       toast({
@@ -311,12 +342,17 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const backToLobby = async () => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("rooms")
       .update({
         game_state: { phase: "lobby", currentQuestion: null, votes: {} }
       })
-      .eq("id", room.id);
+      .eq("id", room.id)
+      .select();
+      
+    if (data?.[0]) {
+      onUpdateRoom(data[0]);
+    }
 
     if (error) {
       toast({
