@@ -78,6 +78,15 @@ export const CreateRoom = ({ selectedGame = "would_you_rather" }: CreateRoomProp
       console.log("Trimmed player name:", JSON.stringify(trimmedName));
       console.log("Host ID:", hostId);
 
+      // Verify room exists before adding player
+      const { data: roomCheck, error: roomCheckError } = await supabase
+        .from("rooms")
+        .select("id, room_code")
+        .eq("id", roomData.id)
+        .single();
+      
+      console.log("Room verification:", roomCheck, roomCheckError);
+
       // Add host as player
       const { data: playerData, error: playerError } = await supabase
         .from("players")
