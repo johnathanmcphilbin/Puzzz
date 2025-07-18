@@ -112,7 +112,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
 
       const aiResponse = JSON.parse(response.data.response);
       const generatedQuestions = aiResponse.questions.map((q: any, index: number) => ({
-        id: `ai-generated-${Date.now()}-${index}`,
+        id: crypto.randomUUID(),
         option_a: q.option_a,
         option_b: q.option_b,
         category: "AI Generated",
@@ -158,21 +158,21 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         // Add default questions as fallback
         const defaultQuestions = [
           {
-            id: "default-1",
+            id: crypto.randomUUID(),
             option_a: "Have the ability to fly",
             option_b: "Have the ability to read minds",
             category: "default",
             created_at: new Date().toISOString()
           },
           {
-            id: "default-2", 
+            id: crypto.randomUUID(), 
             option_a: "Always be 10 minutes late",
             option_b: "Always be 20 minutes early",
             category: "default",
             created_at: new Date().toISOString()
           },
           {
-            id: "default-3",
+            id: crypto.randomUUID(),
             option_a: "Live in a world without music",
             option_b: "Live in a world without movies",
             category: "default",
