@@ -159,7 +159,7 @@ const Index = () => {
                     src="/lovable-uploads/25019112-f839-4cf5-9cee-9a7d609be518.png" 
                     alt="Paranoia - Mysterious character with swirling eyes"
                     className="w-full h-full object-cover object-center"
-                    style={{ objectPosition: 'center 35%' }}
+                    style={{ objectPosition: 'center 65%' }}
                   />
                 </div>
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
