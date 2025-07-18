@@ -226,7 +226,11 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           <img 
             src="/lovable-uploads/a82e39a6-80cd-4a41-9022-704782310ba2.png"
             alt="AI Chat Cat"
-            className="w-16 h-16 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+            className="w-20 h-20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+            style={{
+              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
+              mixBlendMode: 'multiply'
+            }}
           />
         </div>
       ) : (
