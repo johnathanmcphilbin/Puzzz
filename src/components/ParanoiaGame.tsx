@@ -688,36 +688,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
         {!hasAssigned ? (
           <div className="space-y-4">
-            {/* Question Pool Section */}
-            <Card className="border-secondary">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Add to Question Pool (Optional)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Add questions to the shared pool that anyone can use. These questions will be available to all players.
-                </p>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Who is most likely to..."
-                    value={newPoolQuestion}
-                    onChange={(e) => setNewPoolQuestion(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && addToQuestionPool()}
-                  />
-                  <Button 
-                    onClick={addToQuestionPool}
-                    disabled={!newPoolQuestion.trim()}
-                    variant="outline"
-                  >
-                    Add to Pool
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
             <Card className="border-primary">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -771,28 +741,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                       </div>
                     )}
 
-                    {/* Question Pool */}
-                    {questionPool.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-sm text-secondary">Player Contributed:</h4>
-                        <div className="max-h-32 overflow-y-auto space-y-2">
-                          {questionPool.map((question, index) => (
-                            <Card 
-                              key={`pool_${index}`}
-                              className={`cursor-pointer transition-colors ${
-                                selectedQuestionId === `pool_${index}` ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                              }`}
-                              onClick={() => setSelectedQuestionId(`pool_${index}`)}
-                            >
-                              <CardContent className="p-4">
-                                <p className="font-medium">{question}</p>
-                                <Badge variant="outline" className="mt-2">Player Pool</Badge>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                     {/* Default Questions */}
                     {availableQuestions.length > 0 && (
