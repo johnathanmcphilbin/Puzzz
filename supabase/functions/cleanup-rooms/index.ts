@@ -118,6 +118,12 @@ serve(async (req) => {
         
         // Delete all related data in correct order to avoid foreign key constraints
         
+        // Delete room questions (AI-generated)
+        await supabase
+          .from('room_questions')
+          .delete()
+          .eq('room_id', roomId);
+        
         // Delete AI chat customizations
         await supabase
           .from('ai_chat_customizations')
