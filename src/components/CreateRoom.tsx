@@ -125,8 +125,6 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
     switch (gameType) {
       case "would_you_rather":
         return "Would You Rather";
-      case "forms_game":
-        return "Forms Game";
       case "paranoia":
         return "Paranoia";
       default:

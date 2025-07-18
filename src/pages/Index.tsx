@@ -111,41 +111,6 @@ const Index = () => {
               </div>
             </Card>
 
-            {/* Forms Game */}
-            <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden h-full"
-              onClick={() => handleGameClick("forms_game")}
-            >
-              <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-primary to-secondary relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <div className="text-lg sm:text-4xl font-bold mb-1 sm:mb-2">📋</div>
-                    <div className="text-[10px] sm:text-sm opacity-90">Survey Time</div>
-                  </div>
-                </div>
-                <div className="absolute top-1 right-1 sm:top-3 sm:right-3">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
-                    NEW
-                  </span>
-                </div>
-              </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
-                  <CardTitle className="text-sm sm:text-lg font-bold truncate">Forms Game</CardTitle>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                    <span>Survey Game</span>
-                    <span>•</span>
-                    <span>2-20 Players</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
-                  <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                    Answer fun questions about your friends! Who's most likely to get arrested? Find out together.
-                  </CardDescription>
-                </CardContent>
-              </div>
-            </Card>
 
             {/* Paranoia Game */}
             <Card 

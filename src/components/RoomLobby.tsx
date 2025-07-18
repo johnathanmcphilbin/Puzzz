@@ -91,8 +91,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
       if (error) throw error;
 
-      const gameTitle = selectedGame === "forms_game" ? "Forms Game" : 
-                        selectedGame === "paranoia" ? "Paranoia" : "Would You Rather";
+      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : "Would You Rather";
       
       toast({
         title: "Game Started!",
@@ -287,25 +286,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                   </div>
                 </div>
 
-                {/* Forms Game */}
-                <div 
-                  className={`relative p-4 border rounded-lg transition-all ${
-                    currentPlayer.is_host
-                      ? `cursor-pointer ${selectedGame === "forms_game" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
-                      : "border-muted"
-                  }`}
-                  onClick={() => currentPlayer.is_host && setSelectedGame("forms_game")}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">Forms Game</h4>
-                      <p className="text-sm text-muted-foreground">Answer questions about your friends</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-forms-primary rounded text-xs flex items-center justify-center text-white font-bold">📝</div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Paranoia Game */}
                 <div 
