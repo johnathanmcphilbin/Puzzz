@@ -98,7 +98,7 @@ const Index = () => {
                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
                     <span>Party Game</span>
                     <span>•</span>
-                    <span>2-10 Players</span>
+                    <span>2-20 Players</span>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
@@ -134,7 +134,7 @@ const Index = () => {
                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
                     <span>Survey Game</span>
                     <span>•</span>
-                    <span>3-10 Players</span>
+                    <span>2-20 Players</span>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
@@ -170,7 +170,7 @@ const Index = () => {
                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
                     <span>Whisper Game</span>
                     <span>•</span>
-                    <span>2-10 Players</span>
+                    <span>2-20 Players</span>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
