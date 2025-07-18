@@ -29,16 +29,16 @@ serve(async (req) => {
     if (action === 'chat') {
       systemPrompt = `You are a helpful AI assistant for a party games app. You help users customize their gaming experience and provide fun suggestions. Keep responses conversational, friendly, and brief. If users mention preferences like "we are nerdy" or "we love sci-fi", remember these for future interactions.`;
     } else if (action === 'generate_would_you_rather') {
-      const playerNames = players && players.length > 0 ? players.map(p => p.player_name).join(', ') : '';
-      const playerInfo = playerNames ? `The players are: ${playerNames}.` : '';
+      systemPrompt = `Generate 5 "Would You Rather" questions based HEAVILY on the customization theme: "${customization}".
       
-      systemPrompt = `Generate 5 personalized "Would You Rather" questions based on the customization and players. ${playerInfo}
+      IMPORTANT: The questions MUST be directly related to and inspired by the theme/interests mentioned in the customization. If they mention "Star Wars", include Star Wars elements. If they mention "nerdy", include nerdy/geeky scenarios.
       
       Make the questions:
-      1. Personalized and relevant to the group
-      2. Fun and engaging for party games
-      3. Appropriate for the group dynamic
+      1. HEAVILY themed around the customization (this is the most important requirement)
+      2. General scenarios (NOT personalized to specific players)
+      3. Fun and engaging for party games
       4. Creative and thought-provoking
+      5. Appropriate for the group dynamic
       
       You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
       {
@@ -50,7 +50,7 @@ serve(async (req) => {
           {"option_a": "...", "option_b": "..."}
         ]
       }`;
-      userPrompt = `Generate 5 "Would You Rather" questions for: ${customization}. ${playerInfo}`;
+      userPrompt = `Generate 5 "Would You Rather" questions that are HEAVILY themed around: ${customization}. Make sure every question incorporates elements from this theme.`;
     } else if (action === 'generate_all_questions') {
       const crazynessDescription = crazynessLevel <= 20 ? "very mild and safe" :
                                   crazynessLevel <= 40 ? "mild with some fun edge" :
@@ -58,7 +58,9 @@ serve(async (req) => {
                                   crazynessLevel <= 80 ? "quite dramatic and bold" :
                                   "extremely wild, dramatic, and outrageous";
       
-      systemPrompt = `Generate questions for ALL three party games based on the customization: "${customization}". 
+      systemPrompt = `Generate questions for ALL three party games based HEAVILY on the customization theme: "${customization}". 
+      
+      CRITICAL: ALL questions must be directly related to and inspired by the theme/interests mentioned. If they mention "Star Wars", include Star Wars elements throughout. If they mention "nerdy", include nerdy/geeky scenarios. The theme should be evident in EVERY question.
       
       CRAZINESS LEVEL: ${crazynessLevel}% (${crazynessDescription})
       
@@ -78,16 +80,6 @@ serve(async (req) => {
           {"option_a": "...", "option_b": "..."},
           {"option_a": "...", "option_b": "..."}
         ],
-        "forms": [
-          {"question": "..."},
-          {"question": "..."},
-          {"question": "..."},
-          {"question": "..."},
-          {"question": "..."},
-          {"question": "..."},
-          {"question": "..."},
-          {"question": "..."}
-        ],
         "paranoia": [
           {"question": "Who is most likely to..."},
           {"question": "Who is most likely to..."},
@@ -97,8 +89,8 @@ serve(async (req) => {
         ]
       }
       
-      Make sure all questions match both the theme/preferences mentioned in the customization AND the specified craziness level. Return ONLY the JSON object, nothing else.`;
-      userPrompt = `Generate questions for all three party games for a group that is: ${customization}. Craziness level: ${crazynessLevel}%`;
+      Make sure ALL questions are HEAVILY themed around the customization AND match the specified craziness level. Return ONLY the JSON object, nothing else.`;
+      userPrompt = `Generate questions that are HEAVILY themed around: ${customization}. Every single question must incorporate elements from this theme. Craziness level: ${crazynessLevel}%`;
     } else if (action === 'generate_paranoia_questions') {
       const playerNames = players && players.length > 0 ? players.map(p => p.player_name).join(', ') : '';
       const playerInfo = playerNames ? `The players are: ${playerNames}.` : '';
