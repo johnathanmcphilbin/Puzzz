@@ -498,6 +498,19 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     const currentPlayerId = playerOrder[currentTurn];
     const currentPlayerObj = players.find(p => p.player_id === currentPlayerId);
     const isMyTurn = currentPlayerId === currentPlayer.player_id;
+
+    // If we can't find the current player, something is wrong with the game state
+    if (!currentPlayerObj) {
+      console.error("Current player not found in players array:", { currentPlayerId, playerOrder, players });
+      return (
+        <Card className="border-destructive">
+          <CardContent className="p-8 text-center">
+            <p className="text-destructive">Game state error. Please restart the game.</p>
+            <Button onClick={resetGame} className="mt-4">Reset Game</Button>
+          </CardContent>
+        </Card>
+      );
+    }
     
     // Find the question assigned to current player
     const myQuestion = Object.values(questionAssignments).find(
@@ -577,6 +590,19 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     const currentPlayerObj = players.find(p => p.player_id === currentPlayerId);
     const shouldReveal = gameState.shouldReveal;
     const isMyChoice = currentPlayerId === currentPlayer.player_id;
+
+    // If we can't find the current player, something is wrong with the game state
+    if (!currentPlayerObj) {
+      console.error("Current player not found in players array:", { currentPlayerId, playerOrder, players });
+      return (
+        <Card className="border-destructive">
+          <CardContent className="p-8 text-center">
+            <p className="text-destructive">Game state error. Please restart the game.</p>
+            <Button onClick={resetGame} className="mt-4">Reset Game</Button>
+          </CardContent>
+        </Card>
+      );
+    }
 
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
