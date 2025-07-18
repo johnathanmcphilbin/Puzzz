@@ -60,23 +60,20 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         }
 
         // Check if AI-generated questions already exist for this room
-        const [wyrCheck, formsCheck, paranoiaCheck] = await Promise.all([
+        const [wyrCheck, paranoiaCheck] = await Promise.all([
           supabase.from('would_you_rather_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1),
-          supabase.from('forms_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1),
           supabase.from('paranoia_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1)
         ]);
 
         const hasExistingQuestions = (wyrCheck.data && wyrCheck.data.length > 0) ||
-                                   (formsCheck.data && formsCheck.data.length > 0) ||
                                    (paranoiaCheck.data && paranoiaCheck.data.length > 0);
         
         setHasGeneratedQuestions(hasExistingQuestions);
         
         if (hasExistingQuestions && customizationData?.customization_text) {
-          addMessage(`This room already has custom questions generated for theme: "${customizationData.customization_text}". Only one set of questions per room is allowed.`);
+          addMessage(`Already customized for: "${customizationData.customization_text}"`);
         } else if (!hasExistingQuestions) {
-          // Add opening message when no questions have been generated yet
-          addMessage("Hi! Tell me what you guys are into and I can personalise all of your games! Just describe your group's interests, hobbies, or themes you love.");
+          addMessage("Describe your group and I'll generate custom questions instantly!");
         }
       }
     };
@@ -100,77 +97,10 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     setMessages(prev => [...prev, newMessage]);
   };
 
-  const sendMessage = async () => {
+  const generateQuestionsFromInput = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
     // Check if user is host for chat functionality
-    if (!currentPlayer?.is_host) {
-      toast({
-        title: "Host Only Feature",
-        description: "Only the room host can chat with the AI assistant.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if questions already generated
-    if (hasGeneratedQuestions) {
-      toast({
-        title: "Questions Already Generated",
-        description: "This room already has custom questions. Only one set per room is allowed.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const userMessage = inputMessage.trim();
-    setInputMessage('');
-    addMessage(userMessage, true);
-    setIsLoading(true);
-
-    try {
-      // Set customization and call chat endpoint
-      const sanitizedCustomization = userMessage;
-      setCustomization(sanitizedCustomization);
-      
-      // Save customization to database
-      if (roomCode) {
-        await supabase.from('ai_chat_customizations').insert({
-          room_id: roomCode,
-          customization_text: sanitizedCustomization
-        });
-      }
-
-      // Call the AI chat endpoint
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: {
-          action: 'chat',
-          message: userMessage,
-        }
-      });
-
-      if (error || !data?.response) {
-        throw new Error(error?.message || 'Failed to get AI response');
-      }
-
-      // Show response message
-      addMessage(data.response);
-      setIsLoading(false);
-      
-    } catch (error) {
-      console.error('Chat error:', error);
-      addMessage('Sorry, I encountered an error. Please try again.');
-      toast({
-        title: "Chat Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
-  };
-
-  const generateAllCustomQuestions = async () => {
-    // Check if user is host
     if (!currentPlayer?.is_host) {
       toast({
         title: "Host Only Feature",
@@ -190,7 +120,41 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
       return;
     }
 
-    if (!customization.trim()) {
+    const userMessage = inputMessage.trim();
+    setInputMessage('');
+    setIsLoading(true);
+
+    try {
+      // Set customization
+      const sanitizedCustomization = userMessage;
+      setCustomization(sanitizedCustomization);
+      
+      // Save customization to database
+      if (roomCode) {
+        await supabase.from('ai_chat_customizations').insert({
+          room_id: roomCode,
+          customization_text: sanitizedCustomization
+        });
+      }
+
+      // Immediately generate questions
+      await generateAllCustomQuestions(sanitizedCustomization);
+      
+    } catch (error) {
+      console.error('Generation error:', error);
+      toast({
+        title: "Generation Error",
+        description: "Failed to generate questions. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const generateAllCustomQuestions = async (customizationText?: string) => {
+    const effectiveCustomization = customizationText || customization;
+    
+    if (!effectiveCustomization.trim()) {
       toast({
         title: "Customization Needed",
         description: "Please tell me about your group first (e.g., 'we are nerdy', 'we love sci-fi')",
@@ -209,14 +173,14 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     }
 
     setIsLoading(true);
-    addMessage(`Generating custom questions for all games based on: "${customization}"`, true);
+    addMessage(`Generating custom questions for: "${effectiveCustomization}"`, false);
 
     try {
       // Call the AI edge function to generate custom questions
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           action: 'generate_all_questions',
-          customization,
+          customization: effectiveCustomization,
           crazynessLevel: crazynessLevel[0],
           gameType: currentGame,
           roomCode
@@ -231,18 +195,11 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         const generatedQuestions = JSON.parse(data.response);
         console.log('Generated questions:', generatedQuestions);
 
-        // Insert generated questions into respective tables
+        // Insert generated questions into respective tables - only paranoia and would_you_rather now
         const { error: wyrError } = await supabase.from('would_you_rather_questions').insert(
           generatedQuestions.would_you_rather.map((q: any) => ({
             option_a: q.option_a,
             option_b: q.option_b,
-            category: `AI-Generated (${roomCode})`
-          }))
-        );
-
-        const { error: formsError } = await supabase.from('forms_questions').insert(
-          generatedQuestions.forms.map((q: any) => ({
-            question: q.question,
             category: `AI-Generated (${roomCode})`
           }))
         );
@@ -254,18 +211,18 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           }))
         );
 
-        console.log('Insert errors:', { wyrError, formsError, paranoiaError });
+        console.log('Insert errors:', { wyrError, paranoiaError });
 
-        if (wyrError || formsError || paranoiaError) {
-          throw new Error(`Failed to save generated questions: ${wyrError?.message || formsError?.message || paranoiaError?.message}`);
+        if (wyrError || paranoiaError) {
+          throw new Error(`Failed to save generated questions: ${wyrError?.message || paranoiaError?.message}`);
         }
 
         setHasGeneratedQuestions(true);
-        addMessage("✅ Generated custom questions for all your games! They're now active in your room.");
+        addMessage("✅ Custom questions generated and ready to use!");
         
         toast({
           title: "Questions Generated!",
-          description: "Custom questions have been created for all games",
+          description: "Custom questions have been created for your games",
         });
           
         setIsLoading(false);
@@ -275,7 +232,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
       }
     } catch (error) {
       console.error("Error generating questions:", error);
-      addMessage("❌ Sorry, I had trouble generating questions. Please try again.");
+      addMessage("❌ Failed to generate questions. Please try again.");
       setIsLoading(false);
     }
   };
@@ -283,7 +240,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      generateQuestionsFromInput();
     }
   };
 
@@ -361,23 +318,6 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
               />
             </div>
             
-            {/* Action buttons */}
-            <div className="px-4 py-2 border-t">
-              <Button
-                onClick={generateAllCustomQuestions}
-                className="w-full mb-2"
-                disabled={!customization || isLoading || hasGeneratedQuestions}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  "Generate Custom Questions"
-                )}
-              </Button>
-            </div>
             
             {/* Input area */}
             <div className="p-4 border-t flex-shrink-0">
@@ -386,20 +326,20 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                   ref={inputRef}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Describe your group's interests..."
+                  placeholder="e.g. 'nerdy group of friends who love gaming'"
                   onKeyPress={handleKeyPress}
                   disabled={isLoading || hasGeneratedQuestions}
                   className="flex-grow"
                 />
                 <Button
                   size="icon"
-                  onClick={sendMessage}
+                  onClick={generateQuestionsFromInput}
                   disabled={!inputMessage.trim() || isLoading || hasGeneratedQuestions}
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Send className="h-4 w-4" />
+                    <Sparkles className="h-4 w-4" />
                   )}
                 </Button>
               </div>
