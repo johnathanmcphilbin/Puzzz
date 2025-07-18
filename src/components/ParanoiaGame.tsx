@@ -728,7 +728,9 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="p-4 bg-primary/10 rounded-lg">
-                <p className="text-lg font-medium">{myQuestion?.question}</p>
+                <p className="text-lg font-medium">
+                  {myQuestion?.question || "No question assigned to you yet. Please wait..."}
+                </p>
               </div>
               
               <div>
