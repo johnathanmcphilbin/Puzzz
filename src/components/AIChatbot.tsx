@@ -59,15 +59,14 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           setCustomization(customizationData.customization_text);
         }
 
-        // Check if AI-generated questions already exist for this room
-        const [wyrCheck, paranoiaCheck] = await Promise.all([
-          supabase.from('would_you_rather_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1),
-          supabase.from('paranoia_questions').select('id').eq('category', `AI-Generated (${roomCode})`).limit(1)
-        ]);
+        // Check if room-specific questions already exist
+        const { data: roomQuestions, error: roomQuestionsError } = await supabase
+          .from('room_questions')
+          .select('id')
+          .eq('room_id', roomCode)
+          .limit(1);
 
-        const hasExistingQuestions = (wyrCheck.data && wyrCheck.data.length > 0) ||
-                                   (paranoiaCheck.data && paranoiaCheck.data.length > 0);
-        
+        const hasExistingQuestions = roomQuestions && roomQuestions.length > 0;
         setHasGeneratedQuestions(hasExistingQuestions);
         
         if (hasExistingQuestions && customizationData?.customization_text) {
@@ -176,60 +175,28 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     addMessage(`Generating custom questions for: "${effectiveCustomization}"`, false);
 
     try {
-      // Call the AI edge function to generate custom questions
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
+      // Call the room-questions edge function to generate and store custom questions
+      const { data, error } = await supabase.functions.invoke('room-questions', {
         body: {
-          action: 'generate_all_questions',
+          roomCode,
           customization: effectiveCustomization,
-          crazynessLevel: crazynessLevel[0],
-          gameType: currentGame,
-          roomCode
+          crazynessLevel: crazynessLevel[0]
         }
       });
 
-      if (error || !data?.response) {
-        throw new Error(error?.message || 'Failed to generate questions');
+      if (error || !data?.success) {
+        throw new Error(error?.message || data?.error || 'Failed to generate questions');
       }
 
-      try {
-        const generatedQuestions = JSON.parse(data.response);
-        console.log('Generated questions:', generatedQuestions);
-
-        // Insert generated questions into respective tables - only paranoia and would_you_rather now
-        const { error: wyrError } = await supabase.from('would_you_rather_questions').insert(
-          generatedQuestions.would_you_rather.map((q: any) => ({
-            option_a: q.option_a,
-            option_b: q.option_b,
-            category: `AI-Generated (${roomCode})`
-          }))
-        );
-
-        const { error: paranoiaError } = await supabase.from('paranoia_questions').insert(
-          generatedQuestions.paranoia.map((q: any) => ({
-            question: q.question,
-            category: `AI-Generated (${roomCode})`
-          }))
-        );
-
-        console.log('Insert errors:', { wyrError, paranoiaError });
-
-        if (wyrError || paranoiaError) {
-          throw new Error(`Failed to save generated questions: ${wyrError?.message || paranoiaError?.message}`);
-        }
-
-        setHasGeneratedQuestions(true);
-        addMessage("✅ Custom questions generated and ready to use!");
+      setHasGeneratedQuestions(true);
+      addMessage(`✅ Generated ${data.counts?.would_you_rather || 0} Would You Rather and ${data.counts?.paranoia || 0} Paranoia questions!`);
+      
+      toast({
+        title: "Questions Generated!",
+        description: data.message || "Custom questions have been created for your games",
+      });
         
-        toast({
-          title: "Questions Generated!",
-          description: "Custom questions have been created for your games",
-        });
-          
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error parsing or saving questions:', error);
-        throw new Error(`Failed to process questions: ${error.message}`);
-      }
+      setIsLoading(false);
     } catch (error) {
       console.error("Error generating questions:", error);
       addMessage("❌ Failed to generate questions. Please try again.");

@@ -275,6 +275,30 @@ export type Database = {
           },
         ]
       }
+      room_questions: {
+        Row: {
+          created_at: string
+          game_type: string
+          id: string
+          question_data: Json
+          room_id: string
+        }
+        Insert: {
+          created_at?: string
+          game_type: string
+          id?: string
+          question_data: Json
+          room_id: string
+        }
+        Update: {
+          created_at?: string
+          game_type?: string
+          id?: string
+          question_data?: Json
+          room_id?: string
+        }
+        Relationships: []
+      }
       rooms: {
         Row: {
           created_at: string | null

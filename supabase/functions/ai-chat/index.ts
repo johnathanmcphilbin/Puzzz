@@ -71,26 +71,22 @@ serve(async (req) => {
       - 61-80%: Create dramatic, bold questions that push boundaries
       - 81-100%: Go wild with outrageous, extreme, and highly dramatic scenarios
       
+      Generate 20 Would You Rather questions and 15 Paranoia questions.
+      
       You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
       {
         "would_you_rather": [
           {"option_a": "...", "option_b": "..."},
-          {"option_a": "...", "option_b": "..."},
-          {"option_a": "...", "option_b": "..."},
-          {"option_a": "...", "option_b": "..."},
           {"option_a": "...", "option_b": "..."}
         ],
         "paranoia": [
-          {"question": "Who is most likely to..."},
-          {"question": "Who is most likely to..."},
-          {"question": "Who is most likely to..."},
           {"question": "Who is most likely to..."},
           {"question": "Who is most likely to..."}
         ]
       }
       
       Make sure ALL questions are HEAVILY themed around the customization AND match the specified craziness level. Return ONLY the JSON object, nothing else.`;
-      userPrompt = `Generate questions that are HEAVILY themed around: ${customization}. Every single question must incorporate elements from this theme. Craziness level: ${crazynessLevel}%`;
+      userPrompt = `Generate 20 Would You Rather questions and 15 Paranoia questions that are HEAVILY themed around: ${customization}. Every single question must incorporate elements from this theme. Craziness level: ${crazynessLevel}%`;
     } else if (action === 'generate_paranoia_questions') {
       const playerNames = players && players.length > 0 ? players.map(p => p.player_name).join(', ') : '';
       const playerInfo = playerNames ? `The players are: ${playerNames}.` : '';

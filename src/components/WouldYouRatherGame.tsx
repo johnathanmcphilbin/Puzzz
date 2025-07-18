@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronRight, Users, RotateCcw, Trophy } from "lucide-react";
 
@@ -134,17 +135,32 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
     try {
       let questions: Question[] = [];
 
-      // Try to use AI questions first, then fall back to database
-      if (aiQuestions.length === 0) {
+      // First try to get room-specific questions
+      const { data: roomQuestions, error: roomQuestionsError } = await supabase
+        .from("room_questions")
+        .select("question_data")
+        .eq("room_id", room.room_code)
+        .eq("game_type", "would_you_rather");
+
+      if (!roomQuestionsError && roomQuestions && roomQuestions.length > 0) {
+        questions = roomQuestions.map((rq: any) => ({
+          id: crypto.randomUUID(),
+          option_a: rq.question_data.option_a,
+          option_b: rq.question_data.option_b,
+          category: "Room Custom",
+          created_at: new Date().toISOString()
+        }));
+      }
+
+      // If no room questions, fall back to AI generation
+      if (questions.length === 0) {
         const aiQuestions = await generateAIQuestions();
         if (aiQuestions.length > 0) {
           questions = aiQuestions;
         }
-      } else {
-        questions = aiQuestions;
       }
 
-      // If no AI questions, get from database
+      // If still no questions, get from database
       if (questions.length === 0) {
         const { data: questionsData, error: questionsError } = await supabase
           .from("would_you_rather_questions")

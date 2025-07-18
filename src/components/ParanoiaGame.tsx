@@ -111,20 +111,40 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const loadQuestions = async () => {
     try {
-      // Get all questions: AI-generated, room-specific, and general
-      const { data: allQuestionsData } = await supabase
-        .from("paranoia_questions")
-        .select("*")
-        .in("category", [`AI-Generated (${room.room_code})`, `Room ${room.room_code}`, "general"]);
+      let questionsToUse: ParanoiaQuestion[] = [];
 
-      // Sort questions by priority: AI-generated first, then room-specific, then general
-      const questionsToUse = (allQuestionsData || []).sort((a, b) => {
-        if (a.category === `AI-Generated (${room.room_code})`) return -1;
-        if (b.category === `AI-Generated (${room.room_code})`) return 1;
-        if (a.category === `Room ${room.room_code}`) return -1;
-        if (b.category === `Room ${room.room_code}`) return 1;
-        return 0;
-      });
+      // First, try to get room-specific questions from the new system
+      const { data: roomQuestions, error: roomQuestionsError } = await supabase
+        .from("room_questions")
+        .select("question_data")
+        .eq("room_id", room.room_code)
+        .eq("game_type", "paranoia");
+
+      if (!roomQuestionsError && roomQuestions && roomQuestions.length > 0) {
+        questionsToUse = roomQuestions.map((rq: any) => ({
+          id: crypto.randomUUID(),
+          question: rq.question_data.question,
+          category: "Room Custom",
+          spiciness_level: 2
+        }));
+        console.log(`Loaded ${questionsToUse.length} custom paranoia questions for room ${room.room_code}`);
+      } else {
+        // Fall back to the old system: AI-generated, room-specific, and general
+        const { data: allQuestionsData } = await supabase
+          .from("paranoia_questions")
+          .select("*")
+          .in("category", [`AI-Generated (${room.room_code})`, `Room ${room.room_code}`, "general"]);
+
+        // Sort questions by priority: AI-generated first, then room-specific, then general
+        questionsToUse = (allQuestionsData || []).sort((a, b) => {
+          if (a.category === `AI-Generated (${room.room_code})`) return -1;
+          if (b.category === `AI-Generated (${room.room_code})`) return 1;
+          if (a.category === `Room ${room.room_code}`) return -1;
+          if (b.category === `Room ${room.room_code}`) return 1;
+          return 0;
+        });
+        console.log(`Loaded ${questionsToUse.length} paranoia questions from database for room ${room.room_code}`);
+      }
       
       setAvailableQuestions(questionsToUse);
     } catch (error) {
