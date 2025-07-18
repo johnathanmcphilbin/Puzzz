@@ -308,17 +308,28 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       showResults: true
     };
 
-    await supabase
+    const { error } = await supabase
       .from("rooms")
       .update({ game_state: updatedGameState })
       .eq("id", room.id);
+
+    if (!error) {
+      // Update the room state immediately
+      const updatedRoom = {
+        ...room,
+        game_state: updatedGameState
+      };
+      onUpdateRoom(updatedRoom);
+    }
   };
 
   const backToLobby = async () => {
+    const newGameState = { phase: "lobby", currentQuestion: null, votes: {} };
+    
     const { error } = await supabase
       .from("rooms")
       .update({
-        game_state: { phase: "lobby", currentQuestion: null, votes: {} }
+        game_state: newGameState
       })
       .eq("id", room.id);
 
@@ -328,6 +339,13 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         description: "Failed to return to lobby",
         variant: "destructive",
       });
+    } else {
+      // Update the room state immediately
+      const updatedRoom = {
+        ...room,
+        game_state: newGameState
+      };
+      onUpdateRoom(updatedRoom);
     }
   };
 
