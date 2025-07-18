@@ -149,10 +149,10 @@ const Index = () => {
 
             {/* Paranoia Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-destructive/20 to-warning/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden h-full"
               onClick={() => handleGameClick("paranoia")}
             >
-              <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-destructive to-warning relative overflow-hidden">
+              <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
