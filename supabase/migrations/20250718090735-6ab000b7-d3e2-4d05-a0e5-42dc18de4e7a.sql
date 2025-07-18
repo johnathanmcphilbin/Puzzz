@@ -1,0 +1,22 @@
+-- Insert default paranoia questions
+INSERT INTO paranoia_questions (question, category, spiciness_level) VALUES
+  ('Who is most likely to get arrested for something silly?', 'general', 2),
+  ('Who is most likely to become famous for something embarrassing?', 'general', 2),
+  ('Who is most likely to eat something weird on a dare?', 'general', 1),
+  ('Who is most likely to get lost in their own neighborhood?', 'general', 1),
+  ('Who is most likely to text the wrong person by accident?', 'general', 2),
+  ('Who is most likely to forget their own birthday?', 'general', 1),
+  ('Who is most likely to survive a zombie apocalypse?', 'general', 2),
+  ('Who is most likely to win a reality TV show?', 'general', 2),
+  ('Who is most likely to become a conspiracy theorist?', 'general', 3),
+  ('Who is most likely to accidentally start a cult?', 'general', 3),
+  ('Who is most likely to cry at a commercial?', 'general', 2),
+  ('Who is most likely to get kicked out of a library for being too loud?', 'general', 2),
+  ('Who is most likely to become a social media influencer?', 'general', 2),
+  ('Who is most likely to fake their own death for attention?', 'general', 4),
+  ('Who is most likely to marry someone they just met?', 'general', 3),
+  ('Who is most likely to run away and join the circus?', 'general', 2),
+  ('Who is most likely to get a face tattoo?', 'general', 3),
+  ('Who is most likely to accidentally set something on fire while cooking?', 'general', 2),
+  ('Who is most likely to become a hermit and live in the woods?', 'general', 2),
+  ('Who is most likely to get banned from a restaurant?', 'general', 3);
