@@ -58,14 +58,16 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const [selectedRecipient, setSelectedRecipient] = useState<string>("");
   const [isUsingCustom, setIsUsingCustom] = useState(false);
   const [newPoolQuestion, setNewPoolQuestion] = useState<string>("");
+  const [newQuestion, setNewQuestion] = useState<string>("");
 
   const gameState = room.game_state || {};
-  const phase = gameState.phase || "waiting"; // waiting, setup, playing, reveal_choice, ended
+  const phase = gameState.phase || "waiting"; // waiting, question_submission, setup, playing, reveal_choice, ended
   const currentTurn = gameState.currentTurn || 0;
   const questionAssignments = gameState.questionAssignments || {}; // {assignmentId: {question, fromPlayerId, toPlayerId, isRevealed}}
   const playerOrder = gameState.playerOrder || players.map(p => p.player_id); // Fallback to current players if order not set
   const completedTurns = gameState.completedTurns || [];
   const sharedQuestionPool = gameState.questionPool || [];
+  const submittedQuestions = gameState.submittedQuestions || {}; // {playerId: true} to track who submitted
 
   // Real-time subscription for game state changes
   useEffect(() => {
@@ -109,25 +111,20 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const loadQuestions = async () => {
     try {
-      // First try to get AI-generated questions for this room
-      const { data: aiQuestionsData } = await supabase
+      // Get all questions: AI-generated, room-specific, and general
+      const { data: allQuestionsData } = await supabase
         .from("paranoia_questions")
         .select("*")
-        .eq("category", `AI-Generated (${room.room_code})`);
+        .in("category", [`AI-Generated (${room.room_code})`, `Room ${room.room_code}`, "general"]);
 
-      let questionsToUse = [];
-      
-      if (aiQuestionsData && aiQuestionsData.length > 0) {
-        questionsToUse = aiQuestionsData;
-      } else {
-        // Fall back to general questions
-        const { data: generalQuestionsData } = await supabase
-          .from("paranoia_questions")
-          .select("*")
-          .neq("category", `AI-Generated (${room.room_code})`);
-        
-        questionsToUse = generalQuestionsData || [];
-      }
+      // Sort questions by priority: AI-generated first, then room-specific, then general
+      const questionsToUse = (allQuestionsData || []).sort((a, b) => {
+        if (a.category === `AI-Generated (${room.room_code})`) return -1;
+        if (b.category === `AI-Generated (${room.room_code})`) return 1;
+        if (a.category === `Room ${room.room_code}`) return -1;
+        if (b.category === `Room ${room.room_code}`) return 1;
+        return 0;
+      });
       
       setAvailableQuestions(questionsToUse);
     } catch (error) {
@@ -206,6 +203,86 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     });
   };
 
+  const startQuestionSubmission = async () => {
+    setIsLoading(true);
+    try {
+      const newGameState = {
+        phase: "question_submission",
+        submittedQuestions: {},
+        questionPool: gameState.questionPool || []
+      };
+
+      await supabase
+        .from("rooms")
+        .update({ game_state: newGameState })
+        .eq("id", room.id);
+
+      onUpdateRoom({ ...room, game_state: newGameState });
+      
+      toast({
+        title: "Question Submission Started!",
+        description: "Everyone can now submit questions to the database.",
+        className: "bg-success text-success-foreground",
+      });
+    } catch (error) {
+      console.error("Error starting question submission:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start question submission. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const submitQuestionToDatabase = async (question: string) => {
+    if (!question.trim()) return;
+
+    setIsLoading(true);
+    try {
+      // Add question to database with room-specific category
+      await supabase
+        .from("paranoia_questions")
+        .insert({
+          question: question.trim(),
+          category: `Room ${room.room_code}`,
+          spiciness_level: 2
+        });
+
+      // Update game state to track submission
+      const newGameState = {
+        ...gameState,
+        submittedQuestions: {
+          ...submittedQuestions,
+          [currentPlayer.player_id]: true
+        }
+      };
+
+      await supabase
+        .from("rooms")
+        .update({ game_state: newGameState })
+        .eq("id", room.id);
+
+      onUpdateRoom({ ...room, game_state: newGameState });
+      
+      toast({
+        title: "Question Submitted!",
+        description: "Your question has been added to the database for this room.",
+        className: "bg-success text-success-foreground",
+      });
+    } catch (error) {
+      console.error("Error submitting question:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit question. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const startGame = async () => {
     setIsLoading(true);
     try {
@@ -219,7 +296,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         playerOrder: shuffledPlayers.map(p => p.player_id),
         completedTurns: [],
         setupComplete: {},
-        questionPool: gameState.questionPool || []
+        questionPool: gameState.questionPool || [],
+        submittedQuestions: gameState.submittedQuestions || {}
       };
 
       await supabase
@@ -437,22 +515,32 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         </div>
 
         {currentPlayer.is_host ? (
-          <div className="text-center">
-            <Button 
-              onClick={startGame} 
-              disabled={isLoading || players.length < 2 || players.length > 20}
-              size="lg"
-              className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
-            >
-              {isLoading ? "Starting..." : "Start Paranoia Game"}
-            </Button>
+          <div className="text-center space-y-4">
+            <div className="flex gap-4 justify-center">
+              <Button 
+                onClick={startQuestionSubmission} 
+                disabled={isLoading || players.length < 2 || players.length > 20}
+                size="lg"
+                variant="outline"
+              >
+                {isLoading ? "Starting..." : "Let Players Add Questions First"}
+              </Button>
+              <Button 
+                onClick={startGame} 
+                disabled={isLoading || players.length < 2 || players.length > 20}
+                size="lg"
+                className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+              >
+                {isLoading ? "Starting..." : "Start Game Now"}
+              </Button>
+            </div>
             {players.length < 2 && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-muted-foreground">
                 Need at least 2 players to start
               </p>
             )}
             {players.length > 20 && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-muted-foreground">
                 Maximum 20 players allowed
               </p>
             )}
@@ -462,6 +550,119 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             <p className="text-muted-foreground">
               Waiting for {players.find(p => p.is_host)?.player_name} to start the game...
             </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Question submission phase
+  if (phase === "question_submission") {
+    const hasSubmitted = submittedQuestions[currentPlayer.player_id];
+    const submittedCount = Object.keys(submittedQuestions).length;
+
+    return (
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Submit Your Questions</h1>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <MessageSquare className="h-4 w-4" />
+            <span className="text-muted-foreground">
+              {submittedCount} of {players.length} players submitted
+            </span>
+          </div>
+          <p className="text-muted-foreground">
+            Add your own questions to the database for this room! These will be available for everyone to use.
+          </p>
+        </div>
+
+        {!hasSubmitted ? (
+          <Card className="border-primary">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Submit Your Question
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-question">Your question:</Label>
+                <Textarea
+                  id="new-question"
+                  placeholder="Who is most likely to..."
+                  value={newQuestion}
+                  onChange={(e) => setNewQuestion(e.target.value)}
+                  className="min-h-20"
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => submitQuestionToDatabase(newQuestion)}
+                  disabled={isLoading || !newQuestion.trim()}
+                  className="flex-1"
+                  size="lg"
+                >
+                  {isLoading ? "Submitting..." : "Submit Question"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    const newGameState = {
+                      ...gameState,
+                      submittedQuestions: {
+                        ...submittedQuestions,
+                        [currentPlayer.player_id]: true
+                      }
+                    };
+                    supabase
+                      .from("rooms")
+                      .update({ game_state: newGameState })
+                      .eq("id", room.id);
+                    onUpdateRoom({ ...room, game_state: newGameState });
+                  }}
+                  variant="outline"
+                  size="lg"
+                >
+                  Skip
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/20 flex items-center justify-center">
+                <MessageSquare className="h-8 w-8 text-success" />
+              </div>
+              <p className="text-lg font-medium mb-2">Question Submitted!</p>
+              <p className="text-muted-foreground">
+                Waiting for other players to submit their questions...
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {currentPlayer.is_host && submittedCount === players.length && (
+          <div className="text-center">
+            <Button 
+              onClick={startGame} 
+              size="lg"
+              className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+            >
+              Start Game Now
+            </Button>
+          </div>
+        )}
+
+        {currentPlayer.is_host && submittedCount > 0 && submittedCount < players.length && (
+          <div className="text-center">
+            <Button 
+              onClick={startGame} 
+              variant="outline"
+              size="lg"
+            >
+              Start Game Without Waiting
+            </Button>
           </div>
         )}
       </div>
