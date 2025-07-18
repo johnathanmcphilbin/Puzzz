@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Shuffle, Crown, History, Users } from "lucide-react";
+import { Eye, EyeOff, Users, Crown, Dice1, MessageSquare } from "lucide-react";
 
 interface Room {
   id: string;
@@ -40,30 +40,28 @@ interface ParanoiaQuestion {
   spiciness_level: number;
 }
 
+interface QuestionAssignment {
+  question: string;
+  fromPlayerId: string;
+  toPlayerId: string;
+  isRevealed: boolean;
+}
+
 export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: ParanoiaGameProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState<ParanoiaQuestion | null>(null);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [spinResult, setSpinResult] = useState<string | null>(null);
-  const [customName, setCustomName] = useState<string>("");
-  const [selectedOption, setSelectedOption] = useState<string>("");
+  const [availableQuestions, setAvailableQuestions] = useState<ParanoiaQuestion[]>([]);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
+  const [customQuestion, setCustomQuestion] = useState<string>("");
+  const [selectedRecipient, setSelectedRecipient] = useState<string>("");
+  const [isUsingCustom, setIsUsingCustom] = useState(false);
 
   const gameState = room.game_state || {};
-  const phase = gameState.phase || "waiting"; // waiting, answering, spinning, results, ended
-  const roundNumber = gameState.roundNumber || 1;
-  const maxRounds = gameState.maxRounds || 5;
-  const playerAnswers = gameState.playerAnswers || {};
-  const currentQuestions = gameState.currentQuestions || {};
-  const revealedPlayer = gameState.revealedPlayer || null;
-  
-
-  useEffect(() => {
-    if (room.current_game === "paranoia" && phase === "answering" && !currentQuestion) {
-      // Each player loads their own question
-      loadQuestion();
-    }
-  }, [room.current_game, phase]);
+  const phase = gameState.phase || "waiting"; // waiting, setup, playing, reveal_choice, ended
+  const currentTurn = gameState.currentTurn || 0;
+  const questionAssignments = gameState.questionAssignments || {}; // {assignmentId: {question, fromPlayerId, toPlayerId, isRevealed}}
+  const playerOrder = gameState.playerOrder || [];
+  const completedTurns = gameState.completedTurns || [];
 
   // Real-time subscription for game state changes
   useEffect(() => {
@@ -90,7 +88,14 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     };
   }, [room.id]);
 
-  const loadQuestion = async () => {
+  // Load available questions when game starts
+  useEffect(() => {
+    if (phase === "setup") {
+      loadQuestions();
+    }
+  }, [phase]);
+
+  const loadQuestions = async () => {
     try {
       // First try to get AI-generated questions for this room
       const { data: aiQuestionsData } = await supabase
@@ -101,7 +106,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       let questionsToUse = [];
       
       if (aiQuestionsData && aiQuestionsData.length > 0) {
-        // Use AI-generated questions if available
         questionsToUse = aiQuestionsData;
       } else {
         // Fall back to general questions
@@ -113,29 +117,12 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         questionsToUse = generalQuestionsData || [];
       }
       
-      if (questionsToUse.length === 0) {
-        throw new Error("No questions available");
-      }
-
-      // Get used question IDs from game state to avoid repeats
-      const usedQuestionIds = gameState.usedQuestionIds || [];
-      
-      // Filter out already used questions
-      const availableQuestions = questionsToUse.filter(q => !usedQuestionIds.includes(q.id));
-      
-      // If no unused questions left, reset and use all questions again
-      const finalQuestions = availableQuestions.length > 0 ? availableQuestions : questionsToUse;
-      
-      // Get a random question from the available set
-      const randomIndex = Math.floor(Math.random() * finalQuestions.length);
-      const randomQuestion = finalQuestions[randomIndex];
-      
-      setCurrentQuestion(randomQuestion);
+      setAvailableQuestions(questionsToUse);
     } catch (error) {
-      console.error("Error loading question:", error);
+      console.error("Error loading questions:", error);
       toast({
         title: "Error",
-        description: "Failed to load question. Please try again.",
+        description: "Failed to load questions. Please try again.",
         variant: "destructive",
       });
     }
@@ -144,15 +131,16 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const startGame = async () => {
     setIsLoading(true);
     try {
+      // Shuffle players for turn order
+      const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+      
       const newGameState = {
-        ...gameState,
-        phase: "answering",
-        roundNumber: 1,
-        maxRounds: 5,
-        playerAnswers: {},
-        currentQuestions: {},
-        revealedPlayer: null,
-        usedQuestionIds: [] // Reset used questions when starting a new game
+        phase: "setup",
+        currentTurn: 0,
+        questionAssignments: {},
+        playerOrder: shuffledPlayers.map(p => p.player_id),
+        completedTurns: [],
+        setupComplete: {}
       };
 
       await supabase
@@ -164,7 +152,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       
       toast({
         title: "Game Started!",
-        description: "Everyone gets a question. Answer secretly!",
+        description: "Everyone choose a question and recipient!",
         className: "bg-success text-success-foreground",
       });
     } catch (error) {
@@ -179,44 +167,38 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   };
 
-  const submitAnswer = async (selectedPlayerId: string) => {
-    if (!currentQuestion) return;
+  const submitQuestionAssignment = async () => {
+    if ((!selectedQuestionId && !customQuestion) || !selectedRecipient) return;
 
     setIsLoading(true);
     try {
-      // Use custom name if "other" is selected and custom name is provided
-      const finalAnswer = selectedPlayerId === "other" && customName.trim() 
-        ? customName.trim() 
-        : selectedPlayerId;
-
-      const newPlayerAnswers = {
-        ...playerAnswers,
-        [currentPlayer.player_id]: finalAnswer
+      const question = isUsingCustom ? customQuestion : availableQuestions.find(q => q.id === selectedQuestionId)?.question;
+      
+      const assignmentId = `${currentPlayer.player_id}_${Date.now()}`;
+      const newAssignment = {
+        question,
+        fromPlayerId: currentPlayer.player_id,
+        toPlayerId: selectedRecipient,
+        isRevealed: false
       };
-
-      const newCurrentQuestions = {
-        ...currentQuestions,
-        [currentPlayer.player_id]: currentQuestion
-      };
-
-      // Track used questions to prevent repeats
-      const usedQuestionIds = gameState.usedQuestionIds || [];
-      const newUsedQuestionIds = currentQuestion && !usedQuestionIds.includes(currentQuestion.id) 
-        ? [...usedQuestionIds, currentQuestion.id] 
-        : usedQuestionIds;
 
       const newGameState = {
         ...gameState,
-        playerAnswers: newPlayerAnswers,
-        currentQuestions: newCurrentQuestions,
-        usedQuestionIds: newUsedQuestionIds
+        questionAssignments: {
+          ...questionAssignments,
+          [assignmentId]: newAssignment
+        },
+        setupComplete: {
+          ...gameState.setupComplete,
+          [currentPlayer.player_id]: true
+        }
       };
 
-      // Check if all players have answered
-      const allAnswered = Object.keys(newPlayerAnswers).length === players.length;
-      
-      if (allAnswered) {
-        newGameState.phase = "spinning";
+      // Check if all players have assigned questions
+      const allComplete = Object.keys(newGameState.setupComplete).length === players.length;
+      if (allComplete) {
+        newGameState.phase = "playing";
+        newGameState.currentTurn = 0;
       }
 
       await supabase
@@ -226,22 +208,59 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
       onUpdateRoom({ ...room, game_state: newGameState });
 
-      const selectedPlayer = players.find(p => p.player_id === selectedPlayerId);
-      const displayName = selectedPlayerId === "other" ? customName : selectedPlayer?.player_name;
-      
+      const recipient = players.find(p => p.player_id === selectedRecipient);
       toast({
-        title: "Answer Submitted!",
-        description: `You chose ${displayName}`,
+        title: "Question Assigned!",
+        description: `Question sent to ${recipient?.player_name}`,
         className: "bg-success text-success-foreground",
       });
 
-      if (allAnswered) {
-        toast({
-          title: "Everyone Answered!",
-          description: "Time to spin the wheel of fate...",
-          className: "bg-warning text-warning-foreground",
-        });
-      }
+      // Reset form
+      setSelectedQuestionId("");
+      setCustomQuestion("");
+      setSelectedRecipient("");
+      setIsUsingCustom(false);
+
+    } catch (error) {
+      console.error("Error submitting question:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit question. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const answerQuestion = async (answer: string) => {
+    const currentPlayerId = playerOrder[currentTurn];
+    
+    setIsLoading(true);
+    try {
+      const newGameState = {
+        ...gameState,
+        completedTurns: [...completedTurns, { playerId: currentPlayerId, answer }]
+      };
+
+      await supabase
+        .from("rooms")
+        .update({ game_state: newGameState })
+        .eq("id", room.id);
+
+      onUpdateRoom({ ...room, game_state: newGameState });
+
+      toast({
+        title: "Answer Recorded!",
+        description: "Now deciding if the question gets revealed...",
+        className: "bg-primary text-primary-foreground",
+      });
+
+      // Automatically proceed to reveal decision (45% chance)
+      setTimeout(() => {
+        handleRevealDecision();
+      }, 2000);
+
     } catch (error) {
       console.error("Error submitting answer:", error);
       toast({
@@ -254,90 +273,40 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   };
 
-  const spinWheel = async () => {
-    if (!currentPlayer.is_host) return;
-
-    setIsSpinning(true);
+  const handleRevealDecision = async () => {
+    const shouldReveal = Math.random() < 0.45; // 45% chance to reveal
     
-    // Dramatic pause for suspense
-    setTimeout(async () => {
-      const randomPlayer = players[Math.floor(Math.random() * players.length)];
-      setSpinResult(randomPlayer.player_id);
-      
-      try {
-        const newGameState = {
-          ...gameState,
-          phase: "results",
-          revealedPlayer: randomPlayer.player_id
-        };
+    const newGameState = {
+      ...gameState,
+      phase: "reveal_choice",
+      shouldReveal
+    };
 
-        await supabase
-          .from("rooms")
-          .update({ game_state: newGameState })
-          .eq("id", room.id);
+    await supabase
+      .from("rooms")
+      .update({ game_state: newGameState })
+      .eq("id", room.id);
 
-        onUpdateRoom({ ...room, game_state: newGameState });
-        
-        toast({
-          title: "🎉 The Wheel Has Spoken!",
-          description: `${randomPlayer.player_name}'s question will be revealed!`,
-          className: "bg-destructive text-destructive-foreground",
-        });
-      } catch (error) {
-        console.error("Error spinning wheel:", error);
-        toast({
-          title: "Error",
-          description: "Failed to process wheel spin. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSpinning(false);
-      }
-    }, 3000);
+    onUpdateRoom({ ...room, game_state: newGameState });
   };
 
-  const nextRound = async () => {
-    if (!currentPlayer.is_host) return;
+  const nextTurn = async () => {
+    const nextTurnIndex = currentTurn + 1;
+    const isGameComplete = nextTurnIndex >= players.length;
 
-    try {
-      const isGameEnded = roundNumber >= maxRounds;
-      
-      const newGameState = {
-        ...gameState,
-        phase: isGameEnded ? "ended" : "answering",
-        roundNumber: isGameEnded ? roundNumber : roundNumber + 1,
-        playerAnswers: {},
-        currentQuestions: {},
-        revealedPlayer: null,
-        // Keep usedQuestionIds to prevent repeats across rounds
-        usedQuestionIds: gameState.usedQuestionIds || []
-      };
+    const newGameState = {
+      ...gameState,
+      phase: isGameComplete ? "ended" : "playing",
+      currentTurn: nextTurnIndex,
+      shouldReveal: false
+    };
 
-      await supabase
-        .from("rooms")
-        .update({ game_state: newGameState })
-        .eq("id", room.id);
+    await supabase
+      .from("rooms")
+      .update({ game_state: newGameState })
+      .eq("id", room.id);
 
-      onUpdateRoom({ ...room, game_state: newGameState });
-      setCurrentQuestion(null);
-      setSpinResult(null);
-      
-      if (isGameEnded) {
-        toast({
-          title: "Game Complete!",
-          description: "Thanks for playing Paranoia!",
-          className: "bg-success text-success-foreground",
-        });
-      } else {
-        toast({
-          title: `Round ${roundNumber + 1} Starting!`,
-          description: "Get ready for new questions...",
-          className: "bg-primary text-primary-foreground",
-        });
-      }
-    } catch (error) {
-      console.error("Error starting next round:", error);
-    }
+    onUpdateRoom({ ...room, game_state: newGameState });
   };
 
   const resetGame = async () => {
@@ -353,7 +322,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   };
 
-  // Waiting phase - host can start game
+  // Waiting phase
   if (phase === "waiting") {
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -362,8 +331,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             Paranoia
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Everyone gets a secret question and chooses someone. Then the wheel of fate decides 
-            whose question gets revealed to everyone!
+            Players send secret questions to each other. Answer out loud without others knowing the question. 
+            45% chance the question gets revealed! Risk vs. reward - continue or take a shot to learn the question.
           </p>
         </div>
 
@@ -371,15 +340,15 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           <div className="text-center">
             <Button 
               onClick={startGame} 
-              disabled={isLoading || players.length < 2}
+              disabled={isLoading || players.length < 3}
               size="lg"
               className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
             >
               {isLoading ? "Starting..." : "Start Paranoia Game"}
             </Button>
-            {players.length < 2 && (
+            {players.length < 3 && (
               <p className="text-sm text-muted-foreground mt-2">
-                Need at least 2 players to start
+                Need at least 3 players to start
               </p>
             )}
           </div>
@@ -394,118 +363,128 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     );
   }
 
-  // Answering phase - everyone answers their question
-  if (phase === "answering") {
-    const hasAnswered = currentPlayer.player_id in playerAnswers;
-    const answeredCount = Object.keys(playerAnswers).length;
+  // Setup phase - assign questions
+  if (phase === "setup") {
+    const hasAssigned = gameState.setupComplete?.[currentPlayer.player_id];
+    const assignedCount = Object.keys(gameState.setupComplete || {}).length;
 
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Round {roundNumber} of {maxRounds}</h1>
+          <h1 className="text-2xl font-bold mb-2">Assign Your Question</h1>
           <div className="flex items-center justify-center gap-2 mb-4">
             <Users className="h-4 w-4" />
             <span className="text-muted-foreground">
-              {answeredCount} of {players.length} players answered
+              {assignedCount} of {players.length} players assigned
             </span>
           </div>
-          <Progress value={(answeredCount / players.length) * 100} className="w-64 mx-auto" />
         </div>
 
-        {!hasAnswered ? (
+        {!hasAssigned ? (
           <Card className="border-primary">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                Your Secret Question
+                <MessageSquare className="h-5 w-5" />
+                Choose Question & Recipient
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {currentQuestion ? (
-                <div className="space-y-6">
-                  <div className="p-4 bg-primary/10 rounded-lg">
-                    <p className="text-lg font-medium">{currentQuestion.question}</p>
-                    <div className="flex gap-2 mt-2">
-                      <Badge variant="outline">{currentQuestion.category}</Badge>
-                      <Badge variant="outline">Spice Level: {currentQuestion.spiciness_level}/5</Badge>
+            <CardContent className="space-y-6">
+              {/* Question Type Selection */}
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <Button
+                    variant={!isUsingCustom ? "default" : "outline"}
+                    onClick={() => setIsUsingCustom(false)}
+                  >
+                    Use Pre-made Question
+                  </Button>
+                  <Button
+                    variant={isUsingCustom ? "default" : "outline"}
+                    onClick={() => setIsUsingCustom(true)}
+                  >
+                    Write Custom Question
+                  </Button>
+                </div>
+
+                {/* Question Selection */}
+                {!isUsingCustom ? (
+                  <div className="space-y-3">
+                    <Label>Select a question:</Label>
+                    <div className="max-h-60 overflow-y-auto space-y-2">
+                      {availableQuestions.map((question) => (
+                        <Card 
+                          key={question.id}
+                          className={`cursor-pointer transition-colors ${
+                            selectedQuestionId === question.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => setSelectedQuestionId(question.id)}
+                        >
+                          <CardContent className="p-4">
+                            <p className="font-medium">{question.question}</p>
+                            <div className="flex gap-2 mt-2">
+                              <Badge variant="outline">{question.category}</Badge>
+                              <Badge variant="outline">Spice: {question.spiciness_level}/5</Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   </div>
-                  
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Choose who this question applies to. Your choice will be revealed later!
-                    </p>
-                    <div className="space-y-4">
-                      {/* Player Selection */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {players.map((player) => (
-                          <Button
-                            key={player.player_id}
-                            variant={selectedOption === player.player_id ? "default" : "outline"}
-                            onClick={() => setSelectedOption(player.player_id)}
-                            disabled={isLoading}
-                            className="h-auto p-4 text-left"
-                          >
-                            <div>
-                              <div className="font-medium">{player.player_name}</div>
-                              {player.is_host && <Crown className="inline h-3 w-3 ml-1" />}
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-question">Write your question:</Label>
+                    <Textarea
+                      id="custom-question"
+                      placeholder="Who is most likely to..."
+                      value={customQuestion}
+                      onChange={(e) => setCustomQuestion(e.target.value)}
+                      className="min-h-20"
+                    />
+                  </div>
+                )}
 
-                      {/* Custom "Other" Option */}
-                      <div className="space-y-2">
+                {/* Recipient Selection */}
+                <div className="space-y-3">
+                  <Label>Send to:</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {players
+                      .filter(p => p.player_id !== currentPlayer.player_id)
+                      .map((player) => (
                         <Button
-                          variant={selectedOption === "other" ? "default" : "outline"}
-                          onClick={() => setSelectedOption("other")}
-                          disabled={isLoading}
-                          className="w-full h-auto p-4 text-left"
+                          key={player.player_id}
+                          variant={selectedRecipient === player.player_id ? "default" : "outline"}
+                          onClick={() => setSelectedRecipient(player.player_id)}
+                          className="h-auto p-4"
                         >
-                          <div className="font-medium">Other (Custom Name)</div>
-                        </Button>
-                        
-                        {selectedOption === "other" && (
-                          <div className="space-y-2">
-                            <Label htmlFor="custom-name" className="text-sm">Enter custom name:</Label>
-                            <Input
-                              id="custom-name"
-                              type="text"
-                              placeholder="Type a name..."
-                              value={customName}
-                              onChange={(e) => setCustomName(e.target.value)}
-                              className="w-full"
-                            />
+                          <div>
+                            <div className="font-medium">{player.player_name}</div>
+                            {player.is_host && <Crown className="inline h-3 w-3 ml-1" />}
                           </div>
-                        )}
-                      </div>
-
-                      {/* Submit Button */}
-                      <Button
-                        onClick={() => submitAnswer(selectedOption)}
-                        disabled={isLoading || !selectedOption || (selectedOption === "other" && !customName.trim())}
-                        className="w-full"
-                        size="lg"
-                      >
-                        {isLoading ? "Submitting..." : "Submit Answer"}
-                      </Button>
-                    </div>
+                        </Button>
+                      ))}
                   </div>
                 </div>
-              ) : (
-                <p>Loading question...</p>
-              )}
+
+                <Button
+                  onClick={submitQuestionAssignment}
+                  disabled={isLoading || (!selectedQuestionId && !customQuestion) || !selectedRecipient}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isLoading ? "Sending..." : "Send Question"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
           <Card>
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/20 flex items-center justify-center">
-                <Eye className="h-8 w-8 text-success" />
+                <MessageSquare className="h-8 w-8 text-success" />
               </div>
-              <p className="text-lg font-medium mb-2">Answer Submitted!</p>
+              <p className="text-lg font-medium mb-2">Question Assigned!</p>
               <p className="text-muted-foreground">
-                Waiting for other players to finish answering...
+                Waiting for other players to assign their questions...
               </p>
             </CardContent>
           </Card>
@@ -514,147 +493,164 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     );
   }
 
-  // Spinning phase - wheel decides whose question gets revealed
-  if (phase === "spinning") {
+  // Playing phase - take turns answering
+  if (phase === "playing") {
+    const currentPlayerId = playerOrder[currentTurn];
+    const currentPlayerObj = players.find(p => p.player_id === currentPlayerId);
+    const isMyTurn = currentPlayerId === currentPlayer.player_id;
+    
+    // Find the question assigned to current player
+    const myQuestion = Object.values(questionAssignments).find(
+      (assignment: any) => assignment.toPlayerId === currentPlayerId
+    ) as QuestionAssignment | undefined;
+
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Round {roundNumber} of {maxRounds}</h1>
-          <p className="text-lg mb-4">Everyone has answered! Time for the wheel of fate...</p>
+          <h1 className="text-2xl font-bold mb-2">
+            {isMyTurn ? "Your Turn!" : `${currentPlayerObj?.player_name}'s Turn`}
+          </h1>
+          <div className="text-muted-foreground">
+            Turn {currentTurn + 1} of {players.length}
+          </div>
         </div>
 
-        <Card className="border-warning">
-          <CardContent className="p-8 text-center">
-            <div className="mb-6">
-              <div className="relative w-32 h-32 mx-auto mb-4">
-                <Shuffle className={`w-full h-full ${isSpinning ? 'animate-spin' : ''}`} style={{ 
-                  animationDuration: isSpinning ? '2s' : '0s' 
-                }} />
-                {isSpinning && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-pulse" />
-                )}
+        {isMyTurn ? (
+          <Card className="border-primary">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                Your Secret Question
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="p-4 bg-primary/10 rounded-lg">
+                <p className="text-lg font-medium">{myQuestion?.question}</p>
               </div>
-              <h2 className="text-xl font-bold mb-2">Wheel of Fate</h2>
-              <p className="text-muted-foreground">
-                Which player's question will be revealed?
-              </p>
-            </div>
-
-            {currentPlayer.is_host && !isSpinning ? (
-              <Button 
-                onClick={spinWheel}
-                size="lg"
-                className="bg-gradient-to-r from-warning to-destructive hover:from-warning/90 hover:to-destructive/90"
-              >
-                Spin the Wheel!
-              </Button>
-            ) : isSpinning ? (
-              <div className="space-y-2">
-                <div className="animate-pulse">
-                  <p className="text-lg font-medium">The wheel is spinning...</p>
-                  <p className="text-sm text-muted-foreground">Deciding fate...</p>
+              
+              <div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Answer this question OUT LOUD so everyone can hear. They don't know what the question is!
+                </p>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {players.map((player) => (
+                    <Button
+                      key={player.player_id}
+                      onClick={() => answerQuestion(player.player_name)}
+                      disabled={isLoading}
+                      className="h-auto p-4"
+                      variant="outline"
+                    >
+                      <div>
+                        <div className="font-medium">{player.player_name}</div>
+                        {player.is_host && <Crown className="inline h-3 w-3 ml-1" />}
+                      </div>
+                    </Button>
+                  ))}
                 </div>
               </div>
-            ) : (
-              <p className="text-muted-foreground">
-                {players.find(p => p.is_host)?.player_name} will spin the wheel...
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/20 flex items-center justify-center">
+                <Users className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-lg font-medium mb-2">
+                {currentPlayerObj?.player_name} is answering their secret question
               </p>
-            )}
-          </CardContent>
-        </Card>
+              <p className="text-muted-foreground">
+                Listen to their answer - but you won't know what the question was!
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
 
-  // Results phase - show whose question was revealed and all answers
-  if (phase === "results") {
-    const revealedPlayerObj = players.find(p => p.player_id === revealedPlayer);
-    const revealedQuestion = currentQuestions[revealedPlayer];
-    
+  // Reveal choice phase
+  if (phase === "reveal_choice") {
+    const currentPlayerId = playerOrder[currentTurn];
+    const currentPlayerObj = players.find(p => p.player_id === currentPlayerId);
+    const shouldReveal = gameState.shouldReveal;
+    const isMyChoice = currentPlayerId === currentPlayer.player_id;
+
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Round {roundNumber} Results</h1>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 text-destructive rounded-full">
-            <Crown className="h-4 w-4" />
-            <span className="font-medium">{revealedPlayerObj?.player_name}'s question was revealed!</span>
-          </div>
+          <h1 className="text-2xl font-bold mb-4">
+            {shouldReveal ? "🎉 Question Revealed!" : "❓ Question Stays Secret"}
+          </h1>
         </div>
 
-        {/* Revealed Question */}
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-center text-destructive">
-              🎯 The Revealed Question
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center p-4 bg-destructive/10 rounded-lg">
-              <p className="text-lg font-medium">{revealedQuestion?.question}</p>
-              <div className="flex justify-center gap-2 mt-2">
-                <Badge variant="outline">{revealedQuestion?.category}</Badge>
-                <Badge variant="outline">Spice Level: {revealedQuestion?.spiciness_level}/5</Badge>
+        <Card className={shouldReveal ? "border-destructive" : "border-muted"}>
+          <CardContent className="p-8 text-center">
+            {shouldReveal ? (
+              <div>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/20 flex items-center justify-center">
+                  <Eye className="h-8 w-8 text-destructive" />
+                </div>
+                <p className="text-lg font-medium mb-4">The question is revealed to everyone!</p>
+                {/* Show the actual question */}
+                <div className="p-4 bg-destructive/10 rounded-lg">
+                  <p className="font-medium">
+                    {(Object.values(questionAssignments).find(
+                      (assignment: any) => assignment.toPlayerId === currentPlayerId
+                    ) as QuestionAssignment | undefined)?.question}
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* All Player Answers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Everyone's Answers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              {players.map((player) => {
-                const answeredPlayerId = playerAnswers[player.player_id];
-                const answeredPlayer = players.find(p => p.player_id === answeredPlayerId);
-                const isRevealed = player.player_id === revealedPlayer;
-                
-                // Check if the answer is a custom name or a player
-                const displayAnswer = answeredPlayer?.player_name || answeredPlayerId;
-                
-                return (
-                  <div 
-                    key={player.player_id} 
-                    className={`p-4 rounded-lg border ${isRevealed ? 'border-destructive bg-destructive/5' : 'border-muted'}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{player.player_name}</span>
-                        {player.is_host && <Crown className="h-3 w-3" />}
-                        {isRevealed && <Badge variant="destructive" className="text-xs">REVEALED</Badge>}
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm text-muted-foreground">chose</span>
-                        <div className="font-medium">{displayAnswer}</div>
-                      </div>
+            ) : (
+              <div>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/20 flex items-center justify-center">
+                  <EyeOff className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-lg font-medium mb-4">The question remains a mystery!</p>
+                {isMyChoice && (
+                  <div className="space-y-4">
+                    <p className="text-muted-foreground">
+                      {currentPlayerObj?.player_name}, you can continue to the next round or take a "shot" to find out what the question was!
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                      <Button onClick={nextTurn} variant="outline">
+                        Continue Playing
+                      </Button>
+                      <Button onClick={() => {
+                        // Reveal question as penalty for wanting to know
+                        toast({
+                          title: "Question Revealed!",
+                          description: (Object.values(questionAssignments).find(
+                            (assignment: any) => assignment.toPlayerId === currentPlayerId
+                          ) as QuestionAssignment | undefined)?.question,
+                          className: "bg-warning text-warning-foreground",
+                        });
+                        nextTurn();
+                      }}>
+                        Take Shot & Learn Question
+                      </Button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                )}
+                {!isMyChoice && (
+                  <p className="text-muted-foreground">
+                    Waiting for {currentPlayerObj?.player_name} to decide...
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <div className="flex gap-4 justify-center">
-          {currentPlayer.is_host && (
-            <>
-              {roundNumber < maxRounds ? (
-                <Button onClick={nextRound} size="lg">
-                  Next Round ({roundNumber + 1}/{maxRounds})
-                </Button>
-              ) : (
-                <Button onClick={nextRound} size="lg">
-                  End Game
-                </Button>
-              )}
-            </>
-          )}
-        </div>
+        {shouldReveal && (
+          <div className="text-center">
+            <Button onClick={nextTurn} size="lg">
+              Continue to Next Turn
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -666,32 +662,31 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-4">Game Complete!</h1>
           <p className="text-muted-foreground text-lg">
-            Thanks for playing Paranoia! Hope you enjoyed the suspense.
+            Thanks for playing Paranoia! Hope you enjoyed the mystery and suspense.
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              Game Summary
-            </CardTitle>
+            <CardTitle>Game Summary</CardTitle>
           </CardHeader>
-          <CardContent className="text-center">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-4 bg-primary/10 rounded-lg">
-                <div className="text-2xl font-bold text-primary">{maxRounds}</div>
-                <div className="text-sm text-muted-foreground">Rounds Played</div>
-              </div>
-              <div className="p-4 bg-secondary/10 rounded-lg">
-                <div className="text-2xl font-bold text-secondary">{players.length}</div>
-                <div className="text-sm text-muted-foreground">Players</div>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-4 bg-primary/10 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-primary">{players.length}</div>
+                  <div className="text-sm text-muted-foreground">Players</div>
+                </div>
+                <div className="p-4 bg-secondary/10 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-secondary">{players.length}</div>
+                  <div className="text-sm text-muted-foreground">Questions Asked</div>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex gap-4 justify-center">
+        <div className="text-center">
           <Button onClick={resetGame} variant="outline">
             Back to Lobby
           </Button>
