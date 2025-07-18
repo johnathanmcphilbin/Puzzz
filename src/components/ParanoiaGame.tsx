@@ -102,9 +102,10 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   // Update question pool from game state
   useEffect(() => {
-    const poolFromState = gameState.questionPool || [];
-    setQuestionPool(poolFromState);
-  }, [gameState.questionPool]);
+    if (sharedQuestionPool.length !== questionPool.length) {
+      setQuestionPool(sharedQuestionPool);
+    }
+  }, [sharedQuestionPool.length]);
 
   const loadQuestions = async () => {
     try {
@@ -260,7 +261,17 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         const poolIndex = parseInt(selectedQuestionId.replace('pool_', ''));
         question = questionPool[poolIndex];
       } else {
-        question = availableQuestions.find(q => q.id === selectedQuestionId)?.question;
+        const foundQuestion = availableQuestions.find(q => q.id === selectedQuestionId);
+        question = foundQuestion?.question;
+      }
+
+      if (!question) {
+        toast({
+          title: "Error",
+          description: "Please select a valid question.",
+          variant: "destructive",
+        });
+        return;
       }
       
       const assignmentId = `${currentPlayer.player_id}_${Date.now()}`;
