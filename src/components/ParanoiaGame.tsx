@@ -60,7 +60,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const phase = gameState.phase || "waiting"; // waiting, setup, playing, reveal_choice, ended
   const currentTurn = gameState.currentTurn || 0;
   const questionAssignments = gameState.questionAssignments || {}; // {assignmentId: {question, fromPlayerId, toPlayerId, isRevealed}}
-  const playerOrder = gameState.playerOrder || [];
+  const playerOrder = gameState.playerOrder || players.map(p => p.player_id); // Fallback to current players if order not set
   const completedTurns = gameState.completedTurns || [];
 
   // Real-time subscription for game state changes
