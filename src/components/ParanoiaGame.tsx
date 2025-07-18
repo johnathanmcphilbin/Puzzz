@@ -340,15 +340,20 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           <div className="text-center">
             <Button 
               onClick={startGame} 
-              disabled={isLoading || players.length < 3}
+              disabled={isLoading || players.length < 2 || players.length > 20}
               size="lg"
               className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
             >
               {isLoading ? "Starting..." : "Start Paranoia Game"}
             </Button>
-            {players.length < 3 && (
+            {players.length < 2 && (
               <p className="text-sm text-muted-foreground mt-2">
-                Need at least 3 players to start
+                Need at least 2 players to start
+              </p>
+            )}
+            {players.length > 20 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Maximum 20 players allowed
               </p>
             )}
           </div>

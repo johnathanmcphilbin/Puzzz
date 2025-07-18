@@ -219,7 +219,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                 Players ({players.length})
               </CardTitle>
               <CardDescription>
-                {players.length < 2 ? "Waiting for more players to join..." : "Ready to start!"}
+                {players.length < 2 ? "Waiting for more players to join..." : 
+                 players.length > 20 ? "Too many players (max 20)" : "Ready to start!"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -332,7 +333,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                 {currentPlayer.is_host ? (
                   <Button 
                     onClick={startGame} 
-                    disabled={isStarting || players.length < 2}
+                    disabled={isStarting || players.length < 2 || players.length > 20}
                     className="flex-1 gap-2"
                   >
                     {isStarting ? (
