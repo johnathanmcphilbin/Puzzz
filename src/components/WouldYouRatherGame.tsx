@@ -44,6 +44,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   const [hasVoted, setHasVoted] = useState(false);
   const [votes, setVotes] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [aiQuestions, setAiQuestions] = useState<Question[]>([]);
   const { toast } = useToast();
 
   const gameState = room.game_state || {};
@@ -89,19 +90,69 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
     }
   };
 
+  const generateAIQuestions = async () => {
+    try {
+      const { data: customizationData } = await supabase
+        .from("ai_chat_customizations")
+        .select("customization_text")
+        .eq("room_id", room.id)
+        .single();
+
+      const customization = customizationData?.customization_text || "a fun group of friends";
+
+      const response = await supabase.functions.invoke('ai-chat', {
+        body: {
+          action: 'generate_would_you_rather',
+          customization,
+          players: players
+        }
+      });
+
+      if (response.error) throw response.error;
+
+      const aiResponse = JSON.parse(response.data.response);
+      const generatedQuestions = aiResponse.questions.map((q: any, index: number) => ({
+        id: `ai-generated-${Date.now()}-${index}`,
+        option_a: q.option_a,
+        option_b: q.option_b,
+        category: "AI Generated",
+        created_at: new Date().toISOString()
+      }));
+
+      setAiQuestions(generatedQuestions);
+      return generatedQuestions;
+    } catch (error) {
+      console.error("Error generating AI questions:", error);
+      return [];
+    }
+  };
+
   const loadNextQuestion = async () => {
     if (!currentPlayer.is_host) return;
 
     setIsLoading(true);
     try {
-      // Get random question from database
-      const { data: questionsData, error: questionsError } = await supabase
-        .from("would_you_rather_questions")
-        .select("*");
+      let questions: Question[] = [];
 
-      if (questionsError) throw questionsError;
+      // Try to use AI questions first, then fall back to database
+      if (aiQuestions.length === 0) {
+        const aiQuestions = await generateAIQuestions();
+        if (aiQuestions.length > 0) {
+          questions = aiQuestions;
+        }
+      } else {
+        questions = aiQuestions;
+      }
 
-      const questions = questionsData || [];
+      // If no AI questions, get from database
+      if (questions.length === 0) {
+        const { data: questionsData, error: questionsError } = await supabase
+          .from("would_you_rather_questions")
+          .select("*");
+
+        if (questionsError) throw questionsError;
+        questions = questionsData || [];
+      }
       
       if (questions.length === 0) {
         // Add default questions as fallback
@@ -428,16 +479,21 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
               )}
               
               {showResults && (
-                <Button onClick={loadNextQuestion} disabled={isLoading} className="gap-2">
-                  {isLoading ? (
-                    "Loading..."
-                  ) : (
-                    <>
-                      <ChevronRight className="h-4 w-4" />
-                      Next Question
-                    </>
-                  )}
-                </Button>
+                <>
+                  <Button onClick={generateAIQuestions} disabled={isLoading} variant="outline" className="gap-2">
+                    {isLoading ? "Generating..." : "Generate New AI Questions"}
+                  </Button>
+                  <Button onClick={loadNextQuestion} disabled={isLoading} className="gap-2">
+                    {isLoading ? (
+                      "Loading..."
+                    ) : (
+                      <>
+                        <ChevronRight className="h-4 w-4" />
+                        Next Question
+                      </>
+                    )}
+                  </Button>
+                </>
               )}
             </>
           )}

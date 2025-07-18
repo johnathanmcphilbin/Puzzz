@@ -28,6 +28,29 @@ serve(async (req) => {
 
     if (action === 'chat') {
       systemPrompt = `You are a helpful AI assistant for a party games app. You help users customize their gaming experience and provide fun suggestions. Keep responses conversational, friendly, and brief. If users mention preferences like "we are nerdy" or "we love sci-fi", remember these for future interactions.`;
+    } else if (action === 'generate_would_you_rather') {
+      const playerNames = players && players.length > 0 ? players.map(p => p.player_name).join(', ') : '';
+      const playerInfo = playerNames ? `The players are: ${playerNames}.` : '';
+      
+      systemPrompt = `Generate 5 personalized "Would You Rather" questions based on the customization and players. ${playerInfo}
+      
+      Make the questions:
+      1. Personalized and relevant to the group
+      2. Fun and engaging for party games
+      3. Appropriate for the group dynamic
+      4. Creative and thought-provoking
+      
+      You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
+      {
+        "questions": [
+          {"option_a": "...", "option_b": "..."},
+          {"option_a": "...", "option_b": "..."},
+          {"option_a": "...", "option_b": "..."},
+          {"option_a": "...", "option_b": "..."},
+          {"option_a": "...", "option_b": "..."}
+        ]
+      }`;
+      userPrompt = `Generate 5 "Would You Rather" questions for: ${customization}. ${playerInfo}`;
     } else if (action === 'generate_all_questions') {
       const crazynessDescription = crazynessLevel <= 20 ? "very mild and safe" :
                                   crazynessLevel <= 40 ? "mild with some fun edge" :
