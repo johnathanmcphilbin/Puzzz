@@ -677,153 +677,82 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Assign Your Question</h1>
+          <h1 className="text-2xl font-bold mb-2">Add Questions to Pool</h1>
           <div className="flex items-center justify-center gap-2 mb-4">
             <Users className="h-4 w-4" />
             <span className="text-muted-foreground">
-              {assignedCount} of {players.length} players assigned
+              {assignedCount} of {players.length} players finished
             </span>
           </div>
         </div>
 
         {!hasAssigned ? (
-          <div className="space-y-4">
-            <Card className="border-primary">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Choose Question & Recipient
-                </CardTitle>
-              </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Question Type Selection */}
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <Button
-                    variant={!isUsingCustom ? "default" : "outline"}
-                    onClick={() => setIsUsingCustom(false)}
-                  >
-                    Use Pre-made Question
-                  </Button>
-                  <Button
-                    variant={isUsingCustom ? "default" : "outline"}
-                    onClick={() => setIsUsingCustom(true)}
-                  >
-                    Write Custom Question
-                  </Button>
-                </div>
-
-                {/* Question Selection */}
-                {!isUsingCustom ? (
-                  <div className="space-y-4">
-                    <Label>Select a question:</Label>
-                    
-                    {/* AI Generated Questions */}
-                    {aiQuestions.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-sm text-primary">AI Generated for Your Group:</h4>
-                        <div className="max-h-40 overflow-y-auto space-y-2">
-                          {aiQuestions.map((question, index) => (
-                            <Card 
-                              key={`ai_${index}`}
-                              className={`cursor-pointer transition-colors ${
-                                selectedQuestionId === `ai_${index}` ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                              }`}
-                              onClick={() => setSelectedQuestionId(`ai_${index}`)}
-                            >
-                              <CardContent className="p-4">
-                                <p className="font-medium">{question}</p>
-                                <Badge variant="outline" className="mt-2">AI Generated</Badge>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-
-                    {/* Default Questions */}
-                    {availableQuestions.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-sm text-muted-foreground">Default Questions:</h4>
-                        <div className="max-h-32 overflow-y-auto space-y-2">
-                          {availableQuestions.map((question) => (
-                            <Card 
-                              key={question.id}
-                              className={`cursor-pointer transition-colors ${
-                                selectedQuestionId === question.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                              }`}
-                              onClick={() => setSelectedQuestionId(question.id)}
-                            >
-                              <CardContent className="p-4">
-                                <p className="font-medium">{question.question}</p>
-                                <div className="flex gap-2 mt-2">
-                                  <Badge variant="outline">{question.category}</Badge>
-                                  <Badge variant="outline">Spice: {question.spiciness_level}/5</Badge>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="custom-question">Write your question:</Label>
-                    <Textarea
-                      id="custom-question"
-                      placeholder="Who is most likely to..."
-                      value={customQuestion}
-                      onChange={(e) => setCustomQuestion(e.target.value)}
-                      className="min-h-20"
-                    />
-                  </div>
-                )}
-
-                {/* Recipient Selection */}
-                <div className="space-y-3">
-                  <Label>Send to:</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {players
-                      .filter(p => p.player_id !== currentPlayer.player_id)
-                      .map((player) => (
-                        <Button
-                          key={player.player_id}
-                          variant={selectedRecipient === player.player_id ? "default" : "outline"}
-                          onClick={() => setSelectedRecipient(player.player_id)}
-                          className="h-auto p-4"
-                        >
-                          <div>
-                            <div className="font-medium">{player.player_name}</div>
-                            {player.is_host && <Crown className="inline h-3 w-3 ml-1" />}
-                          </div>
-                        </Button>
-                      ))}
-                  </div>
-                </div>
-
-                <Button
-                  onClick={submitQuestionAssignment}
-                  disabled={isLoading || (!selectedQuestionId && !customQuestion) || !selectedRecipient}
-                  className="w-full"
-                  size="lg"
+          <Card className="border-secondary">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Add to Question Pool
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Add questions to the shared pool that anyone can use. These questions will be available to all players.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Who is most likely to..."
+                  value={newPoolQuestion}
+                  onChange={(e) => setNewPoolQuestion(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addToQuestionPool()}
+                />
+                <Button 
+                  onClick={addToQuestionPool}
+                  disabled={!newPoolQuestion.trim()}
+                  variant="outline"
                 >
-                  {isLoading ? "Sending..." : "Send Question"}
+                  Add to Pool
                 </Button>
               </div>
+              
+              <Button
+                onClick={() => {
+                  const newGameState = {
+                    ...gameState,
+                    setupComplete: {
+                      ...gameState.setupComplete,
+                      [currentPlayer.player_id]: true
+                    }
+                  };
+                  
+                  // Check if all players are done
+                  const allComplete = Object.keys(newGameState.setupComplete).length === players.length;
+                  if (allComplete) {
+                    newGameState.phase = "playing";
+                    newGameState.currentTurn = 0;
+                  }
+                  
+                  supabase
+                    .from("rooms")
+                    .update({ game_state: newGameState })
+                    .eq("id", room.id);
+                  onUpdateRoom({ ...room, game_state: newGameState });
+                }}
+                className="w-full"
+                size="lg"
+              >
+                Done Adding Questions
+              </Button>
             </CardContent>
           </Card>
-          </div>
         ) : (
           <Card>
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/20 flex items-center justify-center">
                 <MessageSquare className="h-8 w-8 text-success" />
               </div>
-              <p className="text-lg font-medium mb-2">Question Assigned!</p>
+              <p className="text-lg font-medium mb-2">Questions Added!</p>
               <p className="text-muted-foreground">
-                Waiting for other players to assign their questions...
+                Waiting for other players to add their questions...
               </p>
             </CardContent>
           </Card>
