@@ -224,30 +224,32 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           className="relative cursor-pointer group"
         >
           {/* Cat face button */}
-          <div className="w-16 h-16 bg-blue-500 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110">
+          <div className="w-16 h-20 bg-blue-500 rounded-t-full rounded-b-3xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110 relative">
             {/* Cat ears */}
-            <div className="absolute -top-2 left-3 w-0 h-0 border-l-[8px] border-r-[8px] border-b-[12px] border-l-transparent border-r-transparent border-b-blue-500"></div>
-            <div className="absolute -top-2 right-3 w-0 h-0 border-l-[8px] border-r-[8px] border-b-[12px] border-l-transparent border-r-transparent border-b-blue-500"></div>
+            <div className="absolute -top-1 left-4 w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-blue-500"></div>
+            <div className="absolute -top-1 right-4 w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-blue-500"></div>
+            
+            {/* Inner ear triangles */}
+            <div className="absolute top-1 left-5 w-0 h-0 border-l-[3px] border-r-[3px] border-b-[6px] border-l-transparent border-r-transparent border-b-blue-400"></div>
+            <div className="absolute top-1 right-5 w-0 h-0 border-l-[3px] border-r-[3px] border-b-[6px] border-l-transparent border-r-transparent border-b-blue-400"></div>
             
             {/* Cat face */}
-            <div className="text-white text-2xl flex flex-col items-center">
-              {/* Eyes */}
-              <div className="flex space-x-2 mb-1">
-                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+            <div className="text-white flex flex-col items-center mt-2">
+              {/* Happy curved eyes */}
+              <div className="flex space-x-3 mb-2">
+                <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-t-[3px] border-l-transparent border-r-transparent border-t-white rounded-full"></div>
+                <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-t-[3px] border-l-transparent border-r-transparent border-t-white rounded-full"></div>
               </div>
-              {/* Mouth */}
-              <div className="flex items-center">
-                <div className="w-1 h-1 bg-white rounded-full"></div>
-                <div className="text-xs">ω</div>
+              {/* Nose and mouth */}
+              <div className="flex flex-col items-center">
+                <div className="w-1 h-1 bg-white rounded-full mb-1"></div>
+                <div className="w-3 h-0 border-t-[2px] border-white rounded-full"></div>
               </div>
             </div>
             
-            {/* Whiskers */}
-            <div className="absolute left-1 top-6 w-3 h-0.5 bg-white rounded-full opacity-70"></div>
-            <div className="absolute left-0.5 top-8 w-3 h-0.5 bg-white rounded-full opacity-70"></div>
-            <div className="absolute right-1 top-6 w-3 h-0.5 bg-white rounded-full opacity-70"></div>
-            <div className="absolute right-0.5 top-8 w-3 h-0.5 bg-white rounded-full opacity-70"></div>
+            {/* Cat tail */}
+            <div className="absolute -right-2 top-8 w-6 h-3 bg-blue-500 rounded-full transform rotate-45"></div>
+            <div className="absolute -right-1 top-6 w-4 h-2 bg-blue-500 rounded-full transform rotate-12"></div>
           </div>
         </div>
       ) : (
