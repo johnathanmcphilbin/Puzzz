@@ -85,7 +85,7 @@ const Index = () => {
                     src="/lovable-uploads/e1223d72-4579-4d9b-a783-c817eb336925.png" 
                     alt="Would You Rather - Character vs Character"
                     className="w-full h-full object-cover object-center"
-                    style={{ objectPosition: 'center 45%' }}
+                    style={{ objectPosition: 'center 35%' }}
                   />
                 </div>
                 <div className="absolute top-1 right-1 sm:top-3 sm:right-3">
