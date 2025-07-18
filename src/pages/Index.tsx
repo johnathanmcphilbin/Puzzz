@@ -80,11 +80,12 @@ const Index = () => {
             >
               <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <div className="text-lg sm:text-4xl font-bold mb-1 sm:mb-2">A vs B</div>
-                    <div className="text-[10px] sm:text-sm opacity-90">Choose Your Side</div>
-                  </div>
+                <div className="absolute inset-0 flex items-center justify-center p-2">
+                  <img 
+                    src="/lovable-uploads/e1223d72-4579-4d9b-a783-c817eb336925.png" 
+                    alt="Would You Rather - Character vs Character"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div className="absolute top-1 right-1 sm:top-3 sm:right-3">
                   <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
