@@ -102,8 +102,9 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   // Update question pool from game state
   useEffect(() => {
-    setQuestionPool(sharedQuestionPool);
-  }, [sharedQuestionPool]);
+    const poolFromState = gameState.questionPool || [];
+    setQuestionPool(poolFromState);
+  }, [gameState.questionPool]);
 
   const loadQuestions = async () => {
     try {
