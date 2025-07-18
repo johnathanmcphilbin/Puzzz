@@ -890,6 +890,23 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     const currentPlayerObj = players.find(p => p.player_id === currentPlayerId);
     const isMyTurn = currentPlayerId === currentPlayer.player_id;
 
+    // Check if we have question assignments, if not go back to setup
+    if (Object.keys(questionAssignments).length === 0) {
+      console.log("No question assignments found, going back to setup");
+      const newGameState = {
+        ...gameState,
+        phase: "setup"
+      };
+      
+      supabase
+        .from("rooms")
+        .update({ game_state: newGameState })
+        .eq("id", room.id);
+      
+      onUpdateRoom({ ...room, game_state: newGameState });
+      return null;
+    }
+
     // If we can't find the current player, something is wrong with the game state
     if (!currentPlayerObj) {
       console.error("Current player not found in players array:", { currentPlayerId, playerOrder, players });
@@ -940,20 +957,22 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 </p>
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {players.map((player) => (
-                    <Button
-                      key={player.player_id}
-                      onClick={() => answerQuestion(player.player_name)}
-                      disabled={isLoading}
-                      className="h-auto p-4"
-                      variant="outline"
-                    >
-                      <div>
-                        <div className="font-medium">{player.player_name}</div>
-                        {player.is_host && <Crown className="inline h-3 w-3 ml-1" />}
-                      </div>
-                    </Button>
-                  ))}
+                  {players
+                    .filter(player => player.player_id !== currentPlayer.player_id)
+                    .map((player) => (
+                      <Button
+                        key={player.player_id}
+                        onClick={() => answerQuestion(player.player_name)}
+                        disabled={isLoading}
+                        className="h-auto p-4"
+                        variant="outline"
+                      >
+                        <div>
+                          <div className="font-medium">{player.player_name}</div>
+                          {player.is_host && <Crown className="inline h-3 w-3 ml-1" />}
+                        </div>
+                      </Button>
+                    ))}
                 </div>
               </div>
             </CardContent>
