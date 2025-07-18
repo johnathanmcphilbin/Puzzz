@@ -219,13 +219,37 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]">
       {!isOpen ? (
-        <Button
+        <div 
           onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300"
-          size="icon"
+          className="relative cursor-pointer group"
         >
-          <Sparkles className="h-6 w-6" />
-        </Button>
+          {/* Cat face button */}
+          <div className="w-16 h-16 bg-blue-500 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110">
+            {/* Cat ears */}
+            <div className="absolute -top-2 left-3 w-0 h-0 border-l-[8px] border-r-[8px] border-b-[12px] border-l-transparent border-r-transparent border-b-blue-500"></div>
+            <div className="absolute -top-2 right-3 w-0 h-0 border-l-[8px] border-r-[8px] border-b-[12px] border-l-transparent border-r-transparent border-b-blue-500"></div>
+            
+            {/* Cat face */}
+            <div className="text-white text-2xl flex flex-col items-center">
+              {/* Eyes */}
+              <div className="flex space-x-2 mb-1">
+                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+              </div>
+              {/* Mouth */}
+              <div className="flex items-center">
+                <div className="w-1 h-1 bg-white rounded-full"></div>
+                <div className="text-xs">ω</div>
+              </div>
+            </div>
+            
+            {/* Whiskers */}
+            <div className="absolute left-1 top-6 w-3 h-0.5 bg-white rounded-full opacity-70"></div>
+            <div className="absolute left-0.5 top-8 w-3 h-0.5 bg-white rounded-full opacity-70"></div>
+            <div className="absolute right-1 top-6 w-3 h-0.5 bg-white rounded-full opacity-70"></div>
+            <div className="absolute right-0.5 top-8 w-3 h-0.5 bg-white rounded-full opacity-70"></div>
+          </div>
+        </div>
       ) : (
         <Card className="w-80 sm:w-96 h-[32rem] sm:h-[36rem] flex flex-col shadow-2xl border-primary/20 animate-scale-in">
           <CardHeader className="p-4 border-b flex-shrink-0">
@@ -251,16 +275,28 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'} mb-4`}
                 >
-                  <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      message.isUser
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
-                  >
-                    <p>{message.text}</p>
+                  <div className="relative max-w-[80%]">
+                    {/* Speech bubble */}
+                    <div
+                      className={`p-3 rounded-2xl shadow-sm ${
+                        message.isUser
+                          ? 'bg-blue-500 text-white rounded-br-sm'
+                          : 'bg-gray-200 text-gray-800 rounded-bl-sm'
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed">{message.text}</p>
+                    </div>
+                    
+                    {/* Speech bubble tail */}
+                    <div
+                      className={`absolute bottom-0 ${
+                        message.isUser
+                          ? 'right-0 w-0 h-0 border-l-[12px] border-t-[8px] border-l-blue-500 border-t-transparent'
+                          : 'left-0 w-0 h-0 border-r-[12px] border-t-[8px] border-r-gray-200 border-t-transparent'
+                      }`}
+                    ></div>
                   </div>
                 </div>
               ))}
