@@ -80,11 +80,11 @@ const Index = () => {
             >
               <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center p-2">
+                <div className="absolute inset-0 flex items-center justify-center">
                   <img 
                     src="/lovable-uploads/e1223d72-4579-4d9b-a783-c817eb336925.png" 
                     alt="Would You Rather - Character vs Character"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="absolute top-1 right-1 sm:top-3 sm:right-3">
