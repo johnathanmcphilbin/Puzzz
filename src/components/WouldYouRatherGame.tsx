@@ -360,7 +360,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
               <h2 className="text-2xl font-bold text-foreground mb-4">
                 Would you rather...
               </h2>
-              {currentQuestion.category && (
+              {currentQuestion.category && currentQuestion.category !== "AI Generated" && (
                 <Badge variant="outline" className="mb-4">
                   {currentQuestion.category}
                 </Badge>
