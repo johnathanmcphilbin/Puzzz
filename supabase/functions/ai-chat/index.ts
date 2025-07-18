@@ -99,6 +99,35 @@ serve(async (req) => {
       
       Make sure all questions match both the theme/preferences mentioned in the customization AND the specified craziness level. Return ONLY the JSON object, nothing else.`;
       userPrompt = `Generate questions for all three party games for a group that is: ${customization}. Craziness level: ${crazynessLevel}%`;
+    } else if (action === 'generate_paranoia_questions') {
+      const playerNames = players && players.length > 0 ? players.map(p => p.player_name).join(', ') : '';
+      const playerInfo = playerNames ? `The players are: ${playerNames}.` : '';
+      
+      systemPrompt = `Generate 10 personalized Paranoia questions based on the customization and players. ${playerInfo}
+      
+      Paranoia questions should:
+      1. Start with "Who is most likely to..." or similar format
+      2. Be personalized to the group when player names are provided
+      3. Create fun suspense and mystery
+      4. Be appropriate for party games
+      5. Make players curious about who was chosen
+      
+      You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
+      {
+        "questions": [
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."},
+          {"question": "Who is most likely to..."}
+        ]
+      }`;
+      userPrompt = `Generate 10 Paranoia questions for: ${customization}. ${playerInfo}`;
     }
 
     console.log('Sending request to OpenAI:', {

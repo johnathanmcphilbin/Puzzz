@@ -51,10 +51,13 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [availableQuestions, setAvailableQuestions] = useState<ParanoiaQuestion[]>([]);
+  const [aiQuestions, setAiQuestions] = useState<string[]>([]);
+  const [questionPool, setQuestionPool] = useState<string[]>([]);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
   const [customQuestion, setCustomQuestion] = useState<string>("");
   const [selectedRecipient, setSelectedRecipient] = useState<string>("");
   const [isUsingCustom, setIsUsingCustom] = useState(false);
+  const [newPoolQuestion, setNewPoolQuestion] = useState<string>("");
 
   const gameState = room.game_state || {};
   const phase = gameState.phase || "waiting"; // waiting, setup, playing, reveal_choice, ended
@@ -62,6 +65,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const questionAssignments = gameState.questionAssignments || {}; // {assignmentId: {question, fromPlayerId, toPlayerId, isRevealed}}
   const playerOrder = gameState.playerOrder || players.map(p => p.player_id); // Fallback to current players if order not set
   const completedTurns = gameState.completedTurns || [];
+  const sharedQuestionPool = gameState.questionPool || [];
 
   // Real-time subscription for game state changes
   useEffect(() => {
@@ -92,8 +96,14 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   useEffect(() => {
     if (phase === "setup") {
       loadQuestions();
+      generateAIQuestions();
     }
   }, [phase]);
+
+  // Update question pool from game state
+  useEffect(() => {
+    setQuestionPool(sharedQuestionPool);
+  }, [sharedQuestionPool]);
 
   const loadQuestions = async () => {
     try {
@@ -128,6 +138,72 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   };
 
+  const generateAIQuestions = async () => {
+    try {
+      const customization = await getCustomization();
+      
+      const response = await supabase.functions.invoke('ai-chat', {
+        body: { 
+          action: 'generate_paranoia_questions',
+          customization: customization || "a fun group of friends",
+          players: players
+        }
+      });
+
+      if (response.error) throw response.error;
+
+      const result = JSON.parse(response.data.response);
+      if (result.questions) {
+        setAiQuestions(result.questions.map(q => q.question));
+      }
+    } catch (error) {
+      console.error("Error generating AI questions:", error);
+      toast({
+        title: "Info",
+        description: "Using default questions. AI generation unavailable.",
+        variant: "default",
+      });
+    }
+  };
+
+  const getCustomization = async () => {
+    try {
+      const { data } = await supabase
+        .from("ai_chat_customizations")
+        .select("customization_text")
+        .eq("room_id", room.id)
+        .single();
+      return data?.customization_text;
+    } catch {
+      return null;
+    }
+  };
+
+  const addToQuestionPool = async () => {
+    if (!newPoolQuestion.trim()) return;
+
+    const updatedPool = [...sharedQuestionPool, newPoolQuestion.trim()];
+    
+    const newGameState = {
+      ...gameState,
+      questionPool: updatedPool
+    };
+
+    await supabase
+      .from("rooms")
+      .update({ game_state: newGameState })
+      .eq("id", room.id);
+
+    onUpdateRoom({ ...room, game_state: newGameState });
+    setNewPoolQuestion("");
+    
+    toast({
+      title: "Added to Pool!",
+      description: "Your question was added to the shared pool.",
+      className: "bg-success text-success-foreground",
+    });
+  };
+
   const startGame = async () => {
     setIsLoading(true);
     try {
@@ -140,7 +216,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         questionAssignments: {},
         playerOrder: shuffledPlayers.map(p => p.player_id),
         completedTurns: [],
-        setupComplete: {}
+        setupComplete: {},
+        questionPool: gameState.questionPool || []
       };
 
       await supabase
@@ -172,7 +249,18 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
     setIsLoading(true);
     try {
-      const question = isUsingCustom ? customQuestion : availableQuestions.find(q => q.id === selectedQuestionId)?.question;
+      let question;
+      if (isUsingCustom) {
+        question = customQuestion;
+      } else if (selectedQuestionId.startsWith('ai_')) {
+        const aiIndex = parseInt(selectedQuestionId.replace('ai_', ''));
+        question = aiQuestions[aiIndex];
+      } else if (selectedQuestionId.startsWith('pool_')) {
+        const poolIndex = parseInt(selectedQuestionId.replace('pool_', ''));
+        question = questionPool[poolIndex];
+      } else {
+        question = availableQuestions.find(q => q.id === selectedQuestionId)?.question;
+      }
       
       const assignmentId = `${currentPlayer.player_id}_${Date.now()}`;
       const newAssignment = {
@@ -386,13 +474,44 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         </div>
 
         {!hasAssigned ? (
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Choose Question & Recipient
-              </CardTitle>
-            </CardHeader>
+          <div className="space-y-4">
+            {/* Question Pool Section */}
+            <Card className="border-secondary">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Add to Question Pool (Optional)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Add questions to the shared pool that anyone can use. These questions will be available to all players.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Who is most likely to..."
+                    value={newPoolQuestion}
+                    onChange={(e) => setNewPoolQuestion(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && addToQuestionPool()}
+                  />
+                  <Button 
+                    onClick={addToQuestionPool}
+                    disabled={!newPoolQuestion.trim()}
+                    variant="outline"
+                  >
+                    Add to Pool
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Choose Question & Recipient
+                </CardTitle>
+              </CardHeader>
             <CardContent className="space-y-6">
               {/* Question Type Selection */}
               <div className="space-y-4">
@@ -413,27 +532,80 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
                 {/* Question Selection */}
                 {!isUsingCustom ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <Label>Select a question:</Label>
-                    <div className="max-h-60 overflow-y-auto space-y-2">
-                      {availableQuestions.map((question) => (
-                        <Card 
-                          key={question.id}
-                          className={`cursor-pointer transition-colors ${
-                            selectedQuestionId === question.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                          }`}
-                          onClick={() => setSelectedQuestionId(question.id)}
-                        >
-                          <CardContent className="p-4">
-                            <p className="font-medium">{question.question}</p>
-                            <div className="flex gap-2 mt-2">
-                              <Badge variant="outline">{question.category}</Badge>
-                              <Badge variant="outline">Spice: {question.spiciness_level}/5</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                    
+                    {/* AI Generated Questions */}
+                    {aiQuestions.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm text-primary">AI Generated for Your Group:</h4>
+                        <div className="max-h-40 overflow-y-auto space-y-2">
+                          {aiQuestions.map((question, index) => (
+                            <Card 
+                              key={`ai_${index}`}
+                              className={`cursor-pointer transition-colors ${
+                                selectedQuestionId === `ai_${index}` ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                              }`}
+                              onClick={() => setSelectedQuestionId(`ai_${index}`)}
+                            >
+                              <CardContent className="p-4">
+                                <p className="font-medium">{question}</p>
+                                <Badge variant="outline" className="mt-2">AI Generated</Badge>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Question Pool */}
+                    {questionPool.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm text-secondary">Player Contributed:</h4>
+                        <div className="max-h-32 overflow-y-auto space-y-2">
+                          {questionPool.map((question, index) => (
+                            <Card 
+                              key={`pool_${index}`}
+                              className={`cursor-pointer transition-colors ${
+                                selectedQuestionId === `pool_${index}` ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                              }`}
+                              onClick={() => setSelectedQuestionId(`pool_${index}`)}
+                            >
+                              <CardContent className="p-4">
+                                <p className="font-medium">{question}</p>
+                                <Badge variant="outline" className="mt-2">Player Pool</Badge>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Default Questions */}
+                    {availableQuestions.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm text-muted-foreground">Default Questions:</h4>
+                        <div className="max-h-32 overflow-y-auto space-y-2">
+                          {availableQuestions.map((question) => (
+                            <Card 
+                              key={question.id}
+                              className={`cursor-pointer transition-colors ${
+                                selectedQuestionId === question.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                              }`}
+                              onClick={() => setSelectedQuestionId(question.id)}
+                            >
+                              <CardContent className="p-4">
+                                <p className="font-medium">{question.question}</p>
+                                <div className="flex gap-2 mt-2">
+                                  <Badge variant="outline">{question.category}</Badge>
+                                  <Badge variant="outline">Spice: {question.spiciness_level}/5</Badge>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -481,6 +653,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
               </div>
             </CardContent>
           </Card>
+          </div>
         ) : (
           <Card>
             <CardContent className="p-8 text-center">
