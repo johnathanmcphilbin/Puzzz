@@ -8,7 +8,6 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { removeBackground, loadImageFromUrl } from '@/utils/backgroundRemoval';
 
 interface Message {
   id: string;
@@ -31,7 +30,6 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
   const [customization, setCustomization] = useState('');
   const [hasGeneratedQuestions, setHasGeneratedQuestions] = useState(false);
   const [crazynessLevel, setCrazynessLevel] = useState([50]); // 0-100 scale
-  const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -81,24 +79,6 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     
     loadRoomState();
   }, [roomCode]);
-
-  useEffect(() => {
-    // Process the cat image to remove background
-    const processImage = async () => {
-      try {
-        const img = await loadImageFromUrl('/lovable-uploads/a82e39a6-80cd-4a41-9022-704782310ba2.png');
-        const processedBlob = await removeBackground(img);
-        const url = URL.createObjectURL(processedBlob);
-        setProcessedImageUrl(url);
-      } catch (error) {
-        console.error('Failed to process image:', error);
-        // Fallback to original image
-        setProcessedImageUrl('/lovable-uploads/a82e39a6-80cd-4a41-9022-704782310ba2.png');
-      }
-    };
-    
-    processImage();
-  }, []);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -244,11 +224,12 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           className="cursor-pointer group"
         >
           <img 
-            src={processedImageUrl || '/lovable-uploads/a82e39a6-80cd-4a41-9022-704782310ba2.png'}
+            src="/lovable-uploads/a82e39a6-80cd-4a41-9022-704782310ba2.png"
             alt="AI Chat Cat"
             className="w-20 h-20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
             style={{
-              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))'
+              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
+              mixBlendMode: 'multiply'
             }}
           />
         </div>
