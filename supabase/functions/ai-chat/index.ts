@@ -31,6 +31,8 @@ serve(async (req) => {
     } else if (action === 'generate_would_you_rather') {
       systemPrompt = `Generate 5 "Would You Rather" questions based HEAVILY on the customization theme: "${customization}".
       
+      CRITICAL: DO NOT include "Would you rather" in the options themselves. Only provide the choice content.
+      
       IMPORTANT: The questions MUST be directly related to and inspired by the theme/interests mentioned in the customization. If they mention "Star Wars", include Star Wars elements. If they mention "nerdy", include nerdy/geeky scenarios.
       
       Make the questions:
@@ -39,6 +41,12 @@ serve(async (req) => {
       3. Fun and engaging for party games
       4. Creative and thought-provoking
       5. Appropriate for the group dynamic
+      
+      Format the options as simple choices without "Would you rather" prefix.
+      
+      Example format:
+      Good: {"option_a": "have superpowers", "option_b": "have unlimited money"}
+      Bad: {"option_a": "Would you rather have superpowers", "option_b": "Would you rather have unlimited money"}
       
       You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
       {
@@ -50,7 +58,7 @@ serve(async (req) => {
           {"option_a": "...", "option_b": "..."}
         ]
       }`;
-      userPrompt = `Generate 5 "Would You Rather" questions that are HEAVILY themed around: ${customization}. Make sure every question incorporates elements from this theme.`;
+      userPrompt = `Generate 5 "Would You Rather" questions that are HEAVILY themed around: ${customization}. Make sure every question incorporates elements from this theme. Do NOT include "Would you rather" in the options - just provide the choice content.`;
     } else if (action === 'generate_all_questions') {
       const crazynessDescription = crazynessLevel <= 20 ? "very mild and safe" :
                                   crazynessLevel <= 40 ? "mild with some fun edge" :

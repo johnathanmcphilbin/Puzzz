@@ -46,6 +46,8 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   const [votes, setVotes] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [aiQuestions, setAiQuestions] = useState<Question[]>([]);
+  const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
+  const [isPreloadingNext, setIsPreloadingNext] = useState(false);
   const { toast } = useToast();
 
   const gameState = room.game_state || {};
@@ -91,6 +93,20 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
     }
   };
 
+  const preloadMoreQuestions = async () => {
+    if (isPreloadingNext) return;
+    
+    setIsPreloadingNext(true);
+    try {
+      const newQuestions = await loadQuestions();
+      setQuestionQueue(prev => [...prev, ...newQuestions]);
+    } catch (error) {
+      console.error("Error preloading questions:", error);
+    } finally {
+      setIsPreloadingNext(false);
+    }
+  };
+
   const generateAIQuestions = async () => {
     try {
       const { data: customizationData } = await supabase
@@ -128,6 +144,47 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
     }
   };
 
+  const loadQuestions = async (): Promise<Question[]> => {
+    let questions: Question[] = [];
+
+    // First try to get room-specific questions
+    const { data: roomQuestions, error: roomQuestionsError } = await supabase
+      .from("room_questions")
+      .select("question_data")
+      .eq("room_id", room.room_code)
+      .eq("game_type", "would_you_rather");
+
+    if (!roomQuestionsError && roomQuestions && roomQuestions.length > 0) {
+      questions = roomQuestions.map((rq: any) => ({
+        id: crypto.randomUUID(),
+        option_a: rq.question_data.option_a,
+        option_b: rq.question_data.option_b,
+        category: "Room Custom",
+        created_at: new Date().toISOString()
+      }));
+    }
+
+    // If no room questions, fall back to AI generation
+    if (questions.length === 0) {
+      const aiQuestions = await generateAIQuestions();
+      if (aiQuestions.length > 0) {
+        questions = aiQuestions;
+      }
+    }
+
+    // If still no questions, get from database
+    if (questions.length === 0) {
+      const { data: questionsData, error: questionsError } = await supabase
+        .from("would_you_rather_questions")
+        .select("*");
+
+      if (questionsError) throw questionsError;
+      questions = questionsData || [];
+    }
+
+    return questions;
+  };
+
   const loadNextQuestion = async () => {
     if (!currentPlayer.is_host) return;
 
@@ -135,39 +192,13 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
     try {
       let questions: Question[] = [];
 
-      // First try to get room-specific questions
-      const { data: roomQuestions, error: roomQuestionsError } = await supabase
-        .from("room_questions")
-        .select("question_data")
-        .eq("room_id", room.room_code)
-        .eq("game_type", "would_you_rather");
-
-      if (!roomQuestionsError && roomQuestions && roomQuestions.length > 0) {
-        questions = roomQuestions.map((rq: any) => ({
-          id: crypto.randomUUID(),
-          option_a: rq.question_data.option_a,
-          option_b: rq.question_data.option_b,
-          category: "Room Custom",
-          created_at: new Date().toISOString()
-        }));
-      }
-
-      // If no room questions, fall back to AI generation
-      if (questions.length === 0) {
-        const aiQuestions = await generateAIQuestions();
-        if (aiQuestions.length > 0) {
-          questions = aiQuestions;
-        }
-      }
-
-      // If still no questions, get from database
-      if (questions.length === 0) {
-        const { data: questionsData, error: questionsError } = await supabase
-          .from("would_you_rather_questions")
-          .select("*");
-
-        if (questionsError) throw questionsError;
-        questions = questionsData || [];
+      // First check if we have questions in the queue
+      if (questionQueue.length > 0) {
+        questions = [...questionQueue];
+      } else {
+        // Load fresh questions if queue is empty
+        questions = await loadQuestions();
+        setQuestionQueue(questions);
       }
       
       if (questions.length === 0) {
@@ -198,7 +229,13 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         questions.push(...defaultQuestions);
       }
 
-      const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+      // Pick a random question and remove it from queue
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      const randomQuestion = questions[randomIndex];
+      const remainingQuestions = questions.filter((_, index) => index !== randomIndex);
+      
+      // Update question queue
+      setQuestionQueue(remainingQuestions);
 
       // Update room with new question
       const newGameState = {
@@ -225,6 +262,11 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       setCurrentQuestion(randomQuestion);
       setVotes({});
       setHasVoted(false);
+
+      // Preload more questions if queue is getting low
+      if (remainingQuestions.length < 3 && !isPreloadingNext) {
+        preloadMoreQuestions();
+      }
     } catch (error) {
       console.error("Error loading next question:", error);
       toast({

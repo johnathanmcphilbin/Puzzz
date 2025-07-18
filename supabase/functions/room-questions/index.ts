@@ -58,6 +58,14 @@ serve(async (req) => {
     
     Generate 25 Would You Rather questions and 20 Paranoia questions.
     
+    CRITICAL: DO NOT include "Would you rather" in the options themselves. Only provide the choice content.
+    
+    Format the options as simple choices without "Would you rather" prefix.
+    
+    Example format:
+    Good: {"option_a": "have superpowers", "option_b": "have unlimited money"}
+    Bad: {"option_a": "Would you rather have superpowers", "option_b": "Would you rather have unlimited money"}
+    
     You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
     {
       "would_you_rather": [
@@ -70,7 +78,7 @@ serve(async (req) => {
     
     Make sure ALL questions are HEAVILY themed around the customization AND match the specified craziness level. Return ONLY the JSON object, nothing else.`;
     
-    const userPrompt = `Generate 25 Would You Rather questions and 20 Paranoia questions that are HEAVILY themed around: ${customization}. Every single question must incorporate elements from this theme. Craziness level: ${crazynessLevel}%`;
+    const userPrompt = `Generate 25 Would You Rather questions and 20 Paranoia questions that are HEAVILY themed around: ${customization}. Every single question must incorporate elements from this theme. Craziness level: ${crazynessLevel}%. Do NOT include "Would you rather" in the options - just provide the choice content.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
