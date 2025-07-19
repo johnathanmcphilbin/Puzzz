@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import posthog from 'posthog-js';
 
 // Generate a unique session ID
 const generateSessionId = () => {
@@ -32,6 +33,10 @@ export const useAnalytics = () => {
 
     const trackPageView = async () => {
       try {
+        posthog.capture('$pageview', {
+          $current_url: currentPath,
+          session_id: sessionId.current
+        });
         console.log('Page view tracked:', currentPath);
       } catch (error) {
         console.error('Analytics tracking error:', error);
@@ -49,6 +54,12 @@ export const useAnalytics = () => {
     gameType?: string
   ) => {
     try {
+      posthog.capture(eventType, {
+        ...metadata,
+        room_code: roomCode,
+        game_type: gameType,
+        session_id: sessionId.current
+      });
       console.log('Event tracked:', eventType, { metadata, roomCode, gameType });
     } catch (error) {
       console.error('Event tracking error:', error);
