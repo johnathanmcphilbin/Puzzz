@@ -70,10 +70,20 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     });
   };
 
-  const startGame = async () => {
-    if (!currentPlayer.is_host) return;
+   const startGame = async () => {
+     if (!currentPlayer.is_host) return;
 
-    setIsStarting(true);
+     // Check minimum players for Paranoia
+     if (selectedGame === "paranoia" && players.length < 3) {
+       toast({
+         title: "Not Enough Players",
+         description: "Paranoia requires at least 3 players to start",
+         variant: "destructive",
+       });
+       return;
+     }
+
+     setIsStarting(true);
     try {
       const { error } = await supabase
         .from("rooms")
@@ -217,10 +227,9 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                 <Users className="h-5 w-5" />
                 Players ({players.length})
               </CardTitle>
-              <CardDescription>
-                {players.length < 2 ? "Waiting for more players to join..." : 
-                 players.length > 20 ? "Too many players (max 20)" : "Ready to start!"}
-              </CardDescription>
+               <CardDescription>
+                 {players.length < 2 ? "Waiting for more players to join..." : "Ready to start!"}
+               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -297,10 +306,10 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                   onClick={() => currentPlayer.is_host && setSelectedGame("paranoia")}
                 >
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">Paranoia</h4>
-                      <p className="text-sm text-muted-foreground">Whisper questions and guess answers</p>
-                    </div>
+                     <div>
+                       <h4 className="font-semibold">Paranoia</h4>
+                       <p className="text-sm text-muted-foreground">Whisper questions and guess answers (3+ players)</p>
+                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-paranoia-primary rounded text-xs flex items-center justify-center text-white font-bold">🤫</div>
                     </div>
@@ -311,11 +320,11 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4">
                 {currentPlayer.is_host ? (
-                  <Button 
-                    onClick={startGame} 
-                    disabled={isStarting || players.length < 2 || players.length > 20}
-                    className="flex-1 gap-2"
-                  >
+                   <Button 
+                     onClick={startGame} 
+                     disabled={isStarting || players.length < 2 || (selectedGame === "paranoia" && players.length < 3)}
+                     className="flex-1 gap-2"
+                   >
                     {isStarting ? (
                       "Starting..."
                     ) : (

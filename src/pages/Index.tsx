@@ -97,11 +97,11 @@ const Index = () => {
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
                   <CardTitle className="text-sm sm:text-lg font-bold truncate">Would You Rather</CardTitle>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                    <span>Party Game</span>
-                    <span>•</span>
-                    <span>2-20 Players</span>
-                  </div>
+                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                     <span>Party Game</span>
+                     <span>•</span>
+                     <span>2+ Players</span>
+                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
                   <CardDescription className="text-xs sm:text-sm line-clamp-2">
@@ -137,9 +137,9 @@ const Index = () => {
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
                   <CardTitle className="text-sm sm:text-lg font-bold truncate">Paranoia</CardTitle>
                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                    <span>Whisper Game</span>
-                    <span>•</span>
-                    <span>2-20 Players</span>
+                     <span>Whisper Game</span>
+                     <span>•</span>
+                     <span>3+ Players</span>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
