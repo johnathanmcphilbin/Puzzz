@@ -110,7 +110,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         currentQuestion: null,
         currentAnswer: null,
         lastRevealResult: null,
-        targetPlayerId: null
+        targetPlayerId: null,
+        usedAskers: [] // Track who has asked in current round
       };
 
       await supabase
@@ -195,7 +196,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         currentRound: 1,
         currentQuestion: null,
         currentAnswer: null,
-        targetPlayerId: null
+        targetPlayerId: null,
+        usedAskers: []
       };
 
       await supabase
@@ -231,12 +233,16 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     try {
       const nextPlayerIndex = getNextPlayerIndex();
       const nextPlayerId = playerOrder[nextPlayerIndex];
+      const currentAskerPlayerId = playerOrder[currentTurnIndex];
+      const usedAskers = gameState.usedAskers || [];
       
       const newGameState = {
         ...gameState,
         phase: "answering",
         currentQuestion: customQuestion.trim(),
-        targetPlayerId: nextPlayerId
+        targetPlayerId: nextPlayerId,
+        selectedQuestion: customQuestion.trim(),
+        usedAskers: [...usedAskers, currentAskerPlayerId] // Mark current player as having asked
       };
 
       await supabase
@@ -270,13 +276,16 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     try {
       const nextPlayerIndex = getNextPlayerIndex();
       const nextPlayerId = playerOrder[nextPlayerIndex];
+      const currentAskerPlayerId = playerOrder[currentTurnIndex];
+      const usedAskers = gameState.usedAskers || [];
       
       const newGameState = {
         ...gameState,
         phase: "answering",
         currentQuestion: randomQuestion.question,
         targetPlayerId: nextPlayerId,
-        selectedQuestion: randomQuestion.question // Store for asker to see
+        selectedQuestion: randomQuestion.question,
+        usedAskers: [...usedAskers, currentAskerPlayerId] // Mark current player as having asked
       };
 
       await supabase
@@ -371,58 +380,70 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const nextTurn = async () => {
     try {
       const usedAskers = gameState.usedAskers || [];
-      const currentAskerPlayerId = playerOrder[currentTurnIndex];
-      const newUsedAskers = [...usedAskers, currentAskerPlayerId];
       
       // Check if all players have asked a question (complete round)
-      const allPlayersAsked = newUsedAskers.length === players.length;
-      
-      let newPlayerOrder = playerOrder;
-      let newCurrentTurnIndex = currentTurnIndex;
-      let newRound = currentRound;
-      let resetUsedAskers = newUsedAskers;
+      const allPlayersAsked = usedAskers.length === players.length;
       
       if (allPlayersAsked) {
         // Complete round - randomize order and start new round
         const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
-        newPlayerOrder = shuffledPlayers.map(p => p.player_id);
-        newCurrentTurnIndex = 0;
-        newRound = currentRound + 1;
-        resetUsedAskers = [];
+        const newPlayerOrder = shuffledPlayers.map(p => p.player_id);
+        
+        const newGameState = {
+          ...gameState,
+          phase: "playing",
+          currentQuestion: null,
+          currentAnswer: null,
+          lastRevealResult: null,
+          targetPlayerId: null,
+          selectedQuestion: null,
+          answererPlayerId: null,
+          playerOrder: newPlayerOrder,
+          currentTurnIndex: 0,
+          currentRound: currentRound + 1,
+          usedAskers: [] // Reset for new round
+        };
+
+        await supabase
+          .from("rooms")
+          .update({ game_state: newGameState })
+          .eq("id", room.id);
+
+        onUpdateRoom({ ...room, game_state: newGameState });
       } else {
-        // Find next player who hasn't asked yet
-        let nextIndex = (currentTurnIndex + 1) % playerOrder.length;
+        // Find next player who hasn't asked yet in this round
+        let nextIndex = 0;
         let attempts = 0;
         
-        while (newUsedAskers.includes(playerOrder[nextIndex]) && attempts < playerOrder.length) {
-          nextIndex = (nextIndex + 1) % playerOrder.length;
+        // Find a player who hasn't asked yet
+        for (let i = 0; i < playerOrder.length && attempts < playerOrder.length; i++) {
+          const candidatePlayerId = playerOrder[i];
+          if (!usedAskers.includes(candidatePlayerId)) {
+            nextIndex = i;
+            break;
+          }
           attempts++;
         }
         
-        newCurrentTurnIndex = nextIndex;
+        const newGameState = {
+          ...gameState,
+          phase: "playing",
+          currentQuestion: null,
+          currentAnswer: null,
+          lastRevealResult: null,
+          targetPlayerId: null,
+          selectedQuestion: null,
+          answererPlayerId: null,
+          currentTurnIndex: nextIndex
+        };
+
+        await supabase
+          .from("rooms")
+          .update({ game_state: newGameState })
+          .eq("id", room.id);
+
+        onUpdateRoom({ ...room, game_state: newGameState });
       }
-      
-      const newGameState = {
-        ...gameState,
-        phase: "playing",
-        currentQuestion: null,
-        currentAnswer: null,
-        lastRevealResult: null,
-        targetPlayerId: null,
-        selectedQuestion: null,
-        answererPlayerId: null,
-        playerOrder: newPlayerOrder,
-        currentTurnIndex: newCurrentTurnIndex,
-        currentRound: newRound,
-        usedAskers: resetUsedAskers
-      };
-
-      await supabase
-        .from("rooms")
-        .update({ game_state: newGameState })
-        .eq("id", room.id);
-
-      onUpdateRoom({ ...room, game_state: newGameState });
       
     } catch (error) {
       console.error("Error proceeding to next turn:", error);
