@@ -316,6 +316,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       try {
         // Get the next asker - rotation logic: the person who answered becomes the next asker
         const nextAskerIndex = playerOrder.findIndex(id => id === gameState.targetPlayerId);
+        const answererPlayerId = gameState.targetPlayerId;
         
         const newGameState = {
           ...gameState,
@@ -323,8 +324,9 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           lastRevealResult: willReveal,
           currentTurnIndex: nextAskerIndex,
           currentQuestion: willReveal ? currentQuestion : null,
-          currentAnswer: null,
-          targetPlayerId: null
+          currentAnswer: currentAnswer,
+          targetPlayerId: null,
+          answererPlayerId: answererPlayerId
         };
 
         await supabase
@@ -339,17 +341,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           description: willReveal ? "Everyone can see the question and answer!" : "The question remains a secret.",
           className: willReveal ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground",
         });
-
-        // Add longer pause for both revealed and not revealed phases
-        if (willReveal) {
-          setTimeout(() => {
-            nextTurn();
-          }, 8000);
-        } else {
-          setTimeout(() => {
-            nextTurn();
-          }, 6000);
-        }
         
       } catch (error) {
         console.error("Error processing coin flip:", error);
@@ -443,6 +434,10 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const isTargetPlayer = () => {
     return gameState.targetPlayerId === currentPlayer.player_id;
+  };
+
+  const isAnswererPlayer = () => {
+    return gameState.answererPlayerId === currentPlayer.player_id;
   };
 
   // Player Circle Component
@@ -866,6 +861,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   }
 
   if (phase === "revealed") {
+    const canContinue = isAnswererPlayer();
+    
     return (
       <div className="space-y-6">
         <Card>
@@ -890,8 +887,21 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                   <span className="text-destructive"> {currentAnswer}</span> was chosen!
                 </p>
               </div>
+
+              {canContinue && (
+                <Button 
+                  onClick={nextTurn}
+                  disabled={isLoading}
+                  className="w-full"
+                  size="lg"
+                >
+                  Continue to Next Turn
+                </Button>
+              )}
               
-              <p className="text-muted-foreground">Moving to next turn...</p>
+              {!canContinue && (
+                <p className="text-muted-foreground">Waiting for {players.find(p => p.player_id === gameState.answererPlayerId)?.player_name} to continue...</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -900,6 +910,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   }
 
   if (phase === "not_revealed") {
+    const canContinue = isAnswererPlayer();
+    
     return (
       <div className="space-y-6">
         <Card>
@@ -924,8 +936,21 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                   <span className="text-destructive"> {currentAnswer}</span> was chosen!
                 </p>
               </div>
+
+              {canContinue && (
+                <Button 
+                  onClick={nextTurn}
+                  disabled={isLoading}
+                  className="w-full"
+                  size="lg"
+                >
+                  Continue to Next Turn
+                </Button>
+              )}
               
-              <p className="text-muted-foreground">Moving to next turn...</p>
+              {!canContinue && (
+                <p className="text-muted-foreground">Waiting for {players.find(p => p.player_id === gameState.answererPlayerId)?.player_name} to continue...</p>
+              )}
             </div>
           </CardContent>
         </Card>
