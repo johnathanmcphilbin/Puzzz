@@ -379,7 +379,9 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   };
 
   const getCurrentPlayerName = () => {
+    if (!playerOrder || playerOrder.length === 0) return "Unknown";
     const currentPlayerId = playerOrder[currentTurnIndex];
+    if (!currentPlayerId) return "Unknown";
     const player = players.find(p => p.player_id === currentPlayerId);
     return player?.player_name || "Unknown";
   };
@@ -549,10 +551,10 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             
             <div className="text-center">
               <p className="text-lg font-medium">
-                {isMyTurn ? "Your turn!" : `${getCurrentPlayerName()}'s turn`}
+                {isMyTurn ? "Your turn!" : playerOrder.length > 0 ? `${getCurrentPlayerName()}'s turn` : "Setting up game..."}
               </p>
               <p className="text-muted-foreground">
-                {isMyTurn ? "Choose a question for the next player" : "Waiting for question..."}
+                {isMyTurn ? "Choose a question for the next player" : playerOrder.length > 0 ? "Waiting for question..." : "Please wait while we set up the game"}
               </p>
             </div>
 
