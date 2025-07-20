@@ -35,6 +35,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cat_characters: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon_url: string | null
+          id: string
+          name: string
+          perks: string[] | null
+          stats: Json | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name: string
+          perks?: string[] | null
+          stats?: Json | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name?: string
+          perks?: string[] | null
+          stats?: Json | null
+        }
+        Relationships: []
+      }
       forms_questions: {
         Row: {
           category: string | null
@@ -334,6 +364,139 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      story_players: {
+        Row: {
+          cat_character_id: string | null
+          created_at: string
+          id: string
+          player_id: string
+          player_name: string
+          story_session_id: string | null
+          turn_order: number
+        }
+        Insert: {
+          cat_character_id?: string | null
+          created_at?: string
+          id?: string
+          player_id: string
+          player_name: string
+          story_session_id?: string | null
+          turn_order: number
+        }
+        Update: {
+          cat_character_id?: string | null
+          created_at?: string
+          id?: string
+          player_id?: string
+          player_name?: string
+          story_session_id?: string | null
+          turn_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_players_cat_character_id_fkey"
+            columns: ["cat_character_id"]
+            isOneToOne: false
+            referencedRelation: "cat_characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_players_story_session_id_fkey"
+            columns: ["story_session_id"]
+            isOneToOne: false
+            referencedRelation: "story_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_sessions: {
+        Row: {
+          created_at: string
+          current_turn: number | null
+          final_summary: string | null
+          id: string
+          max_turns: number | null
+          room_id: string | null
+          status: string | null
+          story_content: Json | null
+          story_theme: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_turn?: number | null
+          final_summary?: string | null
+          id?: string
+          max_turns?: number | null
+          room_id?: string | null
+          status?: string | null
+          story_content?: Json | null
+          story_theme?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_turn?: number | null
+          final_summary?: string | null
+          id?: string
+          max_turns?: number | null
+          room_id?: string | null
+          status?: string | null
+          story_content?: Json | null
+          story_theme?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_sessions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_turns: {
+        Row: {
+          ai_prompt: string
+          ai_response: string | null
+          created_at: string
+          id: string
+          player_action: string
+          player_id: string
+          story_session_id: string | null
+          turn_number: number
+        }
+        Insert: {
+          ai_prompt: string
+          ai_response?: string | null
+          created_at?: string
+          id?: string
+          player_action: string
+          player_id: string
+          story_session_id?: string | null
+          turn_number: number
+        }
+        Update: {
+          ai_prompt?: string
+          ai_response?: string | null
+          created_at?: string
+          id?: string
+          player_action?: string
+          player_id?: string
+          story_session_id?: string | null
+          turn_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_turns_story_session_id_fkey"
+            columns: ["story_session_id"]
+            isOneToOne: false
+            referencedRelation: "story_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       would_you_rather_questions: {
         Row: {
