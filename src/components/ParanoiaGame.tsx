@@ -350,13 +350,20 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const nextTurn = async () => {
     try {
+      // Randomize player order for each new round
+      const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+      const newPlayerOrder = shuffledPlayers.map(p => p.player_id);
+      
       const newGameState = {
         ...gameState,
         phase: "playing",
         currentQuestion: null,
         currentAnswer: null,
         lastRevealResult: null,
-        targetPlayerId: null
+        targetPlayerId: null,
+        playerOrder: newPlayerOrder,
+        currentTurnIndex: 0,
+        currentRound: currentRound + 1
       };
 
       await supabase
@@ -925,9 +932,9 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             <PlayerCircle showSpeechBubbles={true} />
             
             <div className="text-center space-y-4">
-              <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
+              <div className="bg-muted p-4 rounded-lg">
                 <p className="font-medium mb-2">The question remains secret!</p>
-                <p className="text-lg text-primary">Only the answerer knows what was asked</p>
+                <p className="text-lg text-muted-foreground">Only the answerer knows what was asked</p>
               </div>
               
               <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
