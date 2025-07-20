@@ -669,14 +669,25 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             {isMyTurnToAnswer && (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="answer">Your Answer</Label>
-                  <Textarea
-                    id="answer"
-                    placeholder="Enter your answer..."
-                    value={playerAnswer}
-                    onChange={(e) => setPlayerAnswer(e.target.value)}
-                    className="mt-1"
-                  />
+                  <Label htmlFor="answer">Select a Player</Label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Choose someone from the room (you cannot select yourself)
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {players
+                      .filter(p => p.player_id !== currentPlayer.player_id)
+                      .map((player) => (
+                        <Button
+                          key={player.id}
+                          variant={playerAnswer === player.player_name ? "default" : "outline"}
+                          onClick={() => setPlayerAnswer(player.player_name)}
+                          className="text-left justify-start"
+                        >
+                          {player.is_host && <Crown className="h-4 w-4 mr-2" />}
+                          {player.player_name}
+                        </Button>
+                      ))}
+                  </div>
                 </div>
                 
                 <Button 
@@ -684,7 +695,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                   disabled={isLoading || !playerAnswer.trim()}
                   className="w-full"
                 >
-                  Submit Answer
+                  Submit Answer: {playerAnswer}
                 </Button>
               </div>
             )}

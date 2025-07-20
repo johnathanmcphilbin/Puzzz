@@ -66,6 +66,14 @@ serve(async (req) => {
     Good: {"option_a": "have superpowers", "option_b": "have unlimited money"}
     Bad: {"option_a": "Would you rather have superpowers", "option_b": "Would you rather have unlimited money"}
     
+    CRITICAL FOR PARANOIA QUESTIONS: ALL Paranoia questions must be formatted to ask about selecting other people in the room. The player will select another player's name as their answer. Use formats like:
+    - "Who is most likely to..."
+    - "Who would be the first to..."
+    - "Who in the group would..."
+    - "Which person here would..."
+    
+    The questions should be designed so that answering with someone's name makes sense.
+    
     You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
     {
       "would_you_rather": [
