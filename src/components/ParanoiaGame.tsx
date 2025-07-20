@@ -442,70 +442,136 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   };
 
   // Player Circle Component
-  const PlayerCircle = () => (
-    <div className="relative w-80 h-80 mx-auto">
-      <svg width="320" height="320" className="absolute inset-0">
-        <circle
-          cx="160"
-          cy="160"
-          r="120"
-          fill="none"
-          stroke="hsl(var(--border))"
-          strokeWidth="2"
-          strokeDasharray="5,5"
-        />
-        
-        {playerOrder.map((playerId, index) => {
-          const player = players.find(p => p.player_id === playerId);
-          const { x, y } = getPlayerCirclePosition(index, playerOrder.length);
-          const isCurrentTurn = index === currentTurnIndex;
-          const isTarget = playerId === gameState.targetPlayerId;
+  const PlayerCircle = ({ showSpeechBubbles = false }: { showSpeechBubbles?: boolean }) => {
+    const questionAskerIndex = currentTurnIndex;
+    const answerPlayerIndex = playerOrder.findIndex(id => {
+      const player = players.find(p => p.player_name === currentAnswer);
+      return player?.player_id === id;
+    });
+
+    return (
+      <div className="relative w-80 h-80 mx-auto">
+        <svg width="320" height="320" className="absolute inset-0">
+          <circle
+            cx="160"
+            cy="160"
+            r="120"
+            fill="none"
+            stroke="hsl(var(--border))"
+            strokeWidth="2"
+            strokeDasharray="5,5"
+          />
           
-          return (
-            <g key={playerId}>
-              <circle
-                cx={160 + x}
-                cy={160 + y}
-                r="20"
-                fill={isCurrentTurn ? "hsl(var(--primary))" : isTarget ? "hsl(var(--destructive))" : "hsl(var(--muted))"}
-                stroke={isCurrentTurn || isTarget ? "hsl(var(--background))" : "hsl(var(--border))"}
-                strokeWidth="2"
-                className={`transition-all duration-500 ${isCurrentTurn ? 'animate-pulse' : ''}`}
-              />
-              
-              <text
-                x={160 + x}
-                y={160 + y + 40}
-                textAnchor="middle"
-                className="text-xs font-medium fill-foreground"
-              >
-                {player?.player_name}
-              </text>
-              
-              {isCurrentTurn && phase === "playing" && (
-                <path
-                  d={`M ${160 + x + 25} ${160 + y} L ${160 + x + 35} ${160 + y - 5} L ${160 + x + 35} ${160 + y + 5} Z`}
-                  fill="hsl(var(--primary))"
-                  className="animate-pulse"
+          {playerOrder.map((playerId, index) => {
+            const player = players.find(p => p.player_id === playerId);
+            const { x, y } = getPlayerCirclePosition(index, playerOrder.length);
+            const isCurrentTurn = index === currentTurnIndex;
+            const isTarget = playerId === gameState.targetPlayerId;
+            const isQuestionAsker = showSpeechBubbles && index === questionAskerIndex;
+            const isAnswerTarget = showSpeechBubbles && index === answerPlayerIndex;
+            
+            return (
+              <g key={playerId}>
+                <circle
+                  cx={160 + x}
+                  cy={160 + y}
+                  r="20"
+                  fill={isCurrentTurn ? "hsl(var(--primary))" : isTarget ? "hsl(var(--destructive))" : "hsl(var(--muted))"}
+                  stroke={isCurrentTurn || isTarget ? "hsl(var(--background))" : "hsl(var(--border))"}
+                  strokeWidth="2"
+                  className={`transition-all duration-500 ${isCurrentTurn ? 'animate-pulse' : ''}`}
                 />
-              )}
-            </g>
-          );
-        })}
-      </svg>
-      
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-sm font-medium text-muted-foreground">Round {currentRound}</div>
-          {phase === "coin_flip" && (
-            <div className="mt-2">
-              <Coins className={`h-8 w-8 text-primary mx-auto ${isFlipping ? 'animate-spin' : ''}`} />
-            </div>
-          )}
+                
+                <text
+                  x={160 + x}
+                  y={160 + y + 40}
+                  textAnchor="middle"
+                  className="text-xs font-medium fill-foreground"
+                >
+                  {player?.player_name}
+                </text>
+                
+                {isCurrentTurn && phase === "playing" && (
+                  <path
+                    d={`M ${160 + x + 25} ${160 + y} L ${160 + x + 35} ${160 + y - 5} L ${160 + x + 35} ${160 + y + 5} Z`}
+                    fill="hsl(var(--primary))"
+                    className="animate-pulse"
+                  />
+                )}
+
+                {/* Speech bubble for question asker */}
+                {isQuestionAsker && (
+                  <g className="animate-fade-in">
+                    <rect
+                      x={160 + x - 40}
+                      y={160 + y - 55}
+                      width="80"
+                      height="25"
+                      rx="12"
+                      fill="hsl(var(--primary))"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth="1"
+                    />
+                    <polygon
+                      points={`${160 + x - 5},${160 + y - 30} ${160 + x + 5},${160 + y - 30} ${160 + x},${160 + y - 20}`}
+                      fill="hsl(var(--primary))"
+                    />
+                    <text
+                      x={160 + x}
+                      y={160 + y - 38}
+                      textAnchor="middle"
+                      className="text-xs font-medium fill-primary-foreground"
+                    >
+                      Asked!
+                    </text>
+                  </g>
+                )}
+
+                {/* Speech bubble for answer target */}
+                {isAnswerTarget && (
+                  <g className="animate-fade-in">
+                    <rect
+                      x={160 + x - 40}
+                      y={160 + y + 30}
+                      width="80"
+                      height="25"
+                      rx="12"
+                      fill="hsl(var(--destructive))"
+                      stroke="hsl(var(--destructive))"
+                      strokeWidth="1"
+                    />
+                    <polygon
+                      points={`${160 + x - 5},${160 + y + 30} ${160 + x + 5},${160 + y + 30} ${160 + x},${160 + y + 20}`}
+                      fill="hsl(var(--destructive))"
+                    />
+                    <text
+                      x={160 + x}
+                      y={160 + y + 47}
+                      textAnchor="middle"
+                      className="text-xs font-medium fill-destructive-foreground"
+                    >
+                      Chosen!
+                    </text>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+        
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-sm font-medium text-muted-foreground">Round {currentRound}</div>
+            {phase === "coin_flip" && (
+              <div className="mt-2">
+                <Coins className={`h-8 w-8 text-primary mx-auto ${isFlipping ? 'animate-spin' : ''}`} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Minimum players check
   if (phase === "waiting") {
@@ -748,7 +814,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <PlayerCircle />
+            <PlayerCircle showSpeechBubbles={true} />
             
             <div className="text-center space-y-4">
               <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
@@ -756,9 +822,11 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 <p className="text-lg text-primary">{currentQuestion}</p>
               </div>
               
-              <div className="bg-muted p-4 rounded-lg">
-                <p className="font-medium mb-2">Answer:</p>
-                <p className="text-lg">{currentAnswer}</p>
+              <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+                <p className="font-medium mb-2">
+                  <span className="text-primary">{getCurrentPlayerName()}</span> asked and 
+                  <span className="text-destructive"> {currentAnswer}</span> was chosen!
+                </p>
               </div>
               
               <p className="text-muted-foreground">Moving to next turn...</p>
