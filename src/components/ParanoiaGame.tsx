@@ -87,6 +87,48 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   }, [phase]);
 
+  // Auto-initialize game if it's in playing phase but not properly set up
+  useEffect(() => {
+    if (phase === "playing" && (!playerOrder || playerOrder.length === 0) && players.length >= 3) {
+      console.log("Auto-initializing Paranoia game...");
+      initializeGame();
+    }
+  }, [phase, playerOrder, players.length]);
+
+  const initializeGame = async () => {
+    if (players.length < 3) return;
+    
+    setIsLoading(true);
+    try {
+      const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+      
+      const newGameState = {
+        phase: "playing",
+        currentTurnIndex: 0,
+        playerOrder: shuffledPlayers.map(p => p.player_id),
+        currentRound: 1,
+        currentQuestion: null,
+        currentAnswer: null,
+        lastRevealResult: null,
+        targetPlayerId: null
+      };
+
+      await supabase
+        .from("rooms")
+        .update({ game_state: newGameState })
+        .eq("id", room.id);
+
+      onUpdateRoom({ ...room, game_state: newGameState });
+      
+      console.log("Paranoia game initialized with player order:", shuffledPlayers.map(p => p.player_name));
+      
+    } catch (error) {
+      console.error("Error initializing game:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const loadQuestions = async () => {
     try {
       const { data: questionsData } = await supabase
