@@ -242,6 +242,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         currentQuestion: customQuestion.trim(),
         targetPlayerId: nextPlayerId,
         selectedQuestion: customQuestion.trim(),
+        currentQuestionAsker: currentAskerPlayerId, // Track who asked this question
         usedAskers: [...usedAskers, currentAskerPlayerId] // Mark current player as having asked
       };
 
@@ -285,6 +286,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         currentQuestion: randomQuestion.question,
         targetPlayerId: nextPlayerId,
         selectedQuestion: randomQuestion.question,
+        currentQuestionAsker: currentAskerPlayerId, // Track who asked this question
         usedAskers: [...usedAskers, currentAskerPlayerId] // Mark current player as having asked
       };
 
@@ -746,13 +748,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
             {isMyTurn && (
               <div className="space-y-4">
-                {gameState.selectedQuestion && (
-                  <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
-                    <p className="font-medium mb-2">Your generated question:</p>
-                    <p className="text-primary">{gameState.selectedQuestion}</p>
-                  </div>
-                )}
-                
                 <div>
                   <Label htmlFor="custom-question">Write your own question</Label>
                   <Textarea
@@ -782,6 +777,14 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                     Use Generated Question
                   </Button>
                 </div>
+              </div>
+            )}
+            
+            {/* Show the current question to the person who asked it */}
+            {currentQuestion && gameState.currentQuestionAsker === currentPlayer.player_id && (phase === "answering" || phase === "waiting_for_flip") && (
+              <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
+                <p className="font-medium mb-2">Your question (only you can see this):</p>
+                <p className="text-primary">{currentQuestion}</p>
               </div>
             )}
           </CardContent>
