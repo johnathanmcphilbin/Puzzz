@@ -158,6 +158,7 @@ export const JoinRoom = ({ onClose }: JoinRoomProps) => {
               maxLength={6}
               disabled={isJoining}
               className="text-center text-lg font-mono tracking-wider"
+              autoComplete="off"
             />
           </div>
           
@@ -171,6 +172,7 @@ export const JoinRoom = ({ onClose }: JoinRoomProps) => {
               onChange={(e) => setPlayerName(e.target.value)}
               maxLength={20}
               disabled={isJoining}
+              autoComplete="given-name"
             />
           </div>
 
