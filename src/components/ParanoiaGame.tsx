@@ -287,7 +287,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     try {
       const newGameState = {
         ...gameState,
-        phase: "coin_flip",
+        phase: "waiting_for_flip",
         currentAnswer: playerAnswer.trim()
       };
 
@@ -298,10 +298,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
       onUpdateRoom({ ...room, game_state: newGameState });
       setPlayerAnswer("");
-      
-      setTimeout(() => {
-        flipCoin();
-      }, 1500);
       
     } catch (error) {
       console.error("Error submitting answer:", error);
@@ -320,10 +316,10 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       try {
         const newGameState = {
           ...gameState,
-          phase: willReveal ? "revealed" : "playing",
+          phase: willReveal ? "revealed" : "not_revealed",
           lastRevealResult: willReveal,
           currentTurnIndex: (currentTurnIndex + 1) % playerOrder.length,
-          currentQuestion: null,
+          currentQuestion: willReveal ? currentQuestion : null,
           currentAnswer: null,
           targetPlayerId: null
         };
@@ -332,6 +328,10 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           setTimeout(() => {
             nextTurn();
           }, 5000);
+        } else {
+          setTimeout(() => {
+            nextTurn();
+          }, 3000);
         }
 
         await supabase
@@ -724,10 +724,16 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
               <p className="text-lg font-medium">
                 {isMyTurnToAnswer ? "It's your turn to answer!" : `${getTargetPlayerName()} is answering...`}
               </p>
-              {currentQuestion && (
+              {currentQuestion && isMyTurnToAnswer && (
                 <div className="bg-muted p-4 rounded-lg">
-                  <p className="font-medium">Question:</p>
+                  <p className="font-medium">Question (only you can see this):</p>
                   <p className="text-muted-foreground">{currentQuestion}</p>
+                </div>
+              )}
+              {!isMyTurnToAnswer && (
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="font-medium">Question asked privately</p>
+                  <p className="text-muted-foreground">Only {getTargetPlayerName()} can see the question</p>
                 </div>
               )}
             </div>
@@ -765,6 +771,58 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (phase === "waiting_for_flip") {
+    const isMyTurnToFlip = isTargetPlayer();
+    
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Coins className="h-5 w-5" />
+              Decision Time
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <PlayerCircle />
+            
+            <div className="text-center space-y-4">
+              <p className="text-lg font-medium">
+                {isMyTurnToFlip ? "Your turn to flip the coin!" : `${getTargetPlayerName()} is deciding...`}
+              </p>
+              <p className="text-muted-foreground">
+                Will the question be revealed to everyone?
+              </p>
+              
+              <div className="bg-muted p-4 rounded-lg">
+                <p className="font-medium mb-2">Answer:</p>
+                <p className="text-lg">{currentAnswer}</p>
+              </div>
+
+              {isMyTurnToFlip && (
+                <Button 
+                  onClick={flipCoin}
+                  disabled={isLoading}
+                  className="w-full"
+                  size="lg"
+                >
+                  <Coins className="h-5 w-5 mr-2" />
+                  Flip Coin
+                </Button>
+              )}
+              
+              {!isMyTurnToFlip && (
+                <div className="flex justify-center">
+                  <Coins className="h-16 w-16 text-primary" />
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -820,6 +878,40 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
               <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
                 <p className="font-medium mb-2">The question was:</p>
                 <p className="text-lg text-primary">{currentQuestion}</p>
+              </div>
+              
+              <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+                <p className="font-medium mb-2">
+                  <span className="text-primary">{getCurrentPlayerName()}</span> asked and 
+                  <span className="text-destructive"> {currentAnswer}</span> was chosen!
+                </p>
+              </div>
+              
+              <p className="text-muted-foreground">Moving to next turn...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (phase === "not_revealed") {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Question Stays Secret
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <PlayerCircle showSpeechBubbles={true} />
+            
+            <div className="text-center space-y-4">
+              <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
+                <p className="font-medium mb-2">The question remains secret!</p>
+                <p className="text-lg text-primary">Only the answerer knows what was asked</p>
               </div>
               
               <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
