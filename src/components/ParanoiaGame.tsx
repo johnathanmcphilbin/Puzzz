@@ -314,25 +314,18 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       setIsFlipping(false);
       
       try {
+        // Get the next asker - rotation logic: the person who answered becomes the next asker
+        const nextAskerIndex = playerOrder.findIndex(id => id === gameState.targetPlayerId);
+        
         const newGameState = {
           ...gameState,
           phase: willReveal ? "revealed" : "not_revealed",
           lastRevealResult: willReveal,
-          currentTurnIndex: (currentTurnIndex + 1) % playerOrder.length,
+          currentTurnIndex: nextAskerIndex,
           currentQuestion: willReveal ? currentQuestion : null,
           currentAnswer: null,
           targetPlayerId: null
         };
-
-        if (willReveal) {
-          setTimeout(() => {
-            nextTurn();
-          }, 5000);
-        } else {
-          setTimeout(() => {
-            nextTurn();
-          }, 3000);
-        }
 
         await supabase
           .from("rooms")
@@ -346,6 +339,17 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           description: willReveal ? "Everyone can see the question and answer!" : "The question remains a secret.",
           className: willReveal ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground",
         });
+
+        // Add longer pause for both revealed and not revealed phases
+        if (willReveal) {
+          setTimeout(() => {
+            nextTurn();
+          }, 8000);
+        } else {
+          setTimeout(() => {
+            nextTurn();
+          }, 6000);
+        }
         
       } catch (error) {
         console.error("Error processing coin flip:", error);
