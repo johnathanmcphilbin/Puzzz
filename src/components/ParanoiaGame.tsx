@@ -131,6 +131,25 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const loadQuestions = async () => {
     try {
+      // First try to get room-specific AI generated questions
+      const { data: roomQuestions, error: roomQuestionsError } = await supabase
+        .from("room_questions")
+        .select("question_data")
+        .eq("room_id", room.room_code)
+        .eq("game_type", "paranoia");
+
+      if (!roomQuestionsError && roomQuestions && roomQuestions.length > 0) {
+        const aiQuestions = roomQuestions.map((rq: any, index: number) => ({
+          id: `ai-${index}`,
+          question: rq.question_data.question,
+          category: rq.question_data.category || "general",
+          spiciness_level: rq.question_data.spiciness_level || 1
+        }));
+        setAvailableQuestions(aiQuestions);
+        return;
+      }
+
+      // Fallback to default questions if no AI questions available
       const { data: questionsData } = await supabase
         .from("paranoia_questions")
         .select("*")
@@ -256,7 +275,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         ...gameState,
         phase: "answering",
         currentQuestion: randomQuestion.question,
-        targetPlayerId: nextPlayerId
+        targetPlayerId: nextPlayerId,
+        selectedQuestion: randomQuestion.question // Store for asker to see
       };
 
       await supabase
@@ -350,9 +370,37 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   const nextTurn = async () => {
     try {
-      // Randomize player order for each new round
-      const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
-      const newPlayerOrder = shuffledPlayers.map(p => p.player_id);
+      const usedAskers = gameState.usedAskers || [];
+      const currentAskerPlayerId = playerOrder[currentTurnIndex];
+      const newUsedAskers = [...usedAskers, currentAskerPlayerId];
+      
+      // Check if all players have asked a question (complete round)
+      const allPlayersAsked = newUsedAskers.length === players.length;
+      
+      let newPlayerOrder = playerOrder;
+      let newCurrentTurnIndex = currentTurnIndex;
+      let newRound = currentRound;
+      let resetUsedAskers = newUsedAskers;
+      
+      if (allPlayersAsked) {
+        // Complete round - randomize order and start new round
+        const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+        newPlayerOrder = shuffledPlayers.map(p => p.player_id);
+        newCurrentTurnIndex = 0;
+        newRound = currentRound + 1;
+        resetUsedAskers = [];
+      } else {
+        // Find next player who hasn't asked yet
+        let nextIndex = (currentTurnIndex + 1) % playerOrder.length;
+        let attempts = 0;
+        
+        while (newUsedAskers.includes(playerOrder[nextIndex]) && attempts < playerOrder.length) {
+          nextIndex = (nextIndex + 1) % playerOrder.length;
+          attempts++;
+        }
+        
+        newCurrentTurnIndex = nextIndex;
+      }
       
       const newGameState = {
         ...gameState,
@@ -361,9 +409,12 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         currentAnswer: null,
         lastRevealResult: null,
         targetPlayerId: null,
+        selectedQuestion: null,
+        answererPlayerId: null,
         playerOrder: newPlayerOrder,
-        currentTurnIndex: 0,
-        currentRound: currentRound + 1
+        currentTurnIndex: newCurrentTurnIndex,
+        currentRound: newRound,
+        usedAskers: resetUsedAskers
       };
 
       await supabase
@@ -674,6 +725,13 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
             {isMyTurn && (
               <div className="space-y-4">
+                {gameState.selectedQuestion && (
+                  <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
+                    <p className="font-medium mb-2">Your generated question:</p>
+                    <p className="text-primary">{gameState.selectedQuestion}</p>
+                  </div>
+                )}
+                
                 <div>
                   <Label htmlFor="custom-question">Write your own question</Label>
                   <Textarea
@@ -700,7 +758,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                     variant="outline"
                     className="flex-1"
                   >
-                    Use Random Question
+                    Use Generated Question
                   </Button>
                 </div>
               </div>
