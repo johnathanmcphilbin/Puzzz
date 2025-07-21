@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Play, Users, Crown, LogOut, QrCode } from "lucide-react";
+import { Copy, Play, Users, Crown, LogOut, QrCode, UserX } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 
@@ -68,6 +68,30 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
       description: "Room code copied to clipboard",
       className: "bg-success text-success-foreground",
     });
+  };
+
+  const kickPlayer = async (playerToKick: Player) => {
+    if (!currentPlayer.is_host || playerToKick.is_host) return;
+    
+    try {
+      await supabase
+        .from("players")
+        .delete()
+        .eq("player_id", playerToKick.player_id);
+
+      toast({
+        title: "Player Kicked",
+        description: `${playerToKick.player_name} has been removed from the room`,
+        className: "bg-warning text-warning-foreground",
+      });
+    } catch (error) {
+      console.error("Error kicking player:", error);
+      toast({
+        title: "Error",
+        description: "Failed to kick player",
+        variant: "destructive",
+      });
+    }
   };
 
    const startGame = async () => {
@@ -238,18 +262,30 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                     key={player.id}
                     className="flex items-center justify-between p-3 bg-muted rounded-lg"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
-                        {player.player_name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="font-medium">{player.player_name}</span>
-                    </div>
-                    {player.is_host && (
-                      <Badge variant="secondary" className="gap-1">
-                        <Crown className="h-3 w-3" />
-                        Host
-                      </Badge>
-                    )}
+                     <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
+                         {player.player_name.charAt(0).toUpperCase()}
+                       </div>
+                       <span className="font-medium">{player.player_name}</span>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       {player.is_host && (
+                         <Badge variant="secondary" className="gap-1">
+                           <Crown className="h-3 w-3" />
+                           Host
+                         </Badge>
+                       )}
+                       {currentPlayer.is_host && !player.is_host && (
+                         <Button
+                           variant="ghost"
+                           size="sm"
+                           onClick={() => kickPlayer(player)}
+                           className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                         >
+                           <UserX className="h-4 w-4" />
+                         </Button>
+                       )}
+                     </div>
                   </div>
                 ))}
               </div>

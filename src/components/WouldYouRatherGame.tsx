@@ -6,7 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronRight, Users, RotateCcw, Trophy } from "lucide-react";
+import { useTimer } from "@/hooks/useTimer";
+import { ChevronRight, Users, RotateCcw, Trophy, Clock } from "lucide-react";
 
 interface Room {
   id: string;
@@ -53,6 +54,32 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   const gameState = room.game_state || {};
   const showResults = gameState.showResults || false;
   const questionIndex = gameState.questionIndex || 0;
+
+  // Timer for voting phase
+  const votingTimer = useTimer({
+    initialTime: 30,
+    onTimeUp: () => {
+      if (!hasVoted && !showResults && currentQuestion) {
+        toast({
+          title: "Time's up!",
+          description: "Voting time expired - selecting random option",
+          variant: "destructive",
+        });
+        // Auto-vote random option
+        const randomOption = Math.random() < 0.5 ? "A" : "B";
+        vote(randomOption);
+      }
+    }
+  });
+
+  // Timer management effects
+  useEffect(() => {
+    if (currentQuestion && !hasVoted && !showResults) {
+      votingTimer.restart();
+    } else {
+      votingTimer.stop();
+    }
+  }, [currentQuestion, hasVoted, showResults]);
 
   useEffect(() => {
     loadCurrentQuestion();
@@ -432,16 +459,27 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         {/* Question Card */}
         <Card className="mb-8">
           <CardContent className="p-8">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-4">
-                Would you rather...
-              </h2>
-              {currentQuestion.category && currentQuestion.category !== "AI Generated" && (
-                <Badge variant="outline" className="mb-4">
-                  {currentQuestion.category}
-                </Badge>
-              )}
-            </div>
+         {/* Timer for voting */}
+         {!hasVoted && !showResults && votingTimer.isRunning && (
+           <div className="text-center space-y-2 mb-6">
+             <div className="flex items-center justify-center gap-2 text-destructive">
+               <Clock className="h-4 w-4" />
+               <span className="font-mono text-lg">{votingTimer.formatTime}</span>
+             </div>
+             <Progress value={(votingTimer.time / 30) * 100} className="h-2 max-w-xs mx-auto" />
+           </div>
+         )}
+
+         <div className="text-center mb-8">
+           <h2 className="text-2xl font-bold text-foreground mb-4">
+             Would you rather...
+           </h2>
+           {currentQuestion.category && currentQuestion.category !== "AI Generated" && (
+             <Badge variant="outline" className="mb-4">
+               {currentQuestion.category}
+             </Badge>
+           )}
+         </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Option A */}

@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Crown, Coins, MessageSquare, Play, StopCircle } from "lucide-react";
+import { useTimer } from "@/hooks/useTimer";
+import { Users, Crown, Coins, MessageSquare, Play, StopCircle, Clock } from "lucide-react";
 
 interface Room {
   id: string;
@@ -55,6 +57,83 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const currentRound = gameState.currentRound || 1;
   const currentQuestion = gameState.currentQuestion || null;
   const currentAnswer = gameState.currentAnswer || null;
+
+  // Timer for question asking phase
+  const questionTimer = useTimer({
+    initialTime: 30,
+    onTimeUp: () => {
+      if (phase === "playing" && isCurrentPlayerTurn()) {
+        toast({
+          title: "Time's up!",
+          description: "Question selection time expired",
+          variant: "destructive",
+        });
+        // Auto-advance to next player
+        nextTurn();
+      }
+    }
+  });
+
+  // Timer for answering phase
+  const answerTimer = useTimer({
+    initialTime: 30,
+    onTimeUp: () => {
+      if (phase === "answering" && isTargetPlayer()) {
+        toast({
+          title: "Time's up!",
+          description: "Answer time expired",
+          variant: "destructive",
+        });
+        // Auto-submit random answer
+        const availablePlayers = players.filter(p => p.player_id !== currentPlayer.player_id);
+        if (availablePlayers.length > 0) {
+          const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+          setPlayerAnswer(randomPlayer.player_name);
+          setTimeout(() => submitAnswer(), 500);
+        }
+      }
+    }
+  });
+
+  // Timer for coin flip decision
+  const flipTimer = useTimer({
+    initialTime: 30,
+    onTimeUp: () => {
+      if (phase === "waiting_for_flip" && isTargetPlayer()) {
+        toast({
+          title: "Time's up!",
+          description: "Coin flip time expired - auto flipping",
+          variant: "destructive",
+        });
+        flipCoin();
+      }
+    }
+  });
+
+  // Timer management effects
+  useEffect(() => {
+    if (phase === "playing" && isCurrentPlayerTurn()) {
+      questionTimer.restart();
+    } else {
+      questionTimer.stop();
+    }
+  }, [phase, currentTurnIndex, playerOrder]);
+
+  useEffect(() => {
+    if (phase === "answering" && isTargetPlayer()) {
+      answerTimer.restart();
+    } else {
+      answerTimer.stop();
+    }
+  }, [phase, gameState.targetPlayerId]);
+
+  useEffect(() => {
+    if (phase === "waiting_for_flip" && isTargetPlayer()) {
+      flipTimer.restart();
+    } else {
+      flipTimer.stop();
+    }
+  }, [phase, gameState.targetPlayerId]);
 
   // Real-time subscription for game state changes
   useEffect(() => {
@@ -729,6 +808,17 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           <CardContent className="space-y-4">
             <PlayerCircle />
             
+            {/* Timer for question asking */}
+            {isMyTurn && questionTimer.isRunning && (
+              <div className="text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 text-destructive">
+                  <Clock className="h-4 w-4" />
+                  <span className="font-mono text-lg">{questionTimer.formatTime}</span>
+                </div>
+                <Progress value={(questionTimer.time / 30) * 100} className="h-2" />
+              </div>
+            )}
+            
             <div className="text-center">
               <p className="text-lg font-medium">
                 {isMyTurn ? "Your turn!" : playerOrder.length > 0 ? `${getCurrentPlayerName()}'s turn` : "Setting up game..."}
@@ -836,6 +926,17 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           <CardContent className="space-y-4">
             <PlayerCircle />
             
+            {/* Timer for answering */}
+            {isMyTurnToAnswer && answerTimer.isRunning && (
+              <div className="text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 text-destructive">
+                  <Clock className="h-4 w-4" />
+                  <span className="font-mono text-lg">{answerTimer.formatTime}</span>
+                </div>
+                <Progress value={(answerTimer.time / 30) * 100} className="h-2" />
+              </div>
+            )}
+            
             <div className="text-center space-y-2">
               <p className="text-lg font-medium">
                 {isMyTurnToAnswer ? "It's your turn to answer!" : `${getTargetPlayerName()} is answering...`}
@@ -907,6 +1008,17 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           </CardHeader>
           <CardContent className="space-y-4">
             <PlayerCircle />
+            
+            {/* Timer for coin flip decision */}
+            {isMyTurnToFlip && flipTimer.isRunning && (
+              <div className="text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 text-destructive">
+                  <Clock className="h-4 w-4" />
+                  <span className="font-mono text-lg">{flipTimer.formatTime}</span>
+                </div>
+                <Progress value={(flipTimer.time / 30) * 100} className="h-2" />
+              </div>
+            )}
             
             <div className="text-center space-y-4">
               <p className="text-lg font-medium">
