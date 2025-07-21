@@ -163,12 +163,19 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
           setSelectedCat(currentStoryPlayer.cat_character_id);
         }
 
-        // Check if all players have selected cats and story should start
-        if (playersData && playersData.length === players.length && sessionData.status === 'active' && sessionData.current_turn === 0) {
-          // All players have cats and story hasn't started yet
-          const hasInitialStory = await checkForInitialStory(sessionData.id);
-          if (!hasInitialStory) {
-            await generateInitialStory();
+        // Only check if we should start the story if we're still in active status and haven't started yet
+        if (playersData && sessionData.status === 'active' && sessionData.current_turn === 0) {
+          // Check if ALL players from the room have selected cats
+          const allPlayersHaveCats = players.every(player => 
+            playersData.some(storyPlayer => storyPlayer.player_id === player.player_id)
+          );
+          
+          if (allPlayersHaveCats) {
+            // Double check we don't already have an initial story
+            const hasInitialStory = await checkForInitialStory(sessionData.id);
+            if (!hasInitialStory) {
+              await generateInitialStory();
+            }
           }
         }
 
@@ -518,7 +525,7 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
               Choose your magical cat companion for this epic journey
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Waiting for all players to select their cats ({storyPlayers.length}/{players.length} selected)
+              Waiting for all players to select their cats ({storyPlayers.filter(p => p.cat_character_id).length}/{players.length} selected)
             </p>
           </div>
 
