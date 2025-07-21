@@ -651,6 +651,35 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   };
 
+  const playerLeave = async () => {
+    try {
+      // Remove current player
+      await supabase
+        .from("players")
+        .delete()
+        .eq("room_id", room.id)
+        .eq("player_id", currentPlayer.player_id);
+
+      // Clear local storage
+      localStorage.removeItem("puzzz_player_id");
+      localStorage.removeItem("puzzz_player_name");
+
+      toast({
+        title: "Left Game",
+        description: "You have left the game",
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.error("Error leaving game:", error);
+      toast({
+        title: "Error",
+        description: "Failed to leave game",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getCurrentPlayerName = () => {
     if (!playerOrder || playerOrder.length === 0) return "Unknown";
     const currentPlayerId = playerOrder[currentTurnIndex];
@@ -918,6 +947,34 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                   <div className="flex gap-2 justify-end">
                     <Button variant="outline" size="sm">Cancel</Button>
                     <Button onClick={transferHostAndLeave} variant="destructive" size="sm">Yes, Leave Game</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+
+        {/* Regular Player Controls */}
+        {!currentPlayer.is_host && (
+          <div className="fixed top-4 left-4 z-50">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Leave Game
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Leave Game</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Are you sure you want to leave the game?
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm">Cancel</Button>
+                    <Button onClick={playerLeave} variant="destructive" size="sm">Yes, Leave Game</Button>
                   </div>
                 </div>
               </DialogContent>

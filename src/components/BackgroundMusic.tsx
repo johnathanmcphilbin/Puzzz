@@ -22,7 +22,7 @@ export const BackgroundMusic: React.FC<BackgroundMusicProps> = ({
   }
 
   return (
-    <div className="fixed top-4 left-4 z-50">
+    <div className="fixed top-4 right-4 z-40">
       <Button
         variant="outline"
         size="icon"
