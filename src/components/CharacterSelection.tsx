@@ -8,16 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 interface CatCharacter {
   id: string;
   name: string;
-  description: string;
   icon_url: string | null;
-  stats: {
-    speed: number;
-    stealth: number;
-    charisma: number;
-    strength: number;
-    intelligence: number;
-  };
-  perks: string[] | null;
 }
 
 interface CharacterSelectionProps {
@@ -50,18 +41,12 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
     try {
       const { data, error } = await supabase
         .from('cat_characters')
-        .select('*')
+        .select('id, name, icon_url')
         .not('icon_url', 'is', null);
 
       if (error) throw error;
       
-      const formattedCharacters = data?.map(character => ({
-        ...character,
-        stats: character.stats as CatCharacter['stats'],
-        perks: character.perks as string[] | null
-      })) || [];
-      
-      setCharacters(formattedCharacters);
+      setCharacters(data || []);
     } catch (error) {
       console.error('Error loading characters:', error);
       toast({
@@ -104,12 +89,6 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
     }
   };
 
-  const getStatColor = (stat: number) => {
-    if (stat >= 4) return 'bg-green-500';
-    if (stat >= 3) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -117,7 +96,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
           <DialogTitle className="text-2xl font-bold text-center">Choose Your Cat Character</DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
           {characters.map((character) => (
             <div
               key={character.id}
@@ -128,53 +107,24 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
               }`}
               onClick={() => setSelectedCharacter(character.id)}
             >
-              <div className="text-center mb-3">
+              <div className="text-center">
                 {character.icon_url ? (
                   <img
                     src={character.icon_url}
                     alt={character.name}
-                    className="w-20 h-20 mx-auto rounded-full object-cover mb-2"
+                    className="w-20 h-20 mx-auto rounded-full object-cover mb-3"
+                    onError={(e) => {
+                      console.error('Image failed to load:', character.icon_url);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 ) : (
-                  <div className="w-20 h-20 mx-auto rounded-full bg-gray-200 flex items-center justify-center mb-2">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-gray-200 flex items-center justify-center mb-3">
                     🐱
                   </div>
                 )}
                 <h3 className="font-bold text-lg">{character.name}</h3>
-                <p className="text-sm text-gray-600 mt-1">{character.description}</p>
               </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-semibold">Stats:</div>
-                {Object.entries(character.stats).map(([statName, value]) => (
-                  <div key={statName} className="flex items-center justify-between">
-                    <span className="text-xs capitalize">{statName}:</span>
-                    <div className="flex space-x-1">
-                      {[1, 2, 3, 4, 5].map((dot) => (
-                        <div
-                          key={dot}
-                          className={`w-2 h-2 rounded-full ${
-                            dot <= value ? getStatColor(value) : 'bg-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {character.perks && character.perks.length > 0 && (
-                <div className="mt-3">
-                  <div className="text-sm font-semibold mb-2">Perks:</div>
-                  <div className="flex flex-wrap gap-1">
-                    {character.perks.map((perk, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {perk}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
