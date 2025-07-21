@@ -110,12 +110,13 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
               <div className="text-center">
                 {character.icon_url ? (
                   <img
-                    src={character.icon_url}
+                    src={encodeURI(character.icon_url)}
                     alt={character.name}
                     className="w-20 h-20 mx-auto rounded-full object-contain bg-white p-1 mb-3"
+                    loading="eager"
                     onError={(e) => {
                       console.error('Image failed to load:', character.icon_url);
-                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.src = '/placeholder.svg';
                     }}
                   />
                 ) : (

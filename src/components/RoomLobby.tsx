@@ -310,9 +310,13 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                         {playerCharacter ? (
                           <div className="w-10 h-10 rounded-full overflow-hidden bg-white">
                             <img
-                              src={playerCharacter.icon_url}
+                              src={encodeURI(playerCharacter.icon_url)}
                               alt={playerCharacter.name}
                               className="w-full h-full object-contain p-0.5"
+                              loading="eager"
+                              onError={(e) => {
+                                e.currentTarget.src = '/placeholder.svg';
+                              }}
                             />
                           </div>
                         ) : (

@@ -969,9 +969,13 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                       {playerCharacter ? (
                         <div className="w-6 h-6 rounded-full overflow-hidden bg-white">
                           <img
-                            src={playerCharacter.icon_url}
+                            src={encodeURI(playerCharacter.icon_url)}
                             alt={playerCharacter.name}
                             className="w-full h-full object-contain p-0.5"
+                            loading="eager"
+                            onError={(e) => {
+                              e.currentTarget.src = '/placeholder.svg';
+                            }}
                           />
                         </div>
                       ) : null}
@@ -1285,9 +1289,13 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                             {playerCharacter ? (
                               <div className="w-4 h-4 rounded-full overflow-hidden bg-white">
                                 <img
-                                  src={playerCharacter.icon_url}
+                                  src={encodeURI(playerCharacter.icon_url)}
                                   alt={playerCharacter.name}
                                   className="w-full h-full object-contain p-0.5"
+                                  loading="eager"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/placeholder.svg';
+                                  }}
                                 />
                               </div>
                             ) : null}

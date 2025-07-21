@@ -390,11 +390,15 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                                             </div>
                                            ) : playerCharacter ? (
                                              <div className="w-8 h-8 rounded-full overflow-hidden bg-white">
-                                               <img
-                                                 src={playerCharacter.icon_url}
-                                                 alt={playerCharacter.name}
-                                                 className="w-full h-full object-contain p-0.5"
-                                               />
+                                                <img
+                                                  src={encodeURI(playerCharacter.icon_url)}
+                                                  alt={playerCharacter.name}
+                                                  className="w-full h-full object-contain p-0.5"
+                                                  loading="eager"
+                                                  onError={(e) => {
+                                                    e.currentTarget.src = '/placeholder.svg';
+                                                  }}
+                                                />
                                              </div>
                                           ) : (
                                             <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-semibold">
@@ -532,11 +536,15 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                              <div className="flex items-center gap-2">
                                 {playerCharacter ? (
                                   <div className="w-6 h-6 rounded-full overflow-hidden bg-white">
-                                    <img
-                                      src={playerCharacter.icon_url}
-                                      alt={playerCharacter.name}
-                                      className="w-full h-full object-contain p-0.5"
-                                    />
+                                     <img
+                                       src={encodeURI(playerCharacter.icon_url)}
+                                       alt={playerCharacter.name}
+                                       className="w-full h-full object-contain p-0.5"
+                                       loading="eager"
+                                       onError={(e) => {
+                                         e.currentTarget.src = '/placeholder.svg';
+                                       }}
+                                     />
                                   </div>
                                ) : (
                                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-semibold">
