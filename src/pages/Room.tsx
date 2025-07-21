@@ -24,6 +24,7 @@ interface Player {
   player_name: string;
   player_id: string;
   is_host: boolean;
+  selected_character_id?: string;
 }
 
 export const Room = () => {
@@ -91,7 +92,7 @@ export const Room = () => {
       // Load players
       const { data: playersData, error: playersError } = await supabase
         .from("players")
-        .select("*")
+        .select("*, selected_character_id")
         .eq("room_id", roomData.id)
         .order("joined_at", { ascending: true });
 
@@ -200,7 +201,7 @@ export const Room = () => {
   const loadPlayers = async (roomId: string) => {
     const { data: playersData } = await supabase
       .from("players")
-      .select("*")
+      .select("*, selected_character_id")
       .eq("room_id", roomId)
       .order("joined_at", { ascending: true });
 
