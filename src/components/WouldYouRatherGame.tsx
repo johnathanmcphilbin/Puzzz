@@ -527,7 +527,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       <div className="max-w-4xl mx-auto">
         {/* Host Controls */}
         {currentPlayer.is_host && (
-          <div className="fixed top-4 left-4 z-50 flex gap-2">
+          <div className="fixed top-4 left-16 z-50 flex gap-2">
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -578,7 +578,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
 
         {/* Regular Player Controls */}
         {!currentPlayer.is_host && (
-          <div className="fixed top-4 left-4 z-50">
+          <div className="fixed top-4 left-16 z-50">
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">

@@ -905,7 +905,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       <div className="space-y-6">
         {/* Host Controls */}
         {currentPlayer.is_host && (
-          <div className="fixed top-4 left-4 z-50 flex gap-2">
+          <div className="fixed top-4 left-16 z-50 flex gap-2">
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -956,7 +956,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
         {/* Regular Player Controls */}
         {!currentPlayer.is_host && (
-          <div className="fixed top-4 left-4 z-50">
+          <div className="fixed top-4 left-16 z-50">
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
