@@ -345,13 +345,21 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   };
 
   const useSelectedQuestion = async (questionText: string) => {
+    if (isLoading) {
+      console.log("Already loading, skipping question selection");
+      return;
+    }
+    
     setIsLoading(true);
+    console.log("Using selected question:", questionText);
     
     try {
       const nextPlayerIndex = getNextPlayerIndex();
       const nextPlayerId = playerOrder[nextPlayerIndex];
       const currentAskerPlayerId = playerOrder[currentTurnIndex];
       const usedAskers = gameState.usedAskers || [];
+      
+      console.log("Question selection - next player:", nextPlayerId, "current asker:", currentAskerPlayerId);
       
       const newGameState = {
         ...gameState,
@@ -363,16 +371,32 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         usedAskers: [...usedAskers, currentAskerPlayerId]
       };
 
-      await supabase
+      const { error } = await supabase
         .from("rooms")
         .update({ game_state: newGameState })
         .eq("id", room.id);
 
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+
       onUpdateRoom({ ...room, game_state: newGameState });
       setSelectedQuestionId(null);
       
+      toast({
+        title: "Question Selected!",
+        description: "Waiting for the answer...",
+        className: "bg-success text-success-foreground",
+      });
+      
     } catch (error) {
       console.error("Error using selected question:", error);
+      toast({
+        title: "Error",
+        description: "Failed to select question. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -412,45 +436,67 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   };
 
   const flipCoin = async () => {
-    setIsFlipping(true);
+    if (isFlipping) {
+      console.log("Coin already flipping, skipping");
+      return;
+    }
     
-    setTimeout(async () => {
-      const willReveal = Math.random() < 0.5;
-      setIsFlipping(false);
-      
-      try {
-        // Get the next asker - rotation logic: the person who answered becomes the next asker
-        const nextAskerIndex = playerOrder.findIndex(id => id === gameState.targetPlayerId);
-        const answererPlayerId = gameState.targetPlayerId;
+    setIsFlipping(true);
+    console.log("Starting coin flip...");
+    
+    // Create suspenseful delay with multiple visual states
+    setTimeout(() => {
+      // Add some extra suspense with a longer animation
+      setTimeout(async () => {
+        const willReveal = Math.random() < 0.5;
+        console.log("Coin flip result:", willReveal ? "REVEAL" : "KEEP SECRET");
         
-        const newGameState = {
-          ...gameState,
-          phase: willReveal ? "revealed" : "not_revealed",
-          lastRevealResult: willReveal,
-          currentTurnIndex: nextAskerIndex,
-          currentQuestion: willReveal ? currentQuestion : null,
-          currentAnswer: currentAnswer,
-          targetPlayerId: null,
-          answererPlayerId: answererPlayerId
-        };
+        try {
+          // Get the next asker - rotation logic: the person who answered becomes the next asker
+          const nextAskerIndex = playerOrder.findIndex(id => id === gameState.targetPlayerId);
+          const answererPlayerId = gameState.targetPlayerId;
+          
+          const newGameState = {
+            ...gameState,
+            phase: willReveal ? "revealed" : "not_revealed",
+            lastRevealResult: willReveal,
+            currentTurnIndex: nextAskerIndex,
+            currentQuestion: willReveal ? currentQuestion : null,
+            currentAnswer: currentAnswer,
+            targetPlayerId: null,
+            answererPlayerId: answererPlayerId
+          };
 
-        await supabase
-          .from("rooms")
-          .update({ game_state: newGameState })
-          .eq("id", room.id);
+          const { error } = await supabase
+            .from("rooms")
+            .update({ game_state: newGameState })
+            .eq("id", room.id);
 
-        onUpdateRoom({ ...room, game_state: newGameState });
-        
-        toast({
-          title: willReveal ? "Question Revealed!" : "Question Stays Secret",
-          description: willReveal ? "Everyone can see the question and answer!" : "The question remains a secret.",
-          className: willReveal ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground",
-        });
-        
-      } catch (error) {
-        console.error("Error processing coin flip:", error);
-      }
-    }, 2000);
+          if (error) {
+            console.error("Supabase error during coin flip:", error);
+            throw error;
+          }
+
+          onUpdateRoom({ ...room, game_state: newGameState });
+          
+          toast({
+            title: willReveal ? "🎉 Question Revealed!" : "🤫 Question Stays Secret",
+            description: willReveal ? "Everyone can see the question and answer!" : "The question remains a secret.",
+            className: willReveal ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground",
+          });
+          
+        } catch (error) {
+          console.error("Error processing coin flip:", error);
+          toast({
+            title: "Error",
+            description: "Failed to process coin flip. Please try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsFlipping(false);
+        }
+      }, 2000); // Extra delay for suspense
+    }, 1000); // Initial delay
   };
 
   const nextTurn = async () => {
@@ -1044,47 +1090,55 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 {availableQuestions.length > 0 && (
                   <div className="space-y-3">
                     <Label>Or choose from AI-generated questions:</Label>
-                    <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3">
-                      {availableQuestions.map((question) => (
-                        <Card 
-                          key={question.id} 
-                          className={`cursor-pointer transition-all hover:bg-muted/50 ${
-                            selectedQuestionId === question.id ? 'ring-2 ring-primary' : ''
-                          }`}
-                          onClick={() => setSelectedQuestionId(question.id)}
-                        >
-                          <CardContent className="p-3">
-                            <p className="text-sm">{question.question}</p>
-                            <div className="flex justify-between items-center mt-2">
-                              <Badge variant="secondary" className="text-xs">
-                                {question.category}
-                              </Badge>
-                              <div className="flex">
-                                {Array.from({ length: question.spiciness_level }, (_, i) => (
-                                  <span key={i} className="text-orange-500">🌶️</span>
-                                ))}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                     <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3">
+                       {availableQuestions.map((question) => (
+                         <Card 
+                           key={question.id} 
+                           className={`cursor-pointer transition-all hover:bg-muted/50 hover:scale-[1.02] ${
+                             selectedQuestionId === question.id ? 'ring-2 ring-primary bg-primary/5' : ''
+                           } ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
+                           onClick={() => {
+                             if (!isLoading) {
+                               console.log("Question clicked:", question.id, question.question);
+                               setSelectedQuestionId(question.id);
+                             }
+                           }}
+                         >
+                           <CardContent className="p-3">
+                             <p className="text-sm">{question.question}</p>
+                             <div className="flex justify-between items-center mt-2">
+                               <Badge variant="secondary" className="text-xs">
+                                 {question.category}
+                               </Badge>
+                               <div className="flex">
+                                 {Array.from({ length: question.spiciness_level }, (_, i) => (
+                                   <span key={i} className="text-orange-500">🌶️</span>
+                                 ))}
+                               </div>
+                             </div>
+                           </CardContent>
+                         </Card>
+                       ))}
+                     </div>
                     
-                    {selectedQuestionId && (
-                      <Button 
-                        onClick={() => {
-                          const selectedQuestion = availableQuestions.find(q => q.id === selectedQuestionId);
-                          if (selectedQuestion) {
-                            useSelectedQuestion(selectedQuestion.question);
-                          }
-                        }}
-                        disabled={isLoading}
-                        className="w-full"
-                        variant="default"
-                      >
-                        Use Selected Question
-                      </Button>
-                    )}
+                     {selectedQuestionId && (
+                       <Button 
+                         onClick={() => {
+                           const selectedQuestion = availableQuestions.find(q => q.id === selectedQuestionId);
+                           if (selectedQuestion && !isLoading) {
+                             console.log("Using selected question button clicked");
+                             useSelectedQuestion(selectedQuestion.question);
+                           } else {
+                             console.log("No question found or already loading");
+                           }
+                         }}
+                         disabled={isLoading || !selectedQuestionId}
+                         className="w-full"
+                         variant="default"
+                       >
+                         {isLoading ? "Selecting..." : "Use Selected Question"}
+                       </Button>
+                     )}
                   </div>
                 )}
               </div>
@@ -1225,23 +1279,29 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 <p className="text-lg">{currentAnswer}</p>
               </div>
 
-              {isMyTurnToFlip && (
-                <Button 
-                  onClick={flipCoin}
-                  disabled={isLoading || isFlipping}
-                  className="w-full"
-                  size="lg"
-                >
-                  <Coins className="h-5 w-5 mr-2" />
-                  {isFlipping ? "Flipping..." : "Flip Coin"}
-                </Button>
-              )}
-              
-              {!isMyTurnToFlip && (
-                <div className="flex justify-center">
-                  <Coins className="h-16 w-16 text-primary" />
-                </div>
-              )}
+               {isMyTurnToFlip && (
+                 <Button 
+                   onClick={flipCoin}
+                   disabled={isLoading || isFlipping}
+                   className={`w-full transition-all duration-300 ${
+                     isFlipping ? 'animate-pulse' : 'hover:scale-105'
+                   }`}
+                   size="lg"
+                 >
+                   <Coins className={`h-5 w-5 mr-2 ${isFlipping ? 'animate-spin' : ''}`} />
+                   {isFlipping ? "🪙 Flipping the coin..." : "🎲 Flip the Coin of Fate"}
+                 </Button>
+               )}
+               
+               {!isMyTurnToFlip && (
+                 <div className="flex flex-col items-center space-y-2">
+                   <div className="relative">
+                     <Coins className="h-16 w-16 text-primary animate-pulse" />
+                     <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
+                   </div>
+                   <p className="text-sm text-muted-foreground">Waiting for the coin flip...</p>
+                 </div>
+               )}
             </div>
           </CardContent>
         </Card>
@@ -1271,9 +1331,21 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 <p className="text-lg">{currentAnswer}</p>
               </div>
               
-              <div className="flex justify-center">
-                <Coins className={`h-16 w-16 text-primary ${isFlipping ? 'animate-spin' : ''}`} />
-              </div>
+               <div className="flex justify-center">
+                 <div className={`relative ${isFlipping ? 'animate-bounce' : ''}`}>
+                   <Coins className={`h-16 w-16 text-primary transition-all duration-500 ${
+                     isFlipping ? 'animate-spin scale-110' : 'scale-100'
+                   }`} />
+                   {isFlipping && (
+                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                   )}
+                 </div>
+               </div>
+               {isFlipping && (
+                 <p className="text-center text-sm text-muted-foreground animate-pulse">
+                   🪙 The coin is spinning through the air... 🪙
+                 </p>
+               )}
             </div>
           </CardContent>
         </Card>
