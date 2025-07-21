@@ -48,8 +48,6 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   const [aiQuestions, setAiQuestions] = useState<Question[]>([]);
   const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
   const [isPreloadingNext, setIsPreloadingNext] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
-  const [timerActive, setTimerActive] = useState(false);
   const { toast } = useToast();
 
   const gameState = room.game_state || {};
@@ -63,44 +61,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
     // Check if current player has voted
     const playerVoted = Object.keys(gameState.votes || {}).includes(currentPlayer.player_id);
     setHasVoted(playerVoted);
-    
-    // Start timer if new question and player hasn't voted and results aren't shown
-    if (currentQuestion && !playerVoted && !showResults) {
-      setTimeLeft(30);
-      setTimerActive(true);
-    } else {
-      setTimerActive(false);
-    }
-  }, [room.game_state, currentPlayer.player_id, currentQuestion]);
-
-  // Timer countdown effect
-  useEffect(() => {
-    if (!timerActive || hasVoted || showResults) {
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Time's up - auto vote randomly
-          if (!hasVoted && currentQuestion) {
-            const randomOption = Math.random() < 0.5 ? "A" : "B";
-            vote(randomOption);
-            toast({
-              title: "Time's Up!",
-              description: `Auto-voted for Option ${randomOption}`,
-              variant: "default",
-            });
-          }
-          setTimerActive(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timerActive, hasVoted, showResults, currentQuestion]);
+  }, [room.game_state, currentPlayer.player_id]);
 
   const loadCurrentQuestion = async () => {
     if (gameState.currentQuestion) {
@@ -466,21 +427,6 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
             <span className="text-muted-foreground">•</span>
             <span className="text-muted-foreground">{totalVotes}/{players.length} voted</span>
           </div>
-          
-          {/* Timer */}
-          {timerActive && !hasVoted && !showResults && (
-            <div className="mt-4">
-              <Badge 
-                variant={timeLeft <= 10 ? "destructive" : "secondary"} 
-                className="text-lg px-4 py-2 animate-pulse"
-              >
-                {timeLeft}s
-              </Badge>
-              <p className="text-sm text-muted-foreground mt-2">
-                Vote now or a random option will be selected!
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Question Card */}

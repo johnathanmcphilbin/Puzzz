@@ -46,8 +46,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const [customQuestion, setCustomQuestion] = useState<string>("");
   const [playerAnswer, setPlayerAnswer] = useState<string>("");
   const [isFlipping, setIsFlipping] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
-  const [timerActive, setTimerActive] = useState(false);
 
   const gameState = room.game_state || {};
   const phase = gameState.phase || "waiting";
@@ -96,49 +94,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       initializeGame();
     }
   }, [phase, playerOrder, players.length]);
-
-  // Timer logic for question asking
-  useEffect(() => {
-    if (phase === "playing" && playerOrder && playerOrder.length > 0) {
-      const currentAskerId = playerOrder[currentTurnIndex];
-      const isMyTurn = currentAskerId === currentPlayer.player_id;
-      
-      if (isMyTurn) {
-        setTimeLeft(30);
-        setTimerActive(true);
-      } else {
-        setTimerActive(false);
-      }
-    } else {
-      setTimerActive(false);
-    }
-  }, [phase, currentTurnIndex, playerOrder, currentPlayer.player_id]);
-
-  // Timer countdown effect
-  useEffect(() => {
-    if (!timerActive) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Time's up - auto select random question
-          if (availableQuestions.length > 0) {
-            useRandomQuestion();
-            toast({
-              title: "Time's Up!",
-              description: "Auto-selected a random question",
-              variant: "default",
-            });
-          }
-          setTimerActive(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timerActive, availableQuestions]);
 
   const initializeGame = async () => {
     if (players.length < 3) return;
@@ -789,21 +744,6 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
               <p className="text-muted-foreground">
                 {isMyTurn ? "Choose a question for the next player" : playerOrder.length > 0 ? "Waiting for question..." : "Please wait while we set up the game"}
               </p>
-              
-              {/* Timer */}
-              {timerActive && isMyTurn && (
-                <div className="mt-4">
-                  <Badge 
-                    variant={timeLeft <= 10 ? "destructive" : "secondary"} 
-                    className="text-lg px-4 py-2 animate-pulse"
-                  >
-                    {timeLeft}s
-                  </Badge>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Choose quickly or a random question will be selected!
-                  </p>
-                </div>
-              )}
             </div>
 
             {isMyTurn && (

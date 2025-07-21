@@ -70,27 +70,18 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     });
   };
 
-     const startGame = async () => {
-       if (!currentPlayer.is_host) return;
+   const startGame = async () => {
+     if (!currentPlayer.is_host) return;
 
-       // Check minimum players for different games
-       if (selectedGame === "paranoia" && players.length < 3) {
-         toast({
-           title: "Not Enough Players",
-           description: "Paranoia requires at least 3 players to start",
-           variant: "destructive",
-         });
-         return;
-       }
-
-       if (selectedGame === "fantasy_cats" && players.length < 2) {
-         toast({
-           title: "Not Enough Players",
-           description: "Fantasy Cat Adventure requires at least 2 players to start",
-           variant: "destructive",
-         });
-         return;
-       }
+     // Check minimum players for Paranoia
+     if (selectedGame === "paranoia" && players.length < 3) {
+       toast({
+         title: "Not Enough Players",
+         description: "Paranoia requires at least 3 players to start",
+         variant: "destructive",
+       });
+       return;
+     }
 
      setIsStarting(true);
     try {
@@ -110,9 +101,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
       if (error) throw error;
 
-       const gameTitle = selectedGame === "paranoia" ? "Paranoia" 
-         : selectedGame === "fantasy_cats" ? "Fantasy Cat Adventure" 
-         : "Would You Rather";
+      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : "Would You Rather";
       
       toast({
         title: "Game Started!",
@@ -323,26 +312,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                      </div>
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-paranoia-primary rounded text-xs flex items-center justify-center text-white font-bold">🤫</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Fantasy Cat Adventure Game */}
-                <div 
-                  className={`relative p-4 border rounded-lg transition-all ${
-                    currentPlayer.is_host
-                      ? `cursor-pointer ${selectedGame === "fantasy_cats" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
-                      : "border-muted"
-                  }`}
-                  onClick={() => currentPlayer.is_host && setSelectedGame("fantasy_cats")}
-                >
-                  <div className="flex items-center justify-between">
-                     <div>
-                       <h4 className="font-semibold">Fantasy Cat Adventure</h4>
-                       <p className="text-sm text-muted-foreground">AI-driven storytelling with magical cats (2+ players)</p>
-                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-gradient-to-br from-primary to-secondary rounded text-xs flex items-center justify-center text-white font-bold">🐱</div>
                     </div>
                   </div>
                 </div>
