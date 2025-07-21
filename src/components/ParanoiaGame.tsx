@@ -436,13 +436,31 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   };
 
   const flipCoin = async () => {
-    if (isFlipping) {
+    if (isFlipping || gameState.isFlipping) {
       console.log("Coin already flipping, skipping");
       return;
     }
     
     setIsFlipping(true);
     console.log("Starting coin flip...");
+    
+    // Update game state to show all players that coin is flipping
+    const flippingGameState = {
+      ...gameState,
+      phase: "coin_flip",
+      isFlipping: true
+    };
+
+    try {
+      await supabase
+        .from("rooms")
+        .update({ game_state: flippingGameState })
+        .eq("id", room.id);
+
+      onUpdateRoom({ ...room, game_state: flippingGameState });
+    } catch (error) {
+      console.error("Error updating flip state:", error);
+    }
     
     // Create suspenseful delay with multiple visual states
     setTimeout(() => {
@@ -464,7 +482,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             currentQuestion: willReveal ? currentQuestion : null,
             currentAnswer: currentAnswer,
             targetPlayerId: null,
-            answererPlayerId: answererPlayerId
+            answererPlayerId: answererPlayerId,
+            isFlipping: false
           };
 
           const { error } = await supabase
@@ -1310,6 +1329,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   }
 
   if (phase === "coin_flip") {
+    const isCurrentlyFlipping = isFlipping || gameState.isFlipping;
+    
     return (
       <div className="space-y-6">
         <Card className="relative overflow-hidden">
@@ -1337,7 +1358,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
               <div className="relative py-8">
                 {/* Background spotlight effect */}
                 <div className={`absolute inset-0 transition-all duration-1000 ${
-                  isFlipping 
+                  isCurrentlyFlipping 
                     ? 'bg-gradient-to-r from-primary/5 via-primary/20 to-primary/5 animate-pulse' 
                     : 'bg-transparent'
                 }`} />
@@ -1346,7 +1367,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 <div className="relative flex justify-center">
                   <div className={`
                     relative w-24 h-24 rounded-full transition-all duration-1000
-                    ${isFlipping 
+                    ${isCurrentlyFlipping 
                       ? 'animate-[spin_0.8s_ease-in-out_infinite] scale-125' 
                       : 'scale-100'
                     }
@@ -1356,18 +1377,18 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                       absolute inset-0 rounded-full border-4 border-primary
                       bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600
                       shadow-lg transition-all duration-500
-                      ${isFlipping ? 'shadow-2xl shadow-primary/50' : ''}
+                      ${isCurrentlyFlipping ? 'shadow-2xl shadow-primary/50' : ''}
                     `}>
                       {/* Coin design */}
                       <div className="absolute inset-2 rounded-full border-2 border-yellow-600/30 flex items-center justify-center">
                         <div className="text-2xl font-bold text-yellow-800">
-                          {isFlipping ? '⚡' : '🪙'}
+                          {isCurrentlyFlipping ? '⚡' : '🪙'}
                         </div>
                       </div>
                     </div>
                     
                     {/* Spinning particles */}
-                    {isFlipping && (
+                    {isCurrentlyFlipping && (
                       <>
                         <div className="absolute -inset-4 rounded-full border border-primary/30 animate-ping" />
                         <div className="absolute -inset-8 rounded-full border border-primary/20 animate-ping animation-delay-200" />
@@ -1378,7 +1399,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 </div>
                 
                 {/* Dramatic text */}
-                {isFlipping && (
+                {isCurrentlyFlipping && (
                   <div className="mt-6 space-y-2">
                     <p className="text-lg font-bold text-primary animate-bounce">
                       ✨ THE COIN IS SPINNING! ✨
@@ -1395,7 +1416,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
           </CardContent>
           
           {/* Background effect overlay */}
-          {isFlipping && (
+          {isCurrentlyFlipping && (
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-transparent via-primary/20 to-transparent transform -translate-x-1/2 animate-pulse" />
               <div className="absolute left-0 top-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent transform -translate-y-1/2 animate-pulse animation-delay-300" />
