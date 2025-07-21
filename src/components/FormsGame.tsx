@@ -388,14 +388,14 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                                             <div className="w-8 h-8 bg-warning text-warning-foreground rounded-full flex items-center justify-center text-sm font-semibold">
                                               <Trophy className="h-4 w-4" />
                                             </div>
-                                          ) : playerCharacter ? (
-                                            <div className="w-8 h-8 rounded-full overflow-hidden">
-                                              <img
-                                                src={playerCharacter.icon_url}
-                                                alt={playerCharacter.name}
-                                                className="w-full h-full object-cover"
-                                              />
-                                            </div>
+                                           ) : playerCharacter ? (
+                                             <div className="w-8 h-8 rounded-full overflow-hidden bg-white">
+                                               <img
+                                                 src={playerCharacter.icon_url}
+                                                 alt={playerCharacter.name}
+                                                 className="w-full h-full object-contain p-0.5"
+                                               />
+                                             </div>
                                           ) : (
                                             <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-semibold">
                                               {player.player_name.charAt(0).toUpperCase()}
@@ -530,14 +530,14 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                          return (
                            <SelectItem key={player.player_id} value={player.player_id}>
                              <div className="flex items-center gap-2">
-                               {playerCharacter ? (
-                                 <div className="w-6 h-6 rounded-full overflow-hidden">
-                                   <img
-                                     src={playerCharacter.icon_url}
-                                     alt={playerCharacter.name}
-                                     className="w-full h-full object-cover"
-                                   />
-                                 </div>
+                                {playerCharacter ? (
+                                  <div className="w-6 h-6 rounded-full overflow-hidden bg-white">
+                                    <img
+                                      src={playerCharacter.icon_url}
+                                      alt={playerCharacter.name}
+                                      className="w-full h-full object-contain p-0.5"
+                                    />
+                                  </div>
                                ) : (
                                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-semibold">
                                    {player.player_name.charAt(0).toUpperCase()}

@@ -112,7 +112,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
                   <img
                     src={character.icon_url}
                     alt={character.name}
-                    className="w-20 h-20 mx-auto rounded-full object-cover mb-3"
+                    className="w-20 h-20 mx-auto rounded-full object-contain bg-white p-1 mb-3"
                     onError={(e) => {
                       console.error('Image failed to load:', character.icon_url);
                       e.currentTarget.style.display = 'none';
