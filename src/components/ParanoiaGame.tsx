@@ -1312,42 +1312,95 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   if (phase === "coin_flip") {
     return (
       <div className="space-y-6">
-        <Card>
+        <Card className="relative overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Coins className="h-5 w-5" />
               Coin Flip
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <PlayerCircle />
             
-            <div className="text-center space-y-4">
-              <p className="text-lg font-medium">Flipping coin to decide...</p>
-              <p className="text-muted-foreground">Will the question be revealed?</p>
+            <div className="text-center space-y-6">
+              <div className="space-y-2">
+                <p className="text-xl font-bold animate-pulse">🎲 FATE IS DECIDING... 🎲</p>
+                <p className="text-muted-foreground">Will the question be revealed to everyone?</p>
+              </div>
               
               <div className="bg-muted p-4 rounded-lg">
                 <p className="font-medium mb-2">Answer:</p>
                 <p className="text-lg">{currentAnswer}</p>
               </div>
               
-               <div className="flex justify-center">
-                 <div className={`relative ${isFlipping ? 'animate-bounce' : ''}`}>
-                   <Coins className={`h-16 w-16 text-primary transition-all duration-500 ${
-                     isFlipping ? 'animate-spin scale-110' : 'scale-100'
-                   }`} />
-                   {isFlipping && (
-                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
-                   )}
-                 </div>
-               </div>
-               {isFlipping && (
-                 <p className="text-center text-sm text-muted-foreground animate-pulse">
-                   🪙 The coin is spinning through the air... 🪙
-                 </p>
-               )}
+              {/* Enhanced Coin Animation */}
+              <div className="relative py-8">
+                {/* Background spotlight effect */}
+                <div className={`absolute inset-0 transition-all duration-1000 ${
+                  isFlipping 
+                    ? 'bg-gradient-to-r from-primary/5 via-primary/20 to-primary/5 animate-pulse' 
+                    : 'bg-transparent'
+                }`} />
+                
+                {/* Main coin container */}
+                <div className="relative flex justify-center">
+                  <div className={`
+                    relative w-24 h-24 rounded-full transition-all duration-1000
+                    ${isFlipping 
+                      ? 'animate-[spin_0.8s_ease-in-out_infinite] scale-125' 
+                      : 'scale-100'
+                    }
+                  `}>
+                    {/* Coin face */}
+                    <div className={`
+                      absolute inset-0 rounded-full border-4 border-primary
+                      bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600
+                      shadow-lg transition-all duration-500
+                      ${isFlipping ? 'shadow-2xl shadow-primary/50' : ''}
+                    `}>
+                      {/* Coin design */}
+                      <div className="absolute inset-2 rounded-full border-2 border-yellow-600/30 flex items-center justify-center">
+                        <div className="text-2xl font-bold text-yellow-800">
+                          {isFlipping ? '⚡' : '🪙'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Spinning particles */}
+                    {isFlipping && (
+                      <>
+                        <div className="absolute -inset-4 rounded-full border border-primary/30 animate-ping" />
+                        <div className="absolute -inset-8 rounded-full border border-primary/20 animate-ping animation-delay-200" />
+                        <div className="absolute -inset-12 rounded-full border border-primary/10 animate-ping animation-delay-400" />
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Dramatic text */}
+                {isFlipping && (
+                  <div className="mt-6 space-y-2">
+                    <p className="text-lg font-bold text-primary animate-bounce">
+                      ✨ THE COIN IS SPINNING! ✨
+                    </p>
+                    <div className="flex justify-center gap-4 text-sm text-muted-foreground">
+                      <span className="animate-pulse">Heads = Reveal</span>
+                      <span>•</span>
+                      <span className="animate-pulse animation-delay-500">Tails = Secret</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
+          
+          {/* Background effect overlay */}
+          {isFlipping && (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-transparent via-primary/20 to-transparent transform -translate-x-1/2 animate-pulse" />
+              <div className="absolute left-0 top-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent transform -translate-y-1/2 animate-pulse animation-delay-300" />
+            </div>
+          )}
         </Card>
       </div>
     );
