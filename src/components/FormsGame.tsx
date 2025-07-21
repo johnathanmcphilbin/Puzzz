@@ -23,6 +23,7 @@ interface Player {
   player_name: string;
   player_id: string;
   is_host: boolean;
+  selected_character_id?: string;
 }
 
 interface FormsQuestion {
@@ -44,6 +45,7 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
   const { toast } = useToast();
 
   const gameState = room.game_state || {};
@@ -64,12 +66,38 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
     const playerResponses = allResponses[currentPlayer.player_id] || {};
     setResponses(playerResponses);
 
+    // Load character data
+    loadCharacterData();
+
     // Check if all players have submitted and show results automatically
     const submittedCount = Object.keys(allResponses).length;
     if (submittedCount === players.length && submittedCount > 0 && !showResults && currentPlayer.is_host) {
       showResultsAutomatically();
     }
   }, [room.game_state, currentPlayer.player_id, players.length]);
+
+  const loadCharacterData = async () => {
+    const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
+    if (characterIds.length === 0) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('cat_characters')
+        .select('*')
+        .in('id', characterIds);
+
+      if (error) throw error;
+
+      const characterMap = data?.reduce((acc, char) => {
+        acc[char.id] = char;
+        return acc;
+      }, {} as any) || {};
+
+      setCharacterData(characterMap);
+    } catch (error) {
+      console.error('Error loading character data:', error);
+    }
+  };
 
   const showResultsAutomatically = async () => {
     try {
@@ -346,30 +374,43 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {sortedPlayers.map((player, playerIndex) => {
-                        const votes = questionResults[player.player_id] || 0;
-                        const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
-                        const isWinner = playerIndex === 0 && votes > 0;
-                        
-                        return (
-                          <div key={player.player_id} className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center gap-2">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                                  isWinner ? 'bg-warning text-warning-foreground' : 'bg-primary text-primary-foreground'
-                                }`}>
-                                  {isWinner ? <Trophy className="h-4 w-4" /> : player.player_name.charAt(0).toUpperCase()}
-                                </div>
-                                <span className={`font-medium ${isWinner ? 'text-warning' : ''}`}>
-                                  {player.player_name}
-                                </span>
-                                {player.is_host && <Crown className="h-4 w-4 text-warning" />}
-                                {isWinner && votes > 0 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    Winner
-                                  </Badge>
-                                )}
-                              </div>
+                                {sortedPlayers.map((player, playerIndex) => {
+                                  const votes = questionResults[player.player_id] || 0;
+                                  const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+                                  const isWinner = playerIndex === 0 && votes > 0;
+                                  const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+                                  
+                                  return (
+                                    <div key={player.player_id} className="space-y-2">
+                                      <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                          {isWinner ? (
+                                            <div className="w-8 h-8 bg-warning text-warning-foreground rounded-full flex items-center justify-center text-sm font-semibold">
+                                              <Trophy className="h-4 w-4" />
+                                            </div>
+                                          ) : playerCharacter ? (
+                                            <div className="w-8 h-8 rounded-full overflow-hidden">
+                                              <img
+                                                src={playerCharacter.icon_url}
+                                                alt={playerCharacter.name}
+                                                className="w-full h-full object-cover"
+                                              />
+                                            </div>
+                                          ) : (
+                                            <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-semibold">
+                                              {player.player_name.charAt(0).toUpperCase()}
+                                            </div>
+                                          )}
+                                          <span className={`font-medium ${isWinner ? 'text-warning' : ''}`}>
+                                            {player.player_name}
+                                          </span>
+                                          {player.is_host && <Crown className="h-4 w-4 text-warning" />}
+                                          {isWinner && votes > 0 && (
+                                            <Badge variant="outline" className="text-xs">
+                                              Winner
+                                            </Badge>
+                                          )}
+                                        </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-sm text-muted-foreground">
                                   {votes} vote{votes !== 1 ? 's' : ''}
@@ -483,17 +524,31 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                       <SelectValue placeholder="Select a player..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {players.map((player) => (
-                        <SelectItem key={player.player_id} value={player.player_id}>
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-semibold">
-                              {player.player_name.charAt(0).toUpperCase()}
-                            </div>
-                            {player.player_name}
-                            {player.is_host && <Crown className="h-3 w-3 text-warning ml-1" />}
-                          </div>
-                        </SelectItem>
-                      ))}
+                       {players.map((player) => {
+                         const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+                         
+                         return (
+                           <SelectItem key={player.player_id} value={player.player_id}>
+                             <div className="flex items-center gap-2">
+                               {playerCharacter ? (
+                                 <div className="w-6 h-6 rounded-full overflow-hidden">
+                                   <img
+                                     src={playerCharacter.icon_url}
+                                     alt={playerCharacter.name}
+                                     className="w-full h-full object-cover"
+                                   />
+                                 </div>
+                               ) : (
+                                 <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-semibold">
+                                   {player.player_name.charAt(0).toUpperCase()}
+                                 </div>
+                               )}
+                               {player.player_name}
+                               {player.is_host && <Crown className="h-3 w-3 text-warning ml-1" />}
+                             </div>
+                           </SelectItem>
+                         );
+                       })}
                     </SelectContent>
                   </Select>
                 </CardContent>
