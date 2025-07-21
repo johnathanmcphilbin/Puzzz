@@ -924,12 +924,12 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
               {isMyTurnToFlip && (
                 <Button 
                   onClick={flipCoin}
-                  disabled={isLoading}
+                  disabled={isLoading || isFlipping}
                   className="w-full"
                   size="lg"
                 >
                   <Coins className="h-5 w-5 mr-2" />
-                  Flip Coin
+                  {isFlipping ? "Flipping..." : "Flip Coin"}
                 </Button>
               )}
               
