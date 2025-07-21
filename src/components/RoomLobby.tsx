@@ -65,7 +65,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   useEffect(() => {
     generateQRCode();
     loadCharacterData();
-  }, [room.room_code]);
+  }, [room.room_code, players]);
 
   const loadCharacterData = async () => {
     const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
@@ -91,11 +91,9 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   };
 
   const handleCharacterSelected = async (characterId: string) => {
-    // Force reload of character data and trigger re-render
+    // Force reload of character data
     await loadCharacterData();
     
-    // Also update the current player's character in the local state
-    // This will trigger a re-render of the lobby
     toast({
       title: "Character Selected!",
       description: "Your cat character is now displayed",
