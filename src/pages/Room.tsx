@@ -161,9 +161,32 @@ export const Room = () => {
           table: "players",
           filter: `room_id=eq.${roomData.id}`,
         },
-        (payload) => {
+        async (payload) => {
           console.log("Player update received:", payload);
-          loadPlayers(roomData.id);
+          
+          // Check for immediate kick detection if it's a DELETE event
+          if (payload.eventType === "DELETE") {
+            const deletedPlayer = payload.old;
+            const currentPlayerId = localStorage.getItem("puzzz_player_id");
+            
+            if (deletedPlayer && currentPlayerId && deletedPlayer.player_id === currentPlayerId) {
+              // Current player was kicked
+              localStorage.removeItem("puzzz_player_id");
+              localStorage.removeItem("puzzz_player_name");
+              
+              toast({
+                title: "Removed from Room",
+                description: "You have been removed from the room by the host.",
+                variant: "destructive",
+              });
+              
+              navigate("/");
+              return;
+            }
+          }
+          
+          // Load updated players list
+          await loadPlayers(roomData.id);
         }
       )
       .subscribe();
