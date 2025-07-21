@@ -4,6 +4,8 @@ import { JoinRoom } from "@/components/JoinRoom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
@@ -96,7 +98,35 @@ const Index = () => {
               </div>
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
-                  <CardTitle className="text-sm sm:text-lg font-bold truncate">Would You Rather</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Would You Rather</CardTitle>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 hover:bg-background/20"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <div className="space-y-2">
+                            <h4 className="font-semibold">Would You Rather</h4>
+                            <p className="text-sm">Choose between two options and see how your friends decide! Each round presents thought-provoking scenarios that will spark fun debates.</p>
+                            <div className="text-xs text-muted-foreground">
+                              <p>• Vote for Option A or B</p>
+                              <p>• See live voting results</p>
+                              <p>• Over 200 unique questions</p>
+                              <p>• 30-second voting timer</p>
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                    <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
                      <span>Party Game</span>
                      <span>•</span>
@@ -135,7 +165,36 @@ const Index = () => {
               </div>
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
-                  <CardTitle className="text-sm sm:text-lg font-bold truncate">Paranoia</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Paranoia</CardTitle>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 hover:bg-background/20"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <div className="space-y-2">
+                            <h4 className="font-semibold">Paranoia</h4>
+                            <p className="text-sm">Read a secret question, whisper someone's name as your answer, then flip a coin to see if the question gets revealed to everyone!</p>
+                            <div className="text-xs text-muted-foreground">
+                              <p>• Read secret questions</p>
+                              <p>• Whisper your answer to one player</p>
+                              <p>• Coin flip decides if question is revealed</p>
+                              <p>• 30-second timers for each phase</p>
+                              <p>• Creates hilarious paranoia moments</p>
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
                      <span>Whisper Game</span>
                      <span>•</span>
