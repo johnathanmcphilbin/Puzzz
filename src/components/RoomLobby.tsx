@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Play, Users, Crown, LogOut, QrCode, UserX } from "lucide-react";
+import { Copy, Play, Users, Crown, LogOut, QrCode, UserX, Cat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
+import { CharacterSelection } from "./CharacterSelection";
 
 interface Room {
   id: string;
@@ -23,6 +24,7 @@ interface Player {
   player_name: string;
   player_id: string;
   is_host: boolean;
+  selected_character_id?: string;
 }
 
 interface RoomLobbyProps {
@@ -36,6 +38,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const [isStarting, setIsStarting] = useState(false);
   const [selectedGame, setSelectedGame] = useState<string>(room.current_game || "would_you_rather");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+  const [showCharacterSelection, setShowCharacterSelection] = useState(false);
+  const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -59,7 +63,35 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
   useEffect(() => {
     generateQRCode();
+    loadCharacterData();
   }, [room.room_code]);
+
+  const loadCharacterData = async () => {
+    const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
+    if (characterIds.length === 0) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('cat_characters')
+        .select('*')
+        .in('id', characterIds);
+
+      if (error) throw error;
+
+      const characterMap = data?.reduce((acc, char) => {
+        acc[char.id] = char;
+        return acc;
+      }, {} as any) || {};
+
+      setCharacterData(characterMap);
+    } catch (error) {
+      console.error('Error loading character data:', error);
+    }
+  };
+
+  const handleCharacterSelected = async (characterId: string) => {
+    await loadCharacterData();
+  };
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(room.room_code);
@@ -257,37 +289,67 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {players.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                  >
-                     <div className="flex items-center gap-3">
-                       <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
-                         {player.player_name.charAt(0).toUpperCase()}
-                       </div>
-                       <span className="font-medium">{player.player_name}</span>
-                     </div>
-                     <div className="flex items-center gap-2">
-                       {player.is_host && (
-                         <Badge variant="secondary" className="gap-1">
-                           <Crown className="h-3 w-3" />
-                           Host
-                         </Badge>
-                       )}
-                       {currentPlayer.is_host && !player.is_host && (
-                         <Button
-                           variant="ghost"
-                           size="sm"
-                           onClick={() => kickPlayer(player)}
-                           className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                         >
-                           <UserX className="h-4 w-4" />
-                         </Button>
-                       )}
-                     </div>
-                  </div>
-                ))}
+                {players.map((player) => {
+                  const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+                  
+                  return (
+                    <div
+                      key={player.id}
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        {playerCharacter ? (
+                          <div className="w-10 h-10 rounded-full overflow-hidden">
+                            <img
+                              src={playerCharacter.icon_url}
+                              alt={playerCharacter.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
+                            {player.player_name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-medium">{player.player_name}</div>
+                          {playerCharacter && (
+                            <div className="text-xs text-muted-foreground">{playerCharacter.name}</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {player.player_id === currentPlayer.player_id && !player.selected_character_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowCharacterSelection(true)}
+                            className="gap-1"
+                          >
+                            <Cat className="h-3 w-3" />
+                            Pick Cat
+                          </Button>
+                        )}
+                        {player.is_host && (
+                          <Badge variant="secondary" className="gap-1">
+                            <Crown className="h-3 w-3" />
+                            Host
+                          </Badge>
+                        )}
+                        {currentPlayer.is_host && !player.is_host && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => kickPlayer(player)}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <UserX className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -389,6 +451,15 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           </Card>
         </div>
       </div>
+
+      {/* Character Selection Modal */}
+      <CharacterSelection
+        isOpen={showCharacterSelection}
+        onClose={() => setShowCharacterSelection(false)}
+        playerId={currentPlayer.player_id}
+        roomId={room.id}
+        onCharacterSelected={handleCharacterSelected}
+      />
     </div>
   );
 };

@@ -278,6 +278,7 @@ export type Database = {
           player_id: string
           player_name: string
           room_id: string | null
+          selected_character_id: string | null
         }
         Insert: {
           id?: string
@@ -286,6 +287,7 @@ export type Database = {
           player_id: string
           player_name: string
           room_id?: string | null
+          selected_character_id?: string | null
         }
         Update: {
           id?: string
@@ -294,6 +296,7 @@ export type Database = {
           player_id?: string
           player_name?: string
           room_id?: string | null
+          selected_character_id?: string | null
         }
         Relationships: [
           {
@@ -301,6 +304,13 @@ export type Database = {
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_selected_character_id_fkey"
+            columns: ["selected_character_id"]
+            isOneToOne: false
+            referencedRelation: "cat_characters"
             referencedColumns: ["id"]
           },
         ]
