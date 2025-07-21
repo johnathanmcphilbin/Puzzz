@@ -1,0 +1,9 @@
+-- Add new cat characters from the cats folder
+INSERT INTO public.cat_characters (name, icon_url, description, stats, perks) VALUES
+('Angry Cat', '/cats/Angry cat.png', 'A fierce and intimidating feline with a short temper', '{"speed": 2, "stealth": 1, "charisma": 1, "strength": 4, "intelligence": 2}', ARRAY['Intimidation', 'Quick Strike']),
+('Drum Cat', '/cats/Drum cat.png', 'A musical cat who keeps the beat and lifts spirits', '{"speed": 2, "stealth": 2, "charisma": 4, "strength": 1, "intelligence": 3}', ARRAY['Rhythm Master', 'Morale Boost']),
+('Glass Cat', '/cats/Glass cat.png', 'An elegant and sophisticated cat with refined tastes', '{"speed": 2, "stealth": 3, "charisma": 3, "strength": 1, "intelligence": 4}', ARRAY['Elegance', 'Sharp Mind']),
+('Happy Cat', '/cats/Happy cat.png', 'A cheerful and optimistic cat who spreads joy everywhere', '{"speed": 3, "stealth": 2, "charisma": 4, "strength": 2, "intelligence": 2}', ARRAY['Infectious Joy', 'Lucky Charm']),
+('Lil Cat', '/cats/Lil Cat.png', 'A small but mighty cat with big dreams', '{"speed": 4, "stealth": 4, "charisma": 2, "strength": 1, "intelligence": 3}', ARRAY['Small & Nimble', 'Underestimated']),
+('Orange Cat', '/cats/Orange cat.png', 'A laid-back orange tabby with one brain cell', '{"speed": 1, "stealth": 1, "charisma": 3, "strength": 2, "intelligence": 1}', ARRAY['Single Brain Cell', 'Loveable Dummy']),
+('Pirate Cat', '/cats/Pirate cat.png', 'A swashbuckling feline adventurer with tales of the high seas', '{"speed": 3, "stealth": 3, "charisma": 3, "strength": 3, "intelligence": 2}', ARRAY['Sea Legs', 'Treasure Hunter']);
