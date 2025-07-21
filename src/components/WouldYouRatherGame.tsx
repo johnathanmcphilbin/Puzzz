@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTimer } from "@/hooks/useTimer";
 import { ChevronRight, Users, RotateCcw, Trophy, Clock, ArrowLeft, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getCatImageUrl } from "@/assets/catImages";
 
 interface Room {
   id: string;
@@ -707,15 +708,12 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                                  <div key={playerId} className="flex items-center gap-1">
                                    {playerCharacter ? (
                                      <div className="w-5 h-5 rounded-full overflow-hidden bg-white">
-                                        <img
-                                          src={encodeURI(playerCharacter.icon_url)}
-                                          alt={playerCharacter.name}
-                                          className="w-full h-full object-contain p-0.5"
-                                          loading="eager"
-                                          onError={(e) => {
-                                            e.currentTarget.src = '/placeholder.svg';
-                                          }}
-                                        />
+                                         <img
+                                           src={getCatImageUrl(playerCharacter.icon_url)}
+                                           alt={playerCharacter.name}
+                                           className="w-full h-full object-contain p-0.5"
+                                           loading="eager"
+                                         />
                                      </div>
                                    ) : null}
                                    <Badge variant="secondary" className="text-xs">
@@ -764,15 +762,12 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                                  <div key={playerId} className="flex items-center gap-1">
                                    {playerCharacter ? (
                                      <div className="w-5 h-5 rounded-full overflow-hidden bg-white">
-                                        <img
-                                          src={encodeURI(playerCharacter.icon_url)}
-                                          alt={playerCharacter.name}
-                                          className="w-full h-full object-contain p-0.5"
-                                          loading="eager"
-                                          onError={(e) => {
-                                            e.currentTarget.src = '/placeholder.svg';
-                                          }}
-                                        />
+                                         <img
+                                           src={getCatImageUrl(playerCharacter.icon_url)}
+                                           alt={playerCharacter.name}
+                                           className="w-full h-full object-contain p-0.5"
+                                           loading="eager"
+                                         />
                                      </div>
                                    ) : null}
                                    <Badge variant="secondary" className="text-xs">

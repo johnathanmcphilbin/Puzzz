@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getCatImageUrl } from "@/assets/catImages";
 
 interface CatCharacter {
   id: string;
@@ -110,14 +111,10 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
               <div className="text-center">
                 {character.icon_url ? (
                   <img
-                    src={encodeURI(character.icon_url)}
+                    src={getCatImageUrl(character.icon_url)}
                     alt={character.name}
                     className="w-20 h-20 mx-auto rounded-full object-contain bg-white p-1 mb-3"
                     loading="eager"
-                    onError={(e) => {
-                      console.error('Image failed to load:', character.icon_url);
-                      e.currentTarget.src = '/placeholder.svg';
-                    }}
                   />
                 ) : (
                   <div className="w-20 h-20 mx-auto rounded-full bg-gray-200 flex items-center justify-center mb-3">

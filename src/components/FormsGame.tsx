@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, Users, RotateCcw, Crown, Trophy, AlertTriangle, FileText } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getCatImageUrl } from "@/assets/catImages";
 
 interface Room {
   id: string;
@@ -389,22 +390,19 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                                               <Trophy className="h-4 w-4" />
                                             </div>
                                            ) : playerCharacter ? (
-                                             <div className="w-8 h-8 rounded-full overflow-hidden bg-white">
-                                                <img
-                                                  src={encodeURI(playerCharacter.icon_url)}
-                                                  alt={playerCharacter.name}
-                                                  className="w-full h-full object-contain p-0.5"
-                                                  loading="eager"
-                                                  onError={(e) => {
-                                                    e.currentTarget.src = '/placeholder.svg';
-                                                  }}
-                                                />
+                                              <div className="w-8 h-8 rounded-full overflow-hidden bg-white">
+                                                 <img
+                                                   src={getCatImageUrl(playerCharacter.icon_url)}
+                                                   alt={playerCharacter.name}
+                                                   className="w-full h-full object-contain p-0.5"
+                                                   loading="eager"
+                                                 />
+                                              </div>
+                                           ) : (
+                                             <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-semibold">
+                                               {player.player_name.charAt(0).toUpperCase()}
                                              </div>
-                                          ) : (
-                                            <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-semibold">
-                                              {player.player_name.charAt(0).toUpperCase()}
-                                            </div>
-                                          )}
+                                           )}
                                           <span className={`font-medium ${isWinner ? 'text-warning' : ''}`}>
                                             {player.player_name}
                                           </span>

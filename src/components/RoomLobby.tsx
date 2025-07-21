@@ -8,6 +8,7 @@ import { Copy, Play, Users, Crown, LogOut, QrCode, UserX, Cat } from "lucide-rea
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 import { CharacterSelection } from "./CharacterSelection";
+import { getCatImageUrl } from "@/assets/catImages";
 
 interface Room {
   id: string;
@@ -310,13 +311,10 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                         {playerCharacter ? (
                           <div className="w-10 h-10 rounded-full overflow-hidden bg-white">
                             <img
-                              src={encodeURI(playerCharacter.icon_url)}
+                              src={getCatImageUrl(playerCharacter.icon_url)}
                               alt={playerCharacter.name}
                               className="w-full h-full object-contain p-0.5"
                               loading="eager"
-                              onError={(e) => {
-                                e.currentTarget.src = '/placeholder.svg';
-                              }}
                             />
                           </div>
                         ) : (

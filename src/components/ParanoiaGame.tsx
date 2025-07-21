@@ -12,6 +12,7 @@ import { useTimer } from "@/hooks/useTimer";
 import { Users, Crown, Coins, MessageSquare, Play, StopCircle, Clock, ArrowLeft, LogOut } from "lucide-react";
 import { CoinFlip3D } from "./CoinFlip3D";
 import { useNavigate } from "react-router-dom";
+import { getCatImageUrl } from "@/assets/catImages";
 
 interface Room {
   id: string;
@@ -1289,13 +1290,10 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                             {playerCharacter ? (
                               <div className="w-4 h-4 rounded-full overflow-hidden bg-white">
                                 <img
-                                  src={encodeURI(playerCharacter.icon_url)}
+                                  src={getCatImageUrl(playerCharacter.icon_url)}
                                   alt={playerCharacter.name}
                                   className="w-full h-full object-contain p-0.5"
                                   loading="eager"
-                                  onError={(e) => {
-                                    e.currentTarget.src = '/placeholder.svg';
-                                  }}
                                 />
                               </div>
                             ) : null}
