@@ -136,7 +136,12 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
           ...sessionData,
           story_content: Array.isArray(sessionData.story_content) ? sessionData.story_content : []
         });
-        setGamePhase(sessionData.status === 'completed' ? 'completed' : 'playing');
+        
+        // Set game phase based on story session status and whether current player has selected
+        if (sessionData.status === 'completed') {
+          setGamePhase('completed');
+        }
+        // Don't auto-set to playing here - let the logic below handle it
         
         // Load story players
         const { data: playersData, error: playersError } = await supabase
@@ -163,19 +168,30 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
           setSelectedCat(currentStoryPlayer.cat_character_id);
         }
 
-        // Only check if we should start the story if we're still in active status and haven't started yet
-        if (playersData && sessionData.status === 'active' && sessionData.current_turn === 0) {
-          // Check if ALL players from the room have selected cats
+        // Determine game phase for THIS specific player
+        if (sessionData.status === 'completed') {
+          setGamePhase('completed');
+        } else {
+          // Check if current player has selected a cat AND all players have selected
+          const currentPlayerHasCat = currentStoryPlayer?.cat_character_id;
           const allPlayersHaveCats = players.every(player => 
-            playersData.some(storyPlayer => storyPlayer.player_id === player.player_id)
+            playersData.some(storyPlayer => storyPlayer.player_id === player.player_id && storyPlayer.cat_character_id)
           );
           
-          if (allPlayersHaveCats) {
-            // Double check we don't already have an initial story
+          if (currentPlayerHasCat && allPlayersHaveCats) {
+            // Check if story has started
             const hasInitialStory = await checkForInitialStory(sessionData.id);
-            if (!hasInitialStory) {
-              await generateInitialStory();
+            if (hasInitialStory) {
+              setGamePhase('playing');
+            } else {
+              // Start the story if we're the host and all conditions are met
+              if (currentPlayer.is_host) {
+                await generateInitialStory();
+              }
+              setGamePhase('playing');
             }
+          } else {
+            setGamePhase('cat_selection');
           }
         }
 
@@ -277,8 +293,7 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
 
       setSelectedCat(catId);
       
-      // Reload story players to get the most current state
-      await checkExistingSession();
+      // Don't automatically reload - let the realtime subscription handle updates
       
       toast({
         title: "Cat Selected!",
@@ -380,7 +395,7 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
           ai_response: aiResponse
         });
 
-      setGamePhase("playing");
+      // Don't auto-set game phase here - let the realtime updates handle it
     } catch (error) {
       console.error("Error generating initial story:", error);
       toast({
