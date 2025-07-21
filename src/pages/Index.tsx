@@ -73,158 +73,147 @@ const Index = () => {
             </CardHeader>
           </Card>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6 max-w-4xl mx-auto justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto">
             {/* Would You Rather Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden"
               onClick={() => handleGameClick("would_you_rather")}
             >
-              <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
+              <div className="aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <img 
-                    src="/lovable-uploads/e1223d72-4579-4d9b-a783-c817eb336925.png" 
-                    alt="Would You Rather - Character vs Character"
-                    className="w-full h-full object-cover object-center"
-                    style={{ objectPosition: 'center 68%' }}
-                  />
-                </div>
-                <div className="absolute top-1 right-1 sm:top-3 sm:right-3">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                <img 
+                  src="/lovable-uploads/e1223d72-4579-4d9b-a783-c817eb336925.png" 
+                  alt="Would You Rather - Character vs Character"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+                  <span className="bg-destructive text-destructive-foreground px-2 py-1 rounded-full text-xs font-medium">
                     LIVE
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Would You Rather</CardTitle>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Would You Rather</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <p className="text-sm text-muted-foreground">
-                            Choose between two options and see how your friends decide! Each round presents thought-provoking scenarios that will spark fun debates and reveal surprising preferences.
-                          </p>
-                          <div className="space-y-2">
-                            <h4 className="font-medium">How to Play:</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              <li>• Read the "Would You Rather" question</li>
-                              <li>• Vote for Option A or Option B</li>
-                              <li>• See live voting results from all players</li>
-                              <li>• Discuss your choices and reasoning</li>
-                              <li>• Host can advance to the next question</li>
-                            </ul>
-                          </div>
-                          <div className="space-y-2">
-                            <h4 className="font-medium">Features:</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              <li>• Over 200 unique questions</li>
-                              <li>• 30-second voting timer</li>
-                              <li>• Real-time vote tracking</li>
-                              <li>• Perfect for 2+ players</li>
-                            </ul>
-                          </div>
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg sm:text-xl font-bold">Would You Rather</CardTitle>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 hover:bg-background/20"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Would You Rather</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                          Choose between two options and see how your friends decide! Each round presents thought-provoking scenarios that will spark fun debates and reveal surprising preferences.
+                        </p>
+                        <div className="space-y-2">
+                          <h4 className="font-medium">How to Play:</h4>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            <li>• Read the "Would You Rather" question</li>
+                            <li>• Vote for Option A or Option B</li>
+                            <li>• See live voting results from all players</li>
+                            <li>• Discuss your choices and reasoning</li>
+                            <li>• Host can advance to the next question</li>
+                          </ul>
                         </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                     <span>Party Game</span>
-                     <span>•</span>
-                     <span>2+ Players</span>
-                   </div>
-                </CardHeader>
-              </div>
+                        <div className="space-y-2">
+                          <h4 className="font-medium">Features:</h4>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            <li>• Over 200 unique questions</li>
+                            <li>• 30-second voting timer</li>
+                            <li>• Real-time vote tracking</li>
+                            <li>• Perfect for 2+ players</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Party Game</span>
+                  <span>•</span>
+                  <span>2+ Players</span>
+                </div>
+              </CardHeader>
             </Card>
-
 
             {/* Paranoia Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden"
               onClick={() => handleGameClick("paranoia")}
             >
-              <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden">
+              <div className="aspect-video bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <img 
-                    src="/lovable-uploads/25019112-f839-4cf5-9cee-9a7d609be518.png" 
-                    alt="Paranoia - Mysterious character with swirling eyes"
-                    className="w-full h-full object-cover object-center"
-                    style={{ objectPosition: 'center 65%' }}
-                  />
-                </div>
-                <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                <img 
+                  src="/lovable-uploads/25019112-f839-4cf5-9cee-9a7d609be518.png" 
+                  alt="Paranoia - Mysterious character with swirling eyes"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+                  <span className="bg-destructive text-destructive-foreground px-2 py-1 rounded-full text-xs font-medium">
                     NEW
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Paranoia</CardTitle>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Paranoia</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <p className="text-sm text-muted-foreground">
-                            Read a secret question, whisper someone's name as your answer, then flip a coin to see if the question gets revealed to everyone! Creates hilarious paranoia moments.
-                          </p>
-                          <div className="space-y-2">
-                            <h4 className="font-medium">How to Play:</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              <li>• Player reads a secret question to themselves</li>
-                              <li>• Whisper your answer (someone's name) to one player</li>
-                              <li>• Everyone sees who you chose, but not the question</li>
-                              <li>• Flip a coin to decide if the question is revealed</li>
-                              <li>• If revealed, everyone learns what the question was!</li>
-                            </ul>
-                          </div>
-                          <div className="space-y-2">
-                            <h4 className="font-medium">Features:</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              <li>• Mysterious and suspenseful gameplay</li>
-                              <li>• 30-second timers for each phase</li>
-                              <li>• Perfect for groups of 3+ players</li>
-                              <li>• Creates memorable moments and inside jokes</li>
-                            </ul>
-                          </div>
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg sm:text-xl font-bold">Paranoia</CardTitle>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 hover:bg-background/20"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Paranoia</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                          Read a secret question, whisper someone's name as your answer, then flip a coin to see if the question gets revealed to everyone! Creates hilarious paranoia moments.
+                        </p>
+                        <div className="space-y-2">
+                          <h4 className="font-medium">How to Play:</h4>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            <li>• Player reads a secret question to themselves</li>
+                            <li>• Whisper your answer (someone's name) to one player</li>
+                            <li>• Everyone sees who you chose, but not the question</li>
+                            <li>• Flip a coin to decide if the question is revealed</li>
+                            <li>• If revealed, everyone learns what the question was!</li>
+                          </ul>
                         </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                     <span>Whisper Game</span>
-                     <span>•</span>
-                     <span>3+ Players</span>
-                  </div>
-                </CardHeader>
-              </div>
+                        <div className="space-y-2">
+                          <h4 className="font-medium">Features:</h4>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            <li>• Mysterious and suspenseful gameplay</li>
+                            <li>• 30-second timers for each phase</li>
+                            <li>• Perfect for groups of 3+ players</li>
+                            <li>• Creates memorable moments and inside jokes</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Whisper Game</span>
+                  <span>•</span>
+                  <span>3+ Players</span>
+                </div>
+              </CardHeader>
             </Card>
 
           </div>
