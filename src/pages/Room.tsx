@@ -181,7 +181,28 @@ export const Room = () => {
       .eq("room_id", roomId)
       .order("joined_at", { ascending: true });
 
-    setPlayers(playersData || []);
+    const updatedPlayers = playersData || [];
+    setPlayers(updatedPlayers);
+
+    // Check if current player was kicked
+    const playerId = localStorage.getItem("puzzz_player_id");
+    if (playerId) {
+      const currentPlayerExists = updatedPlayers.find(p => p.player_id === playerId);
+      if (!currentPlayerExists) {
+        // Player was kicked, redirect to home
+        localStorage.removeItem("puzzz_player_id");
+        localStorage.removeItem("puzzz_player_name");
+        
+        toast({
+          title: "Removed from Room",
+          description: "You have been removed from the room by the host.",
+          variant: "destructive",
+        });
+        
+        navigate("/");
+        return;
+      }
+    }
   };
 
   if (loading) {
