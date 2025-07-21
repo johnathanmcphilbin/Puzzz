@@ -3,8 +3,7 @@ import { CreateRoom } from "@/components/CreateRoom";
 import { JoinRoom } from "@/components/JoinRoom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Info } from "lucide-react";
 
 const Index = () => {
@@ -100,32 +99,47 @@ const Index = () => {
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm sm:text-lg font-bold truncate">Would You Rather</CardTitle>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 w-6 p-0 hover:bg-background/20"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Info className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Would You Rather</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            Choose between two options and see how your friends decide! Each round presents thought-provoking scenarios that will spark fun debates and reveal surprising preferences.
+                          </p>
                           <div className="space-y-2">
-                            <h4 className="font-semibold">Would You Rather</h4>
-                            <p className="text-sm">Choose between two options and see how your friends decide! Each round presents thought-provoking scenarios that will spark fun debates.</p>
-                            <div className="text-xs text-muted-foreground">
-                              <p>• Vote for Option A or B</p>
-                              <p>• See live voting results</p>
-                              <p>• Over 200 unique questions</p>
-                              <p>• 30-second voting timer</p>
-                            </div>
+                            <h4 className="font-medium">How to Play:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Read the "Would You Rather" question</li>
+                              <li>• Vote for Option A or Option B</li>
+                              <li>• See live voting results from all players</li>
+                              <li>• Discuss your choices and reasoning</li>
+                              <li>• Host can advance to the next question</li>
+                            </ul>
                           </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Features:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Over 200 unique questions</li>
+                              <li>• 30-second voting timer</li>
+                              <li>• Real-time vote tracking</li>
+                              <li>• Perfect for 2+ players</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                    <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
                      <span>Party Game</span>
@@ -167,33 +181,47 @@ const Index = () => {
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm sm:text-lg font-bold truncate">Paranoia</CardTitle>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 w-6 p-0 hover:bg-background/20"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Info className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Paranoia</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            Read a secret question, whisper someone's name as your answer, then flip a coin to see if the question gets revealed to everyone! Creates hilarious paranoia moments.
+                          </p>
                           <div className="space-y-2">
-                            <h4 className="font-semibold">Paranoia</h4>
-                            <p className="text-sm">Read a secret question, whisper someone's name as your answer, then flip a coin to see if the question gets revealed to everyone!</p>
-                            <div className="text-xs text-muted-foreground">
-                              <p>• Read secret questions</p>
-                              <p>• Whisper your answer to one player</p>
-                              <p>• Coin flip decides if question is revealed</p>
-                              <p>• 30-second timers for each phase</p>
-                              <p>• Creates hilarious paranoia moments</p>
-                            </div>
+                            <h4 className="font-medium">How to Play:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Player reads a secret question to themselves</li>
+                              <li>• Whisper your answer (someone's name) to one player</li>
+                              <li>• Everyone sees who you chose, but not the question</li>
+                              <li>• Flip a coin to decide if the question is revealed</li>
+                              <li>• If revealed, everyone learns what the question was!</li>
+                            </ul>
                           </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Features:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Mysterious and suspenseful gameplay</li>
+                              <li>• 30-second timers for each phase</li>
+                              <li>• Perfect for groups of 3+ players</li>
+                              <li>• Creates memorable moments and inside jokes</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
                      <span>Whisper Game</span>
