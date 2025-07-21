@@ -90,7 +90,16 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   };
 
   const handleCharacterSelected = async (characterId: string) => {
+    // Force reload of character data and trigger re-render
     await loadCharacterData();
+    
+    // Also update the current player's character in the local state
+    // This will trigger a re-render of the lobby
+    toast({
+      title: "Character Selected!",
+      description: "Your cat character is now displayed",
+      className: "bg-success text-success-foreground",
+    });
   };
 
   const copyRoomCode = () => {

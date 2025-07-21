@@ -26,6 +26,7 @@ interface Player {
   player_name: string;
   player_id: string;
   is_host: boolean;
+  selected_character_id?: string;
 }
 
 interface Question {
@@ -52,6 +53,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   const [aiQuestions, setAiQuestions] = useState<Question[]>([]);
   const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
   const [isPreloadingNext, setIsPreloadingNext] = useState(false);
+  const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
   const { toast } = useToast();
 
   const gameState = room.game_state || {};
@@ -87,6 +89,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   useEffect(() => {
     loadCurrentQuestion();
     loadVotes();
+    loadCharacterData();
     
     // Check if current player has voted
     const playerVoted = Object.keys(gameState.votes || {}).includes(currentPlayer.player_id);
@@ -120,6 +123,29 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       setVotes(votesMap);
     } catch (error) {
       console.error("Error loading votes:", error);
+    }
+  };
+
+  const loadCharacterData = async () => {
+    const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
+    if (characterIds.length === 0) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('cat_characters')
+        .select('*')
+        .in('id', characterIds);
+
+      if (error) throw error;
+
+      const characterMap = data?.reduce((acc, char) => {
+        acc[char.id] = char;
+        return acc;
+      }, {} as any) || {};
+
+      setCharacterData(characterMap);
+    } catch (error) {
+      console.error('Error loading character data:', error);
     }
   };
 
@@ -671,18 +697,30 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                           <span>{Math.round(optionAPercentage)}%</span>
                         </div>
                         <Progress value={optionAPercentage} className="h-2" />
-                        <div className="flex flex-wrap gap-1 justify-center">
-                          {Object.entries(votes)
-                            .filter(([_, vote]) => vote === "A")
-                            .map(([playerId, _]) => {
-                              const player = players.find(p => p.player_id === playerId);
-                              return (
-                                <Badge key={playerId} variant="secondary" className="text-xs">
-                                  {player?.player_name || playerId}
-                                </Badge>
-                              );
-                            })}
-                        </div>
+                         <div className="flex flex-wrap gap-1 justify-center">
+                           {Object.entries(votes)
+                             .filter(([_, vote]) => vote === "A")
+                             .map(([playerId, _]) => {
+                               const player = players.find(p => p.player_id === playerId);
+                               const playerCharacter = player?.selected_character_id ? characterData[player.selected_character_id] : null;
+                               return (
+                                 <div key={playerId} className="flex items-center gap-1">
+                                   {playerCharacter ? (
+                                     <div className="w-5 h-5 rounded-full overflow-hidden bg-white">
+                                       <img
+                                         src={playerCharacter.icon_url}
+                                         alt={playerCharacter.name}
+                                         className="w-full h-full object-contain p-0.5"
+                                       />
+                                     </div>
+                                   ) : null}
+                                   <Badge variant="secondary" className="text-xs">
+                                     {player?.player_name || playerId}
+                                   </Badge>
+                                 </div>
+                               );
+                             })}
+                         </div>
                       </div>
                     )}
                   </div>
@@ -712,18 +750,30 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                           <span>{Math.round(optionBPercentage)}%</span>
                         </div>
                         <Progress value={optionBPercentage} className="h-2" />
-                        <div className="flex flex-wrap gap-1 justify-center">
-                          {Object.entries(votes)
-                            .filter(([_, vote]) => vote === "B")
-                            .map(([playerId, _]) => {
-                              const player = players.find(p => p.player_id === playerId);
-                              return (
-                                <Badge key={playerId} variant="secondary" className="text-xs">
-                                  {player?.player_name || playerId}
-                                </Badge>
-                              );
-                            })}
-                        </div>
+                         <div className="flex flex-wrap gap-1 justify-center">
+                           {Object.entries(votes)
+                             .filter(([_, vote]) => vote === "B")
+                             .map(([playerId, _]) => {
+                               const player = players.find(p => p.player_id === playerId);
+                               const playerCharacter = player?.selected_character_id ? characterData[player.selected_character_id] : null;
+                               return (
+                                 <div key={playerId} className="flex items-center gap-1">
+                                   {playerCharacter ? (
+                                     <div className="w-5 h-5 rounded-full overflow-hidden bg-white">
+                                       <img
+                                         src={playerCharacter.icon_url}
+                                         alt={playerCharacter.name}
+                                         className="w-full h-full object-contain p-0.5"
+                                       />
+                                     </div>
+                                   ) : null}
+                                   <Badge variant="secondary" className="text-xs">
+                                     {player?.player_name || playerId}
+                                   </Badge>
+                                 </div>
+                               );
+                             })}
+                         </div>
                       </div>
                     )}
                   </div>

@@ -28,6 +28,7 @@ interface Player {
   player_name: string;
   player_id: string;
   is_host: boolean;
+  selected_character_id?: string;
 }
 
 interface ParanoiaGameProps {
@@ -53,6 +54,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const [playerAnswer, setPlayerAnswer] = useState<string>("");
   const [isFlipping, setIsFlipping] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
 
   const gameState = room.game_state || {};
   const phase = gameState.phase || "waiting";
@@ -178,6 +180,34 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       initializeGame();
     }
   }, [phase, playerOrder, players.length]);
+
+  // Load character data
+  useEffect(() => {
+    const loadCharacterData = async () => {
+      const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
+      if (characterIds.length === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('cat_characters')
+          .select('*')
+          .in('id', characterIds);
+
+        if (error) throw error;
+
+        const characterMap = data?.reduce((acc, char) => {
+          acc[char.id] = char;
+          return acc;
+        }, {} as any) || {};
+
+        setCharacterData(characterMap);
+      } catch (error) {
+        console.error('Error loading character data:', error);
+      }
+    };
+
+    loadCharacterData();
+  }, [players]);
 
   const initializeGame = async () => {
     if (players.length < 3) return;
@@ -932,12 +962,24 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
               )}
               
               <div className="grid grid-cols-2 gap-2 mb-6">
-                {players.map((player) => (
-                  <div key={player.id} className="flex items-center gap-2 p-2 bg-muted rounded">
-                    {player.is_host && <Crown className="h-4 w-4 text-yellow-500" />}
-                    <span className="text-sm">{player.player_name}</span>
-                  </div>
-                ))}
+                {players.map((player) => {
+                  const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+                  return (
+                    <div key={player.id} className="flex items-center gap-2 p-2 bg-muted rounded">
+                      {playerCharacter ? (
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-white">
+                          <img
+                            src={playerCharacter.icon_url}
+                            alt={playerCharacter.name}
+                            className="w-full h-full object-contain p-0.5"
+                          />
+                        </div>
+                      ) : null}
+                      {player.is_host && <Crown className="h-4 w-4 text-yellow-500" />}
+                      <span className="text-sm">{player.player_name}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1231,17 +1273,29 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                   <div className="grid grid-cols-2 gap-2">
                     {players
                       .filter(p => p.player_id !== currentPlayer.player_id)
-                      .map((player) => (
-                        <Button
-                          key={player.id}
-                          variant={playerAnswer === player.player_name ? "default" : "outline"}
-                          onClick={() => setPlayerAnswer(player.player_name)}
-                          className="text-left justify-start"
-                        >
-                          {player.is_host && <Crown className="h-4 w-4 mr-2" />}
-                          {player.player_name}
-                        </Button>
-                      ))}
+                      .map((player) => {
+                        const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+                        return (
+                          <Button
+                            key={player.id}
+                            variant={playerAnswer === player.player_name ? "default" : "outline"}
+                            onClick={() => setPlayerAnswer(player.player_name)}
+                            className="text-left justify-start flex items-center gap-2"
+                          >
+                            {playerCharacter ? (
+                              <div className="w-4 h-4 rounded-full overflow-hidden bg-white">
+                                <img
+                                  src={playerCharacter.icon_url}
+                                  alt={playerCharacter.name}
+                                  className="w-full h-full object-contain p-0.5"
+                                />
+                              </div>
+                            ) : null}
+                            {player.is_host && <Crown className="h-4 w-4" />}
+                            {player.player_name}
+                          </Button>
+                        );
+                      })}
                   </div>
                 </div>
                 
