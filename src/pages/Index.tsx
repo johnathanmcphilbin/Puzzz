@@ -147,11 +147,6 @@ const Index = () => {
                      <span>2+ Players</span>
                    </div>
                 </CardHeader>
-                <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
-                  <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                    Make tough choices and see how your friends decide. Over 200 thought-provoking scenarios await!
-                  </CardDescription>
-                </CardContent>
               </div>
             </Card>
 
@@ -229,11 +224,6 @@ const Index = () => {
                      <span>3+ Players</span>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0 hidden sm:block flex-1">
-                  <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                    Read secret questions, name someone, then let fate decide if the question gets revealed!
-                  </CardDescription>
-                </CardContent>
               </div>
             </Card>
 
