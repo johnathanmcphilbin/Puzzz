@@ -168,7 +168,7 @@ const Index = () => {
               </div>
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
-                  <CardTitle className="text-sm sm:text-lg font-bold truncate">Fantasy Cat Adventure</CardTitle>
+                  <CardTitle className="text-sm sm:text-lg font-bold truncate">The Cat Chronicles</CardTitle>
                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
                      <span>Story Game</span>
                      <span>•</span>
