@@ -46,6 +46,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const [customQuestion, setCustomQuestion] = useState<string>("");
   const [playerAnswer, setPlayerAnswer] = useState<string>("");
   const [isFlipping, setIsFlipping] = useState(false);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
 
   const gameState = room.game_state || {};
   const phase = gameState.phase || "waiting";
@@ -242,8 +243,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         currentQuestion: customQuestion.trim(),
         targetPlayerId: nextPlayerId,
         selectedQuestion: customQuestion.trim(),
-        currentQuestionAsker: currentAskerPlayerId, // Track who asked this question
-        usedAskers: [...usedAskers, currentAskerPlayerId] // Mark current player as having asked
+        currentQuestionAsker: currentAskerPlayerId,
+        usedAskers: [...usedAskers, currentAskerPlayerId]
       };
 
       await supabase
@@ -261,17 +262,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   };
 
-  const useRandomQuestion = async () => {
-    if (availableQuestions.length === 0) {
-      toast({
-        title: "No Questions Available",
-        description: "Please enter a custom question.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+  const useSelectedQuestion = async (questionText: string) => {
     setIsLoading(true);
     
     try {
@@ -283,11 +274,11 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       const newGameState = {
         ...gameState,
         phase: "answering",
-        currentQuestion: randomQuestion.question,
+        currentQuestion: questionText,
         targetPlayerId: nextPlayerId,
-        selectedQuestion: randomQuestion.question,
-        currentQuestionAsker: currentAskerPlayerId, // Track who asked this question
-        usedAskers: [...usedAskers, currentAskerPlayerId] // Mark current player as having asked
+        selectedQuestion: questionText,
+        currentQuestionAsker: currentAskerPlayerId,
+        usedAskers: [...usedAskers, currentAskerPlayerId]
       };
 
       await supabase
@@ -296,9 +287,10 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         .eq("id", room.id);
 
       onUpdateRoom({ ...room, game_state: newGameState });
+      setSelectedQuestionId(null);
       
     } catch (error) {
-      console.error("Error using random question:", error);
+      console.error("Error using selected question:", error);
     } finally {
       setIsLoading(false);
     }
@@ -759,24 +751,60 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                   />
                 </div>
                 
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={submitQuestion}
-                    disabled={isLoading || !customQuestion.trim()}
-                    className="flex-1"
-                  >
-                    Send Question
-                  </Button>
-                  
-                  <Button 
-                    onClick={useRandomQuestion}
-                    disabled={isLoading}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Use Generated Question
-                  </Button>
-                </div>
+                <Button 
+                  onClick={submitQuestion}
+                  disabled={isLoading || !customQuestion.trim()}
+                  className="w-full"
+                >
+                  Send Custom Question
+                </Button>
+
+                {availableQuestions.length > 0 && (
+                  <div className="space-y-3">
+                    <Label>Or choose from AI-generated questions:</Label>
+                    <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3">
+                      {availableQuestions.map((question) => (
+                        <Card 
+                          key={question.id} 
+                          className={`cursor-pointer transition-all hover:bg-muted/50 ${
+                            selectedQuestionId === question.id ? 'ring-2 ring-primary' : ''
+                          }`}
+                          onClick={() => setSelectedQuestionId(question.id)}
+                        >
+                          <CardContent className="p-3">
+                            <p className="text-sm">{question.question}</p>
+                            <div className="flex justify-between items-center mt-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {question.category}
+                              </Badge>
+                              <div className="flex">
+                                {Array.from({ length: question.spiciness_level }, (_, i) => (
+                                  <span key={i} className="text-orange-500">🌶️</span>
+                                ))}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {selectedQuestionId && (
+                      <Button 
+                        onClick={() => {
+                          const selectedQuestion = availableQuestions.find(q => q.id === selectedQuestionId);
+                          if (selectedQuestion) {
+                            useSelectedQuestion(selectedQuestion.question);
+                          }
+                        }}
+                        disabled={isLoading}
+                        className="w-full"
+                        variant="default"
+                      >
+                        Use Selected Question
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             
