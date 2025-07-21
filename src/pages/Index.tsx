@@ -79,7 +79,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-full"
               onClick={() => handleGameClick("would_you_rather")}
             >
-              <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
+              <div className="aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -95,7 +95,7 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm sm:text-lg font-bold truncate">Would You Rather</CardTitle>
@@ -155,7 +155,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden h-full"
               onClick={() => handleGameClick("paranoia")}
             >
-              <div className="aspect-[3/4] sm:aspect-video bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden">
+              <div className="aspect-video bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -171,7 +171,7 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.3/4)*100vw)] sm:h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm sm:text-lg font-bold truncate">Paranoia</CardTitle>
