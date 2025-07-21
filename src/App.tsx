@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,7 +11,7 @@ import { DirectJoin } from "./pages/DirectJoin";
 import NotFound from "./pages/NotFound";
 import { AnalyticsProvider } from "./providers/AnalyticsProvider";
 import AIChatbot from "./components/AIChatbot";
-
+import { BackgroundMusic } from "./components/BackgroundMusic";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,11 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           <AIChatbot />
+          <BackgroundMusic 
+            audioSrc="/path-to-your-music-file.mp3" 
+            volume={0.2}
+            showControls={true}
+          />
         </AnalyticsProvider>
       </BrowserRouter>
     </TooltipProvider>
