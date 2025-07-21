@@ -5,10 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTimer } from "@/hooks/useTimer";
-import { Users, Crown, Coins, MessageSquare, Play, StopCircle, Clock } from "lucide-react";
+import { Users, Crown, Coins, MessageSquare, Play, StopCircle, Clock, ArrowLeft, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Room {
   id: string;
@@ -43,6 +45,7 @@ interface ParanoiaQuestion {
 
 export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: ParanoiaGameProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [availableQuestions, setAvailableQuestions] = useState<ParanoiaQuestion[]>([]);
   const [customQuestion, setCustomQuestion] = useState<string>("");
@@ -567,6 +570,87 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     }
   };
 
+  const backToLobby = async () => {
+    const newGameState = { phase: "lobby", currentQuestion: null, votes: {} };
+    
+    const { error } = await supabase
+      .from("rooms")
+      .update({
+        game_state: newGameState
+      })
+      .eq("id", room.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to return to lobby",
+        variant: "destructive",
+      });
+    } else {
+      // Update the room state immediately
+      const updatedRoom = {
+        ...room,
+        game_state: newGameState
+      };
+      onUpdateRoom(updatedRoom);
+    }
+  };
+
+  const transferHostAndLeave = async () => {
+    try {
+      // Find next player to be host (first non-current player)
+      const nextHost = players.find(p => p.player_id !== currentPlayer.player_id);
+      
+      if (nextHost) {
+        // Update all players - make next player host, remove current player
+        await supabase
+          .from("players")
+          .update({ is_host: true })
+          .eq("room_id", room.id)
+          .eq("player_id", nextHost.player_id);
+
+        // Update room host
+        await supabase
+          .from("rooms")
+          .update({ host_id: nextHost.player_id })
+          .eq("id", room.id);
+      }
+
+      // Remove current player
+      await supabase
+        .from("players")
+        .delete()
+        .eq("room_id", room.id)
+        .eq("player_id", currentPlayer.player_id);
+
+      // If only one player left or no next host, deactivate room
+      if (players.length <= 1 || !nextHost) {
+        await supabase
+          .from("rooms")
+          .update({ is_active: false })
+          .eq("id", room.id);
+      }
+
+      // Clear local storage
+      localStorage.removeItem("puzzz_player_id");
+      localStorage.removeItem("puzzz_player_name");
+
+      toast({
+        title: "Left Game",
+        description: nextHost ? `${nextHost.player_name} is now the host` : "Game ended",
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.error("Error leaving game:", error);
+      toast({
+        title: "Error",
+        description: "Failed to leave game",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getCurrentPlayerName = () => {
     if (!playerOrder || playerOrder.length === 0) return "Unknown";
     const currentPlayerId = playerOrder[currentTurnIndex];
@@ -790,6 +874,57 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
     
     return (
       <div className="space-y-6">
+        {/* Host Controls */}
+        {currentPlayer.is_host && (
+          <div className="fixed top-4 left-4 z-50 flex gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Lobby
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Return to Lobby</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Are you sure you want to return everyone to the lobby? This will end the current game.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm">Cancel</Button>
+                    <Button onClick={backToLobby} size="sm">Yes, Return to Lobby</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Leave Game
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Leave Game</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Are you sure you want to leave? Another player will become the new host.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm">Cancel</Button>
+                    <Button onClick={transferHostAndLeave} variant="destructive" size="sm">Yes, Leave Game</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 justify-between">

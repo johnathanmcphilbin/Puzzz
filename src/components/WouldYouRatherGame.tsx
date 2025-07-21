@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { useTimer } from "@/hooks/useTimer";
-import { ChevronRight, Users, RotateCcw, Trophy, Clock } from "lucide-react";
+import { ChevronRight, Users, RotateCcw, Trophy, Clock, ArrowLeft, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Room {
   id: string;
@@ -42,6 +44,7 @@ interface WouldYouRatherGameProps {
 }
 
 export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom }: WouldYouRatherGameProps) => {
+  const navigate = useNavigate();
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [votes, setVotes] = useState<Record<string, string>>({});
@@ -418,6 +421,61 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
     }
   };
 
+  const transferHostAndLeave = async () => {
+    try {
+      // Find next player to be host (first non-current player)
+      const nextHost = players.find(p => p.player_id !== currentPlayer.player_id);
+      
+      if (nextHost) {
+        // Update all players - make next player host, remove current player
+        await supabase
+          .from("players")
+          .update({ is_host: true })
+          .eq("room_id", room.id)
+          .eq("player_id", nextHost.player_id);
+
+        // Update room host
+        await supabase
+          .from("rooms")
+          .update({ host_id: nextHost.player_id })
+          .eq("id", room.id);
+      }
+
+      // Remove current player
+      await supabase
+        .from("players")
+        .delete()
+        .eq("room_id", room.id)
+        .eq("player_id", currentPlayer.player_id);
+
+      // If only one player left or no next host, deactivate room
+      if (players.length <= 1 || !nextHost) {
+        await supabase
+          .from("rooms")
+          .update({ is_active: false })
+          .eq("id", room.id);
+      }
+
+      // Clear local storage
+      localStorage.removeItem("puzzz_player_id");
+      localStorage.removeItem("puzzz_player_name");
+
+      toast({
+        title: "Left Game",
+        description: nextHost ? `${nextHost.player_name} is now the host` : "Game ended",
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.error("Error leaving game:", error);
+      toast({
+        title: "Error",
+        description: "Failed to leave game",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!currentQuestion) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -438,6 +496,57 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
+        {/* Host Controls */}
+        {currentPlayer.is_host && (
+          <div className="fixed top-4 left-4 z-50 flex gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Lobby
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Return to Lobby</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Are you sure you want to return everyone to the lobby? This will end the current game.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm">Cancel</Button>
+                    <Button onClick={backToLobby} size="sm">Yes, Return to Lobby</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Leave Game
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Leave Game</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Are you sure you want to leave? Another player will become the new host.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm">Cancel</Button>
+                    <Button onClick={transferHostAndLeave} variant="destructive" size="sm">Yes, Leave Game</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-4">
