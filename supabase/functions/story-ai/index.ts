@@ -11,6 +11,7 @@ const corsHeaders = {
 interface StoryRequest {
   type: 'initial_story' | 'continue_story' | 'final_summary';
   teamDescription?: string;
+  storyPlayers?: any[];
   storyHistory?: any[];
   playerAction?: string;
   catPerks?: string[];
@@ -33,9 +34,15 @@ serve(async (req) => {
       case 'initial_story':
         systemPrompt = `You are a fantasy storyteller creating an immersive adventure for a team of magical cats. Create engaging, family-friendly fantasy scenarios that are suitable for all ages. Focus on adventure, mystery, and teamwork. Always write in second person ("You find yourselves..."). Keep responses to 2-3 paragraphs maximum.`;
         
-        userPrompt = `Create the opening scene for a fantasy adventure featuring a team of magical cats. Team description: ${requestData.teamDescription || "A diverse group of magical cats with unique abilities"}. 
+        const storyPlayersInfo = requestData.storyPlayers ? 
+          requestData.storyPlayers.map((p: any) => `${p.player_name} (${p.cat_character?.name})`).join(', ') : 
+          requestData.teamDescription || "A diverse group of magical cats";
+        
+        userPrompt = `Create the opening scene for a fantasy adventure featuring these magical cats: ${storyPlayersInfo}. 
 
-Set up an engaging scenario that requires teamwork and adventure. End with a situation that prompts the first player to take action. Include mystical elements like ancient ruins, magical artifacts, or mysterious creatures.`;
+Set up an engaging scenario that requires teamwork and adventure. Describe the initial setting and situation clearly. End with a specific action prompt for the first player to respond to. Include mystical elements like ancient ruins, magical artifacts, or mysterious creatures.
+
+Important: End your response with a clear prompt like "What do you do?" or specify what action the cats should take first.`;
         break;
 
       case 'continue_story':

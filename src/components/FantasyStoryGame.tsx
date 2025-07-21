@@ -213,6 +213,18 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
   };
 
   const selectCat = async (catId: string) => {
+    // Check if cat is already taken by another player
+    const isCatTaken = storyPlayers.some(p => p.cat_character_id === catId && p.player_id !== currentPlayer.player_id);
+    
+    if (isCatTaken) {
+      toast({
+        title: "Cat Unavailable",
+        description: "This cat has already been chosen by another player.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!storySession) {
       await startNewStory();
       return;
@@ -316,7 +328,8 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
         },
         body: JSON.stringify({
           type: 'initial_story',
-          teamDescription: storySession.story_theme
+          teamDescription: storySession.story_theme,
+          storyPlayers: storyPlayers
         }),
       });
 
@@ -483,20 +496,31 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {catCharacters.map((cat) => (
-              <Card 
-                key={cat.id}
-                className={`cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${
-                  selectedCat === cat.id ? 'ring-2 ring-primary bg-primary/10' : ''
-                }`}
-                onClick={() => selectCat(cat.id)}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
-                      {cat.name.charAt(0)}
-                    </div>
-                    {cat.name}
+            {catCharacters.map((cat) => {
+              const isTaken = storyPlayers.some(p => p.cat_character_id === cat.id && p.player_id !== currentPlayer.player_id);
+              const takenBy = storyPlayers.find(p => p.cat_character_id === cat.id && p.player_id !== currentPlayer.player_id);
+              
+              return (
+                <Card 
+                  key={cat.id}
+                  className={`transition-all duration-300 ${
+                    isTaken ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 hover:shadow-lg'
+                  } ${
+                    selectedCat === cat.id ? 'ring-2 ring-primary bg-primary/10' : ''
+                  }`}
+                  onClick={() => !isTaken && selectCat(cat.id)}
+                >
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
+                        {cat.name.charAt(0)}
+                      </div>
+                      {cat.name}
+                      {isTaken && (
+                        <Badge variant="secondary" className="ml-auto">
+                          Taken by {takenBy?.player_name}
+                        </Badge>
+                      )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -538,8 +562,9 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
 
           {selectedCat && (
