@@ -163,6 +163,15 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
           setSelectedCat(currentStoryPlayer.cat_character_id);
         }
 
+        // Check if all players have selected cats and story should start
+        if (playersData && playersData.length === players.length && sessionData.status === 'active' && sessionData.current_turn === 0) {
+          // All players have cats and story hasn't started yet
+          const hasInitialStory = await checkForInitialStory(sessionData.id);
+          if (!hasInitialStory) {
+            await generateInitialStory();
+          }
+        }
+
         // Load story turns
         loadStoryTurns(sessionData.id);
       }
@@ -261,10 +270,8 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
 
       setSelectedCat(catId);
       
-      // Check if we should start the story
-      if (storyPlayers.length + 1 >= players.length) {
-        await generateInitialStory();
-      }
+      // Reload story players to get the most current state
+      await checkExistingSession();
       
       toast({
         title: "Cat Selected!",
@@ -312,6 +319,23 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
         description: "Failed to start story session",
         variant: "destructive",
       });
+    }
+  };
+
+  const checkForInitialStory = async (sessionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("story_turns")
+        .select("id")
+        .eq("story_session_id", sessionId)
+        .eq("turn_number", 0)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    } catch (error) {
+      console.error("Error checking for initial story:", error);
+      return false;
     }
   };
 
@@ -492,6 +516,9 @@ export const FantasyStoryGame = ({ room, players, currentPlayer }: FantasyStoryG
             </h1>
             <p className="text-lg text-muted-foreground">
               Choose your magical cat companion for this epic journey
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Waiting for all players to select their cats ({storyPlayers.length}/{players.length} selected)
             </p>
           </div>
 
