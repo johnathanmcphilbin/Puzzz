@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTimer } from "@/hooks/useTimer";
 import { Users, Crown, Coins, MessageSquare, Play, StopCircle, Clock, ArrowLeft, LogOut } from "lucide-react";
+import { CoinFlip3D } from "./CoinFlip3D";
 import { useNavigate } from "react-router-dom";
 
 interface Room {
@@ -1354,7 +1355,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                 <p className="text-lg">{currentAnswer}</p>
               </div>
               
-              {/* Enhanced Coin Animation */}
+              {/* Enhanced 3D Coin Animation */}
               <div className="relative py-8">
                 {/* Background spotlight effect */}
                 <div className={`absolute inset-0 transition-all duration-1000 ${
@@ -1363,39 +1364,14 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
                     : 'bg-transparent'
                 }`} />
                 
-                {/* Main coin container */}
+                {/* 3D Coin */}
                 <div className="relative flex justify-center">
-                  <div className={`
-                    relative w-24 h-24 rounded-full transition-all duration-1000
-                    ${isCurrentlyFlipping 
-                      ? 'animate-[spin_0.8s_ease-in-out_infinite] scale-125' 
-                      : 'scale-100'
-                    }
-                  `}>
-                    {/* Coin face */}
-                    <div className={`
-                      absolute inset-0 rounded-full border-4 border-primary
-                      bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600
-                      shadow-lg transition-all duration-500
-                      ${isCurrentlyFlipping ? 'shadow-2xl shadow-primary/50' : ''}
-                    `}>
-                      {/* Coin design */}
-                      <div className="absolute inset-2 rounded-full border-2 border-yellow-600/30 flex items-center justify-center">
-                        <div className="text-2xl font-bold text-yellow-800">
-                          {isCurrentlyFlipping ? '⚡' : '🪙'}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Spinning particles */}
-                    {isCurrentlyFlipping && (
-                      <>
-                        <div className="absolute -inset-4 rounded-full border border-primary/30 animate-ping" />
-                        <div className="absolute -inset-8 rounded-full border border-primary/20 animate-ping animation-delay-200" />
-                        <div className="absolute -inset-12 rounded-full border border-primary/10 animate-ping animation-delay-400" />
-                      </>
-                    )}
-                  </div>
+                  <CoinFlip3D 
+                    isFlipping={isCurrentlyFlipping}
+                    onFlipComplete={(result) => {
+                      console.log("3D Coin flip result:", result);
+                    }}
+                  />
                 </div>
                 
                 {/* Dramatic text */}
