@@ -91,20 +91,37 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     }
   }, [timeLeft, phase]);
 
-  // Load questions and set up real-time subscriptions
+  // Load questions and set up game state sync
   useEffect(() => {
     if (phase === "setup" && currentPlayer.is_host) {
       loadRandomQuestion();
     }
-  }, [phase, currentPlayer.is_host]);
+    
+    // Sync question from game state if not host
+    if (gameState.question && !currentQuestion) {
+      setCurrentQuestion(gameState.question);
+    }
+    
+    // Sync other game state
+    if (gameState.player_answers) {
+      setPlayerAnswers(gameState.player_answers);
+    }
+    if (gameState.player_defenses) {
+      setPlayerDefenses(gameState.player_defenses);
+    }
+    if (gameState.votes) {
+      setVotes(gameState.votes);
+    }
+    if (gameState.scores) {
+      setScores(gameState.scores);
+    }
+  }, [phase, currentPlayer.is_host, gameState]);
 
   const loadRandomQuestion = async () => {
     try {
       const { data: questions, error } = await supabase
         .from('odd_one_out_questions')
-        .select('*')
-        .order('random()')
-        .limit(1);
+        .select('*');
       
       if (error) {
         console.error("Error loading questions:", error);
@@ -112,25 +129,60 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       }
       
       if (questions && questions.length > 0) {
-        setCurrentQuestion(questions[0]);
+        // Pick a random question from the results
+        const randomIndex = Math.floor(Math.random() * questions.length);
+        const selectedQuestion = questions[randomIndex];
+        setCurrentQuestion(selectedQuestion);
       } else {
         // Fallback if no questions in database
-        setCurrentQuestion({
-          id: 'fallback-1',
-          normal_prompt: 'Name something you might find in a kitchen',
-          imposter_prompt: 'Name something you might find in a bathroom', 
-          category: 'household'
-        });
+        const fallbackQuestions = [
+          {
+            id: 'fallback-1',
+            normal_prompt: 'Name something you might find in a kitchen',
+            imposter_prompt: 'Name something you might find in a bathroom', 
+            category: 'household'
+          },
+          {
+            id: 'fallback-2',
+            normal_prompt: 'Name a type of vehicle',
+            imposter_prompt: 'Name a type of animal', 
+            category: 'general'
+          },
+          {
+            id: 'fallback-3',
+            normal_prompt: 'Name something cold',
+            imposter_prompt: 'Name something hot', 
+            category: 'temperature'
+          }
+        ];
+        const randomFallback = fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
+        setCurrentQuestion(randomFallback);
       }
     } catch (error) {
       console.error("Error loading question:", error);
       // Use fallback question
-      setCurrentQuestion({
-        id: 'fallback-1',
-        normal_prompt: 'Name something you might find in a kitchen',
-        imposter_prompt: 'Name something you might find in a bathroom', 
-        category: 'household'
-      });
+      const fallbackQuestions = [
+        {
+          id: 'fallback-1',
+          normal_prompt: 'Name something you might find in a kitchen',
+          imposter_prompt: 'Name something you might find in a bathroom', 
+          category: 'household'
+        },
+        {
+          id: 'fallback-2',
+          normal_prompt: 'Name a type of vehicle',
+          imposter_prompt: 'Name a type of animal', 
+          category: 'general'
+        },
+        {
+          id: 'fallback-3',
+          normal_prompt: 'Name something cold',
+          imposter_prompt: 'Name something hot', 
+          category: 'temperature'
+        }
+      ];
+      const randomFallback = fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
+      setCurrentQuestion(randomFallback);
       toast({
         title: "Error loading question",
         description: "Using fallback question.",
@@ -431,7 +483,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-primary">Odd One Out</h1>
-              <p className="text-muted-foreground">Puzzz Edition</p>
+              <p className="text-muted-foreground">Find the hidden imposter</p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate('/')}>
