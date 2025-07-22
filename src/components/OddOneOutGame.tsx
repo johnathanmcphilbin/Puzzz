@@ -100,32 +100,37 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
 
   const loadRandomQuestion = async () => {
     try {
-      // Use fallback questions since we don't have the table set up yet
-      const fallbackQuestions: OddOneOutQuestion[] = [
-        {
+      const { data: questions, error } = await supabase
+        .from('odd_one_out_questions')
+        .select('*')
+        .order('random()')
+        .limit(1);
+      
+      if (error) {
+        console.error("Error loading questions:", error);
+        throw error;
+      }
+      
+      if (questions && questions.length > 0) {
+        setCurrentQuestion(questions[0]);
+      } else {
+        // Fallback if no questions in database
+        setCurrentQuestion({
           id: 'fallback-1',
           normal_prompt: 'Name something you might find in a kitchen',
           imposter_prompt: 'Name something you might find in a bathroom', 
           category: 'household'
-        },
-        {
-          id: 'fallback-2',
-          normal_prompt: 'Name a type of fruit',
-          imposter_prompt: 'Name a type of vegetable',
-          category: 'food'
-        },
-        {
-          id: 'fallback-3',
-          normal_prompt: 'Name something you wear on your feet',
-          imposter_prompt: 'Name something you wear on your hands',
-          category: 'clothing'
-        }
-      ];
-      
-      const randomQuestion = fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
-      setCurrentQuestion(randomQuestion);
+        });
+      }
     } catch (error) {
       console.error("Error loading question:", error);
+      // Use fallback question
+      setCurrentQuestion({
+        id: 'fallback-1',
+        normal_prompt: 'Name something you might find in a kitchen',
+        imposter_prompt: 'Name something you might find in a bathroom', 
+        category: 'household'
+      });
       toast({
         title: "Error loading question",
         description: "Using fallback question.",

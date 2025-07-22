@@ -198,6 +198,30 @@ export type Database = {
           },
         ]
       }
+      odd_one_out_questions: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          imposter_prompt: string
+          normal_prompt: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          imposter_prompt: string
+          normal_prompt: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          imposter_prompt?: string
+          normal_prompt?: string
+        }
+        Relationships: []
+      }
       paranoia_questions: {
         Row: {
           category: string | null
