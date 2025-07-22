@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 
@@ -22,7 +22,20 @@ export const BackgroundMusic: React.FC<BackgroundMusicProps> = ({
   }
 
   return (
-    <div className="fixed top-4 left-4 z-40">
+    <div className="fixed top-4 left-4 z-40 flex gap-2">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={togglePlay}
+        className="bg-background/80 backdrop-blur-sm"
+        title={isPlaying ? 'Pause music' : 'Play music'}
+      >
+        {isPlaying ? (
+          <Pause className="h-4 w-4" />
+        ) : (
+          <Play className="h-4 w-4" />
+        )}
+      </Button>
       <Button
         variant="outline"
         size="icon"

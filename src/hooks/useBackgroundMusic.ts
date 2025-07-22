@@ -7,6 +7,7 @@ export const useBackgroundMusic = (audioSrc: string, volume: number = 0.3) => {
   const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
+    console.log('Creating audio element with source:', audioSrc);
     // Create audio element
     audioRef.current = new Audio(audioSrc);
     audioRef.current.loop = true;
@@ -15,7 +16,9 @@ export const useBackgroundMusic = (audioSrc: string, volume: number = 0.3) => {
     // Auto-play when component mounts (with user interaction)
     const playAudio = async () => {
       try {
+        console.log('Attempting to play audio:', audioSrc);
         await audioRef.current?.play();
+        console.log('Audio started playing');
         setIsPlaying(true);
       } catch (error) {
         console.log('Auto-play prevented by browser policy:', error);
