@@ -6,6 +6,7 @@ import { RoomLobby } from "@/components/RoomLobby";
 import { WouldYouRatherGame } from "@/components/WouldYouRatherGame";
 
 import { ParanoiaGame } from "@/components/ParanoiaGame";
+import { OddOneOutGame } from "@/components/OddOneOutGame";
 import AIChatbot from "@/components/AIChatbot";
 import { Loader2 } from "lucide-react";
 
@@ -258,6 +259,13 @@ export const Room = () => {
         />
       ) : currentGame === "paranoia" ? (
         <ParanoiaGame 
+          room={room} 
+          players={players} 
+          currentPlayer={currentPlayer}
+          onUpdateRoom={setRoom}
+        />
+      ) : currentGame === "odd-one-out" ? (
+        <OddOneOutGame 
           room={room} 
           players={players} 
           currentPlayer={currentPlayer}
