@@ -226,6 +226,81 @@ const Index = () => {
               </div>
             </Card>
 
+            {/* Odd One Out Game */}
+            <Card 
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20 overflow-hidden h-full"
+              onClick={() => handleGameClick("odd_one_out")}
+            >
+              <div className="aspect-video bg-gradient-to-br from-amber-500 to-orange-600 relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <img 
+                    src="/lovable-uploads/97e3edcc-c426-4315-8b63-294a6edaf30b.png" 
+                    alt="Odd One Out - Detective puzzle game"
+                    className="w-full h-full object-cover object-center"
+                    style={{ objectPosition: 'center 50%' }}
+                  />
+                </div>
+                <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                    NEW
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Odd One Out</CardTitle>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Odd One Out - Puzzz Edition</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            Everyone gets the same prompt except one secret Imposter who gets a twist! Answer, defend your choice, then vote to find the Imposter.
+                          </p>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">How to Play:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Everyone gets a prompt (except the Imposter gets a different one)</li>
+                              <li>• Pick any word or phrase that fits your prompt</li>
+                              <li>• Defend your answer (30 seconds max)</li>
+                              <li>• Discuss and vote for the suspected Imposter (2 min)</li>
+                              <li>• Reveal results and score points</li>
+                            </ul>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Scoring:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Right guess: players get +1 ★ each</li>
+                              <li>• Wrong guess: Imposter gets +2 ★</li>
+                              <li>• Perfect for 3+ players</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <span>Detective Game</span>
+                    <span>•</span>
+                    <span>3+ Players</span>
+                  </div>
+                </CardHeader>
+              </div>
+            </Card>
+
           </div>
         </div>
       </div>
