@@ -823,34 +823,61 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
             strokeDasharray="5,5"
           />
           
-          {playerOrder.map((playerId, index) => {
-            const player = players.find(p => p.player_id === playerId);
-            const { x, y } = getPlayerCirclePosition(index, playerOrder.length);
-            const isCurrentTurn = index === currentTurnIndex;
-            const isTarget = playerId === gameState.targetPlayerId;
-            const isQuestionAsker = showSpeechBubbles && index === questionAskerIndex;
-            const isAnswerTarget = showSpeechBubbles && index === answerPlayerIndex;
-            
-            return (
-              <g key={playerId}>
-                <circle
-                  cx={160 + x}
-                  cy={160 + y}
-                  r="20"
-                  fill={isCurrentTurn ? "hsl(var(--primary))" : isTarget ? "hsl(var(--destructive))" : "hsl(var(--muted))"}
-                  stroke={isCurrentTurn || isTarget ? "hsl(var(--background))" : "hsl(var(--border))"}
-                  strokeWidth="2"
-                  className={`transition-all duration-500 ${isCurrentTurn ? 'animate-pulse' : ''}`}
-                />
-                
-                <text
-                  x={160 + x}
-                  y={160 + y + 40}
-                  textAnchor="middle"
-                  className="text-xs font-medium fill-foreground"
-                >
-                  {player?.player_name}
-                </text>
+           {playerOrder.map((playerId, index) => {
+             const player = players.find(p => p.player_id === playerId);
+             const playerCharacter = player?.selected_character_id ? characterData[player.selected_character_id] : null;
+             const { x, y } = getPlayerCirclePosition(index, playerOrder.length);
+             const isCurrentTurn = index === currentTurnIndex;
+             const isTarget = playerId === gameState.targetPlayerId;
+             const isQuestionAsker = showSpeechBubbles && index === questionAskerIndex;
+             const isAnswerTarget = showSpeechBubbles && index === answerPlayerIndex;
+             
+             return (
+               <g key={playerId}>
+                 {/* Cat icon background circle */}
+                 <circle
+                   cx={160 + x}
+                   cy={160 + y}
+                   r="22"
+                   fill={isCurrentTurn ? "hsl(var(--primary))" : isTarget ? "hsl(var(--destructive))" : "hsl(var(--muted))"}
+                   stroke={isCurrentTurn || isTarget ? "hsl(var(--background))" : "hsl(var(--border))"}
+                   strokeWidth="3"
+                   className={`transition-all duration-500 ${isCurrentTurn ? 'animate-pulse' : ''}`}
+                 />
+                 
+                 {/* Cat icon */}
+                 {playerCharacter && (
+                   <image
+                     x={160 + x - 18}
+                     y={160 + y - 18}
+                     width="36"
+                     height="36"
+                     href={getCatImageUrl(playerCharacter.icon_url)}
+                     className="rounded-full"
+                     clipPath="circle(18px at 18px 18px)"
+                   />
+                 )}
+                 
+                 {/* Fallback initial if no character */}
+                 {!playerCharacter && (
+                   <text
+                     x={160 + x}
+                     y={160 + y + 6}
+                     textAnchor="middle"
+                     className="text-lg font-bold fill-background"
+                   >
+                     {player?.player_name?.charAt(0)?.toUpperCase()}
+                   </text>
+                 )}
+                 
+                 <text
+                   x={160 + x}
+                   y={160 + y + 45}
+                   textAnchor="middle"
+                   className="text-xs font-medium fill-foreground"
+                 >
+                   {player?.player_name}
+                 </text>
                 
                 {isCurrentTurn && phase === "playing" && (
                   <path
