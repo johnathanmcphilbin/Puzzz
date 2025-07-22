@@ -33,7 +33,7 @@ const App = () => (
           </Routes>
           <AIChatbot />
           <BackgroundMusic 
-            audioSrc="/Puzzzz music mp3.mp3" 
+            audioSrc="/puzzzz-music.mp3" 
             volume={0.2}
             showControls={true}
           />
