@@ -264,7 +264,7 @@ export const Room = () => {
           currentPlayer={currentPlayer}
           onUpdateRoom={setRoom}
         />
-      ) : currentGame === "odd-one-out" ? (
+      ) : (currentGame === "odd_one_out" || currentGame === "odd-one-out") ? (
         <OddOneOutGame 
           room={room} 
           players={players} 

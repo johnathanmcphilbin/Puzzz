@@ -138,7 +138,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
      if (!currentPlayer.is_host) return;
 
      // Check minimum players for games that require them
-     if ((selectedGame === "paranoia" || selectedGame === "odd-one-out") && players.length < 3) {
+     if ((selectedGame === "paranoia" || selectedGame === "odd_one_out" || selectedGame === "odd-one-out") && players.length < 3) {
        const gameTitle = selectedGame === "paranoia" ? "Paranoia" : "Odd One Out";
        toast({
          title: "Not Enough Players",
@@ -152,21 +152,21 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     try {
       const { error } = await supabase
         .from("rooms")
-        .update({
-          current_game: selectedGame,
-          game_state: {
-            phase: "playing",
-            currentQuestion: null,
-            questionIndex: 0,
-            votes: {},
-            showResults: false
-          }
-        })
+         .update({
+           current_game: selectedGame,
+           game_state: {
+             phase: (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "setup" : "playing",
+             currentQuestion: null,
+             questionIndex: 0,
+             votes: {},
+             showResults: false
+           }
+         })
         .eq("id", room.id);
 
       if (error) throw error;
 
-      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : selectedGame === "odd-one-out" ? "Odd One Out" : "Would You Rather";
+      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : "Would You Rather";
       
       toast({
         title: "Game Started!",
@@ -428,10 +428,10 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                  <div 
                    className={`relative p-4 border rounded-lg transition-all ${
                      currentPlayer.is_host
-                       ? `cursor-pointer ${selectedGame === "odd-one-out" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                       ? `cursor-pointer ${selectedGame === "odd_one_out" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
                        : "border-muted"
                    }`}
-                   onClick={() => currentPlayer.is_host && setSelectedGame("odd-one-out")}
+                   onClick={() => currentPlayer.is_host && setSelectedGame("odd_one_out")}
                  >
                    <div className="flex items-center justify-between">
                       <div>
@@ -450,7 +450,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                 {currentPlayer.is_host ? (
                    <Button 
                      onClick={startGame} 
-                     disabled={isStarting || players.length < 2 || ((selectedGame === "paranoia" || selectedGame === "odd-one-out") && players.length < 3)}
+                     disabled={isStarting || players.length < 2 || ((selectedGame === "paranoia" || selectedGame === "odd_one_out" || selectedGame === "odd-one-out") && players.length < 3)}
                      className="flex-1 gap-2"
                    >
                     {isStarting ? (
