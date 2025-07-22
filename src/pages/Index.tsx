@@ -226,13 +226,12 @@ const Index = () => {
               </div>
             </Card>
 
-            {/* Odd One Out Game */}
+            {/* Odd One Out Game - Coming Soon */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20 overflow-hidden h-full"
-              onClick={() => handleGameClick("odd_one_out")}
+              className="group transition-all duration-300 border-0 bg-gradient-to-br from-amber-500/10 to-orange-600/10 overflow-hidden h-full opacity-60 cursor-not-allowed"
             >
-              <div className="aspect-video bg-gradient-to-br from-amber-500 to-orange-600 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
+              <div className="aspect-video bg-gradient-to-br from-amber-500/50 to-orange-600/50 relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/60" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
                     src="/lovable-uploads/97e3edcc-c426-4315-8b63-294a6edaf30b.png" 
@@ -242,8 +241,8 @@ const Index = () => {
                   />
                 </div>
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
-                    NEW
+                  <span className="bg-yellow-500 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                    COMING SOON
                   </span>
                 </div>
               </div>
