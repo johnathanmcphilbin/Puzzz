@@ -124,8 +124,17 @@ serve(async (req) => {
     
     console.log('OpenAI response:', generatedText);
 
-    // Parse the generated questions
-    const questions = JSON.parse(generatedText);
+    // Clean and parse the generated questions
+    let questions;
+    try {
+      // Remove any markdown code blocks or extra text
+      const cleanedText = generatedText.replace(/```json\n?/, '').replace(/```\n?$/, '').trim();
+      questions = JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response as JSON:', parseError);
+      console.error('Raw response:', generatedText);
+      throw new Error('AI response was not valid JSON. Please try again.');
+    }
 
     // Store Would You Rather questions
     if (questions.would_you_rather && Array.isArray(questions.would_you_rather)) {
