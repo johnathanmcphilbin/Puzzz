@@ -51,7 +51,7 @@ const Index = () => {
           </div>
           
           {/* Title Card Widget */}
-          <Card className="mx-auto max-w-2xl mb-6 bg-card border-2 shadow-lg">
+          <Card className="mx-auto max-w-2xl mb-6 bg-background/80 md:bg-card border-2 shadow-lg backdrop-blur-sm">
             <CardHeader className="pb-4">
               <div className="flex justify-center">
                 <img 
@@ -60,7 +60,7 @@ const Index = () => {
                   className="max-w-full h-auto"
                 />
               </div>
-              <CardDescription className="text-base md:text-xl text-muted-foreground px-4">
+              <CardDescription className="text-base md:text-xl text-foreground/90 md:text-muted-foreground px-4">
                 The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
               </CardDescription>
             </CardHeader>
