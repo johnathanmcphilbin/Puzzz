@@ -57,6 +57,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
   const [myDefense, setMyDefense] = useState("");
   const [selectedVote, setSelectedVote] = useState("");
   const [scores, setScores] = useState<{ [playerId: string]: number }>({});
+  const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
   
   // Game state from room
   const gameState = room.game_state || {};
@@ -65,6 +66,34 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
   const currentDefendingPlayer = gameState.current_defending_player;
   const roundNumber = gameState.round_number || 1;
   
+  // Load character data for players
+  useEffect(() => {
+    const loadCharacterData = async () => {
+      const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
+      if (characterIds.length === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('cat_characters')
+          .select('*')
+          .in('id', characterIds);
+
+        if (error) throw error;
+
+        const characterMap = data?.reduce((acc, char) => {
+          acc[char.id] = char;
+          return acc;
+        }, {} as any) || {};
+
+        setCharacterData(characterMap);
+      } catch (error) {
+        console.error('Error loading character data:', error);
+      }
+    };
+
+    loadCharacterData();
+  }, [players]);
+
   // Timer for defense phase (30 seconds) and discussion phase (2 minutes)
   const { time: timeLeft, start: startTimer, stop: stopTimer, reset: resetTimer } = useTimer({ initialTime: 30 });
 
@@ -453,21 +482,27 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
   };
 
   const renderPlayerIcon = (player: Player, isActive = false) => {
-    const iconUrl = player.selected_character_id;
-    const catImageSrc = getCatImageUrl(iconUrl);
+    const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+    const catImageSrc = playerCharacter ? getCatImageUrl(playerCharacter.icon_url) : '/placeholder.svg';
     
     return (
       <div className={`relative w-16 h-16 rounded-full border-4 transition-all ${
         isActive ? 'border-primary shadow-lg scale-110' : 'border-muted-foreground/20'
       }`}>
-        <img
-          src={catImageSrc}
-          alt={player.player_name}
-          className="w-full h-full rounded-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = '/placeholder.svg';
-          }}
-        />
+        {playerCharacter ? (
+          <div className="w-full h-full rounded-full overflow-hidden bg-white">
+            <img
+              src={catImageSrc}
+              alt={playerCharacter.name}
+              className="w-full h-full object-contain p-0.5"
+              loading="eager"
+            />
+          </div>
+        ) : (
+          <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
+            {player.player_name.charAt(0).toUpperCase()}
+          </div>
+        )}
         {player.is_host && (
           <Crown className="absolute -top-2 -right-2 w-6 h-6 text-yellow-500" />
         )}
