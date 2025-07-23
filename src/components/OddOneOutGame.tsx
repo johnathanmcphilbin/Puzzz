@@ -470,8 +470,12 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="text-center sm:text-left">
-              <h1 className="text-2xl sm:text-3xl font-bold text-primary">Odd One Out</h1>
-              <p className="text-sm sm:text-base text-muted-foreground">Find the hidden imposter</p>
+              <img 
+                src="/lovable-uploads/dd1034bf-7d64-44cc-bf4d-94af9f1fadbd.png" 
+                alt="Odd One Out"
+                className="h-16 sm:h-20 mx-auto sm:mx-0"
+              />
+              <p className="text-sm sm:text-base text-muted-foreground mt-2">Find the hidden imposter</p>
             </div>
             <div className="flex items-center justify-center sm:justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate('/')}>
