@@ -53,9 +53,13 @@ const Index = () => {
           {/* Title Card Widget */}
           <Card className="mx-auto max-w-2xl mb-6 bg-card border-2 shadow-lg">
             <CardHeader className="pb-4">
-              <CardTitle className="text-3xl md:text-5xl font-pixel text-foreground tracking-wider leading-relaxed">
-                PUZZZZ
-              </CardTitle>
+              <div className="flex justify-center">
+                <img 
+                  src="/lovable-uploads/07a428ab-970b-4f1b-b39f-9e5da2577609.png" 
+                  alt="PUZZZZ - Design Your Own Chaos"
+                  className="max-w-full h-auto"
+                />
+              </div>
               <CardDescription className="text-base md:text-xl text-muted-foreground px-4">
                 The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
               </CardDescription>
