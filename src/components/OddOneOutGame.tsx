@@ -483,28 +483,32 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
 
   const renderPlayerIcon = (player: Player, isActive = false) => {
     const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
-    const catImageSrc = playerCharacter ? getCatImageUrl(playerCharacter.icon_url) : '/placeholder.svg';
+    const catImageSrc = playerCharacter ? getCatImageUrl(playerCharacter.icon_url) : null;
     
     return (
-      <div className={`relative w-16 h-16 rounded-full border-4 transition-all ${
+      <div className={`relative w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full border-2 sm:border-4 transition-all ${
         isActive ? 'border-primary shadow-lg scale-110' : 'border-muted-foreground/20'
       }`}>
-        {playerCharacter ? (
+        {playerCharacter && catImageSrc ? (
           <div className="w-full h-full rounded-full overflow-hidden bg-white">
             <img
               src={catImageSrc}
               alt={playerCharacter.name}
               className="w-full h-full object-contain p-0.5"
               loading="eager"
+              onError={(e) => {
+                console.error('Failed to load cat image:', catImageSrc);
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </div>
         ) : (
-          <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
+          <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold text-xs sm:text-sm">
             {player.player_name.charAt(0).toUpperCase()}
           </div>
         )}
         {player.is_host && (
-          <Crown className="absolute -top-2 -right-2 w-6 h-6 text-yellow-500" />
+          <Crown className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-3 h-3 sm:w-6 sm:h-6 text-yellow-500" />
         )}
       </div>
     );
@@ -512,35 +516,37 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
 
   if (phase === "setup") {
     return (
-      <div className="min-h-screen gradient-bg p-4">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="min-h-screen gradient-bg p-2 sm:p-4">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-primary">Odd One Out</h1>
-              <p className="text-muted-foreground">Find the hidden imposter</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary">Odd One Out</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Find the hidden imposter</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center sm:justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate('/')}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Lobby
+                <span className="hidden sm:inline">Back to Lobby</span>
+                <span className="sm:hidden">Back</span>
               </Button>
               <Button variant="outline" size="sm" onClick={leaveGame}>
                 <LogOut className="w-4 h-4 mr-2" />
-                Leave Game
+                <span className="hidden sm:inline">Leave Game</span>
+                <span className="sm:hidden">Leave</span>
               </Button>
             </div>
           </div>
 
           {/* Quick Rules */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="text-center space-y-2 sm:space-y-3">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Everyone gets the same prompt except one secret <strong>Imposter</strong> who gets a different one. 
                   Answer, defend your choice briefly, then vote to find the Imposter!
                 </p>
-                <div className="flex justify-center gap-4 text-xs">
+                <div className="flex justify-center gap-2 sm:gap-4 text-xs">
                   <span className="text-green-600">Find Imposter: +1⭐ each</span>
                   <span className="text-red-600">Imposter wins: +2⭐</span>
                 </div>
@@ -550,13 +556,17 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
 
           {/* Players */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-wrap justify-center gap-3">
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-2 sm:gap-3">
                 {players.map((player) => (
-                  <div key={player.id} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
-                    {renderPlayerIcon(player)}
-                    <span className="text-sm font-medium">{player.player_name}</span>
-                    {player.is_host && <Crown className="w-3 h-3 text-amber-500" />}
+                  <div key={player.id} className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 bg-muted rounded-lg p-2 sm:px-3 sm:py-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      {renderPlayerIcon(player)}
+                      <div className="text-center sm:text-left">
+                        <span className="text-xs sm:text-sm font-medium block">{player.player_name}</span>
+                        {player.is_host && <Crown className="w-3 h-3 text-amber-500 mx-auto sm:mx-0" />}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -566,7 +576,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
           {/* Start Game */}
           {currentPlayer.is_host && (
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-4 sm:pt-6">
                 <div className="text-center">
                   <Button 
                     onClick={startGame} 
@@ -574,11 +584,11 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
                     disabled={players.length < 3 || !currentQuestion}
                     className="w-full max-w-md"
                   >
-                    <Play className="w-5 h-5 mr-2" />
+                    <Play className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
                     Start Odd One Out
                   </Button>
                   {players.length < 3 && (
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                       Need at least 3 players to start
                     </p>
                   )}
@@ -597,18 +607,18 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     const answeredCount = Object.keys(gameState.player_answers || {}).length;
     
     return (
-      <div className="min-h-screen gradient-bg p-4">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <div className="min-h-screen gradient-bg p-2 sm:p-4">
+        <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-primary">Round {roundNumber}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary">Round {roundNumber}</h1>
             <div className="flex items-center justify-center gap-2">
-              <Badge variant={isImposter ? "destructive" : "default"}>
+              <Badge variant={isImposter ? "destructive" : "default"} className="text-xs sm:text-sm">
                 {isImposter ? "🎭 You are the IMPOSTER!" : "🕵️ Find the imposter"}
               </Badge>
             </div>
             <Progress value={(answeredCount / players.length) * 100} className="w-full" />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {answeredCount} of {players.length} players have answered
             </p>
           </div>
@@ -619,7 +629,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
               <CardTitle className="text-center">Your Prompt</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-lg font-medium p-4 bg-muted rounded-lg">
+              <p className="text-base sm:text-lg font-medium p-3 sm:p-4 bg-muted rounded-lg">
                 {myPrompt}
               </p>
               {isImposter && (
@@ -678,12 +688,12 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
               <CardTitle>Players</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap justify-center gap-4">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-2 sm:gap-4">
                 {players.map((player) => (
-                  <div key={player.id} className="flex flex-col items-center gap-2">
+                  <div key={player.id} className="flex flex-col items-center gap-1 sm:gap-2">
                     {renderPlayerIcon(player, gameState.player_answers?.[player.player_id])}
-                    <span className="text-sm font-medium">{player.player_name}</span>
-                    <Badge variant={gameState.player_answers?.[player.player_id] ? "default" : "outline"}>
+                    <span className="text-xs sm:text-sm font-medium text-center">{player.player_name}</span>
+                    <Badge variant={gameState.player_answers?.[player.player_id] ? "default" : "outline"} className="text-xs">
                       {gameState.player_answers?.[player.player_id] ? "Done" : "Thinking..."}
                     </Badge>
                   </div>
