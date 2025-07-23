@@ -424,17 +424,22 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                   </div>
                  </div>
 
-                  {/* Odd One Out Game - Coming Soon */}
+                  {/* Odd One Out Game */}
                   <div 
-                    className="relative p-4 border rounded-lg border-muted opacity-60 cursor-not-allowed bg-muted/50"
+                    className={`relative p-4 border rounded-lg transition-all ${
+                      currentPlayer.is_host
+                        ? `cursor-pointer ${selectedGame === "odd-one-out" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                        : "border-muted"
+                    }`}
+                    onClick={() => currentPlayer.is_host && setSelectedGame("odd-one-out")}
                   >
                     <div className="flex items-center justify-between">
                        <div>
-                         <h4 className="font-semibold text-muted-foreground">Odd One Out</h4>
-                         <p className="text-sm text-muted-foreground">Coming Soon - Stay Tuned!</p>
+                         <h4 className="font-semibold">Odd One Out</h4>
+                         <p className="text-sm text-muted-foreground">Find the imposter (3+ players)</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-muted rounded text-xs flex items-center justify-center text-muted-foreground font-bold">🎭</div>
+                        <div className="w-6 h-6 bg-amber-500 rounded text-xs flex items-center justify-center text-white font-bold">🎭</div>
                      </div>
                    </div>
                  </div>

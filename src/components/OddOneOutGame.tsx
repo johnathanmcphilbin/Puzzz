@@ -497,38 +497,17 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
             </div>
           </div>
 
-          {/* Game Rules */}
+          {/* Quick Rules */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Quick Rules
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-semibold">1. Get Prompts</h4>
-                  <p className="text-sm text-muted-foreground">Everyone gets the same question—except one secret Imposter, who gets a twist.</p>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold">2. Pick Your Answer</h4>
-                  <p className="text-sm text-muted-foreground">Choose any word or phrase that fits your prompt.</p>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold">3. Defend It (30 sec max)</h4>
-                  <p className="text-sm text-muted-foreground">One by one, give a brief reason for your choice. Imposter: blend in!</p>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold">4. Discuss & Vote (2 min cap)</h4>
-                  <p className="text-sm text-muted-foreground">Chat, point fingers, then vote for the suspected Imposter.</p>
-                </div>
-              </div>
-              <div className="pt-4 border-t">
-                <h4 className="font-semibold mb-2">Scoring:</h4>
-                <div className="flex gap-4 text-sm">
-                  <span className="text-green-600">Right guess: Players +1 ⭐ each</span>
-                  <span className="text-red-600">Wrong guess: Imposter +2 ⭐</span>
+            <CardContent className="pt-6">
+              <div className="text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Everyone gets the same prompt except one secret <strong>Imposter</strong> who gets a different one. 
+                  Answer, defend your choice briefly, then vote to find the Imposter!
+                </p>
+                <div className="flex justify-center gap-4 text-xs">
+                  <span className="text-green-600">Find Imposter: +1⭐ each</span>
+                  <span className="text-red-600">Imposter wins: +2⭐</span>
                 </div>
               </div>
             </CardContent>
@@ -536,19 +515,13 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
 
           {/* Players */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Players ({players.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4">
+            <CardContent className="pt-6">
+              <div className="flex flex-wrap justify-center gap-3">
                 {players.map((player) => (
-                  <div key={player.id} className="flex flex-col items-center gap-2">
+                  <div key={player.id} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
                     {renderPlayerIcon(player)}
                     <span className="text-sm font-medium">{player.player_name}</span>
-                    {player.is_host && <Badge variant="secondary">Host</Badge>}
+                    {player.is_host && <Crown className="w-3 h-3 text-amber-500" />}
                   </div>
                 ))}
               </div>
