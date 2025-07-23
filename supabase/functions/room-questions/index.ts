@@ -56,7 +56,7 @@ serve(async (req) => {
     - 61-80%: Create dramatic, bold questions that push boundaries
     - 81-100%: Go wild with outrageous, extreme, and highly dramatic scenarios
     
-    Generate 25 Would You Rather questions and 20 Paranoia questions.
+    Generate 25 Would You Rather questions, 20 Paranoia questions, and 15 Odd One Out questions.
     
     CRITICAL: DO NOT include "Would you rather" in the options themselves. Only provide the choice content.
     
@@ -74,6 +74,13 @@ serve(async (req) => {
     
     The questions should be designed so that answering with someone's name makes sense.
     
+    FOR ODD ONE OUT QUESTIONS: Create prompts where most players get one type of prompt and one "imposter" gets a different but related prompt. Format as:
+    - normal_prompt: What the majority of players see
+    - imposter_prompt: What the secret imposter sees (should be similar enough to not be obvious)
+    
+    Example Odd One Out:
+    {"normal_prompt": "Name a type of fruit", "imposter_prompt": "Name a type of vegetable", "category": "food"}
+    
     You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
     {
       "would_you_rather": [
@@ -81,12 +88,15 @@ serve(async (req) => {
       ],
       "paranoia": [
         {"question": "Who is most likely to..."}
+      ],
+      "odd_one_out": [
+        {"normal_prompt": "...", "imposter_prompt": "...", "category": "..."}
       ]
     }
     
     Make sure ALL questions are HEAVILY themed around the customization AND match the specified craziness level. Return ONLY the JSON object, nothing else.`;
     
-    const userPrompt = `Generate 25 Would You Rather questions and 20 Paranoia questions that are HEAVILY themed around: ${customization}. Every single question must incorporate elements from this theme. Craziness level: ${crazynessLevel}%. Do NOT include "Would you rather" in the options - just provide the choice content.`;
+    const userPrompt = `Generate 25 Would You Rather questions, 20 Paranoia questions, and 15 Odd One Out questions that are HEAVILY themed around: ${customization}. Every single question must incorporate elements from this theme. Craziness level: ${crazynessLevel}%. Do NOT include "Would you rather" in the options - just provide the choice content.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -153,14 +163,33 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Successfully stored ${questions.would_you_rather?.length || 0} Would You Rather and ${questions.paranoia?.length || 0} Paranoia questions for room ${roomCode}`);
+    // Store Odd One Out questions
+    if (questions.odd_one_out && Array.isArray(questions.odd_one_out)) {
+      const oddOneOutQuestions = questions.odd_one_out.map((q: any) => ({
+        room_id: roomCode,
+        game_type: 'odd_one_out',
+        question_data: q
+      }));
+
+      const { error: oddOneOutError } = await supabase
+        .from('room_questions')
+        .insert(oddOneOutQuestions);
+
+      if (oddOneOutError) {
+        console.error('Error storing odd one out questions:', oddOneOutError);
+        throw oddOneOutError;
+      }
+    }
+
+    console.log(`Successfully stored ${questions.would_you_rather?.length || 0} Would You Rather, ${questions.paranoia?.length || 0} Paranoia, and ${questions.odd_one_out?.length || 0} Odd One Out questions for room ${roomCode}`);
 
     return new Response(JSON.stringify({ 
       success: true,
-      message: `Generated ${questions.would_you_rather?.length || 0} Would You Rather and ${questions.paranoia?.length || 0} Paranoia questions for your room!`,
+      message: `Generated ${questions.would_you_rather?.length || 0} Would You Rather, ${questions.paranoia?.length || 0} Paranoia, and ${questions.odd_one_out?.length || 0} Odd One Out questions for your room!`,
       counts: {
         would_you_rather: questions.would_you_rather?.length || 0,
-        paranoia: questions.paranoia?.length || 0
+        paranoia: questions.paranoia?.length || 0,
+        odd_one_out: questions.odd_one_out?.length || 0
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

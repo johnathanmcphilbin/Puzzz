@@ -136,6 +136,26 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
 
   const loadRandomQuestion = async () => {
     try {
+      // First try to get room-specific AI generated questions
+      const { data: roomQuestions, error: roomQuestionsError } = await supabase
+        .from("room_questions")
+        .select("question_data")
+        .eq("room_id", room.room_code)
+        .eq("game_type", "odd_one_out");
+
+      if (!roomQuestionsError && roomQuestions && roomQuestions.length > 0) {
+        const aiQuestions = roomQuestions.map((rq: any) => ({
+          id: `ai-${crypto.randomUUID()}`,
+          normal_prompt: rq.question_data.normal_prompt,
+          imposter_prompt: rq.question_data.imposter_prompt,
+          category: rq.question_data.category || "AI Generated"
+        }));
+        const randomIndex = Math.floor(Math.random() * aiQuestions.length);
+        setCurrentQuestion(aiQuestions[randomIndex]);
+        return;
+      }
+
+      // Fallback to default questions
       const { data: questions, error } = await supabase
         .from('odd_one_out_questions')
         .select('*');
@@ -151,7 +171,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
         const selectedQuestion = questions[randomIndex];
         setCurrentQuestion(selectedQuestion);
       } else {
-        // Fallback if no questions in database
+        // Ultimate fallback if no questions in database
         const fallbackQuestions = [
           {
             id: 'fallback-1',
@@ -201,8 +221,8 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       const randomFallback = fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
       setCurrentQuestion(randomFallback);
       toast({
-        title: "Error loading question",
-        description: "Using fallback question.",
+        title: "Using fallback question",
+        description: "No custom questions found for this room.",
         variant: "destructive",
       });
     }

@@ -189,11 +189,11 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
       }
 
       setHasGeneratedQuestions(true);
-      addMessage(`✅ Generated ${data.counts?.would_you_rather || 0} Would You Rather and ${data.counts?.paranoia || 0} Paranoia questions!`);
+      addMessage(`✅ Generated ${data.counts?.would_you_rather || 0} Would You Rather, ${data.counts?.paranoia || 0} Paranoia, and ${data.counts?.odd_one_out || 0} Odd One Out questions!`);
       
       toast({
         title: "Questions Generated!",
-        description: data.message || "Custom questions have been created for your games",
+        description: data.message || "Custom questions have been created for all your games",
       });
         
       setIsLoading(false);
@@ -288,16 +288,33 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                 <Label htmlFor="craziness" className="text-sm font-medium">
                   Craziness Level: {crazynessLevel[0]}%
                 </Label>
+                <Badge variant={
+                  crazynessLevel[0] <= 20 ? "secondary" :
+                  crazynessLevel[0] <= 40 ? "outline" :
+                  crazynessLevel[0] <= 60 ? "default" :
+                  crazynessLevel[0] <= 80 ? "destructive" : "destructive"
+                }>
+                  {crazynessLevel[0] <= 20 ? "😇 Tame" :
+                   crazynessLevel[0] <= 40 ? "😊 Fun" :
+                   crazynessLevel[0] <= 60 ? "😈 Spicy" :
+                   crazynessLevel[0] <= 80 ? "🔥 Wild" : "💀 INSANE"}
+                </Badge>
               </div>
               <Slider
                 id="craziness"
                 max={100}
-                step={1}
+                step={5}
                 value={crazynessLevel}
                 onValueChange={setCrazynessLevel}
-                className="mb-4"
+                className="mb-2"
                 disabled={isLoading || hasGeneratedQuestions}
               />
+              <div className="text-xs text-muted-foreground text-center">
+                {crazynessLevel[0] <= 20 ? "Safe & family-friendly questions" :
+                 crazynessLevel[0] <= 40 ? "Mild fun with light humor" :
+                 crazynessLevel[0] <= 60 ? "Moderately entertaining & bold" :
+                 crazynessLevel[0] <= 80 ? "Dramatic & boundary-pushing" : "Extreme & outrageous scenarios"}
+              </div>
             </div>
             
             
