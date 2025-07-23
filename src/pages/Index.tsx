@@ -55,7 +55,7 @@ const Index = () => {
             <CardHeader className="pb-4">
               <div className="flex justify-center">
                 <img 
-                  src="/lovable-uploads/07a428ab-970b-4f1b-b39f-9e5da2577609.png" 
+                  src="/lovable-uploads/a66ddf8b-e796-4ae7-a019-a8e80b5f30ce.png" 
                   alt="PUZZZZ - Design Your Own Chaos"
                   className="max-w-full h-auto"
                 />
