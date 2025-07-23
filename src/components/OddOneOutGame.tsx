@@ -51,19 +51,16 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
   
   const [currentQuestion, setCurrentQuestion] = useState<OddOneOutQuestion | null>(null);
   const [playerAnswers, setPlayerAnswers] = useState<{ [playerId: string]: string }>({});
-  const [playerDefenses, setPlayerDefenses] = useState<{ [playerId: string]: string }>({});
   const [votes, setVotes] = useState<{ [playerId: string]: string }>({});
   const [myAnswer, setMyAnswer] = useState("");
-  const [myDefense, setMyDefense] = useState("");
   const [selectedVote, setSelectedVote] = useState("");
   const [scores, setScores] = useState<{ [playerId: string]: number }>({});
   const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
   
   // Game state from room
   const gameState = room.game_state || {};
-  const phase = gameState.phase || "setup"; // setup, answering, defending, discussion, voting, reveal
+  const phase = gameState.phase || "setup"; // setup, answering, voting, reveal
   const imposterPlayerId = gameState.imposter_player_id;
-  const currentDefendingPlayer = gameState.current_defending_player;
   const roundNumber = gameState.round_number || 1;
   
   // Load character data for players
@@ -94,29 +91,23 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     loadCharacterData();
   }, [players]);
 
-  // Timer for defense phase (30 seconds) and discussion phase (2 minutes)
-  const { time: timeLeft, start: startTimer, stop: stopTimer, reset: resetTimer } = useTimer({ initialTime: 30 });
+  // Timer for voting phase (60 seconds)
+  const { time: timeLeft, start: startTimer, stop: stopTimer, reset: resetTimer } = useTimer({ initialTime: 60 });
 
   useEffect(() => {
-    if (phase === "defending" && currentDefendingPlayer) {
-      resetTimer(30);
-      startTimer();
-    } else if (phase === "discussion") {
-      resetTimer(120);
+    if (phase === "voting") {
+      resetTimer(60);
       startTimer();
     } else {
       stopTimer();
     }
-  }, [phase, currentDefendingPlayer]);
+  }, [phase]);
 
   useEffect(() => {
-    if (timeLeft === 0) {
-      if (phase === "defending") {
-        handleDefenseComplete();
-      } else if (phase === "discussion") {
-        // Auto move to voting if discussion time runs out
-        updateGameState({ phase: "voting" });
-      }
+    if (timeLeft === 0 && phase === "voting") {
+      // Auto reveal if voting time runs out
+      const finalVotes = gameState.votes || {};
+      revealResults(finalVotes);
     }
   }, [timeLeft, phase]);
 
@@ -134,9 +125,6 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     // Sync other game state
     if (gameState.player_answers) {
       setPlayerAnswers(gameState.player_answers);
-    }
-    if (gameState.player_defenses) {
-      setPlayerDefenses(gameState.player_defenses);
     }
     if (gameState.votes) {
       setVotes(gameState.votes);
@@ -233,7 +221,6 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       question: currentQuestion,
       round_number: 1,
       player_answers: {},
-      player_defenses: {},
       votes: {},
       scores: players.reduce((acc, player) => ({ ...acc, [player.player_id]: 0 }), {})
     };
@@ -290,13 +277,8 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     
     // Check if all players have answered
     if (Object.keys(updatedAnswers).length === players.length) {
-      // Move to defending phase
-      const firstPlayer = players[0];
-      await updateGameState({ 
-        phase: "defending",
-        current_defending_player: firstPlayer.player_id,
-        current_defending_index: 0
-      });
+      // Move directly to voting phase
+      await updateGameState({ phase: "voting" });
     }
     
     setMyAnswer("");
@@ -306,50 +288,6 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     });
   };
 
-  const submitDefense = async () => {
-    if (!myDefense.trim()) {
-      toast({
-        title: "Defense Required", 
-        description: "Please enter a defense before submitting.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const updatedDefenses = { 
-      ...gameState.player_defenses, 
-      [currentPlayer.player_id]: myDefense.trim() 
-    };
-    
-    await updateGameState({ player_defenses: updatedDefenses });
-    setMyDefense("");
-    
-    toast({
-      title: "Defense Submitted!",
-      description: "Moving to next player...",
-    });
-  };
-
-  const handleDefenseComplete = async () => {
-    const currentIndex = gameState.current_defending_index || 0;
-    const nextIndex = currentIndex + 1;
-    
-    if (nextIndex >= players.length) {
-      // All players have defended, move to discussion
-      await updateGameState({ 
-        phase: "discussion",
-        current_defending_player: null,
-        current_defending_index: null
-      });
-    } else {
-      // Move to next player
-      const nextPlayer = players[nextIndex];
-      await updateGameState({
-        current_defending_player: nextPlayer.player_id,
-        current_defending_index: nextIndex
-      });
-    }
-  };
 
   const submitVote = async () => {
     if (!selectedVote) {
@@ -422,7 +360,6 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     
     // Reset for new round
     setMyAnswer("");
-    setMyDefense("");
     setSelectedVote("");
     
     await loadRandomQuestion();
@@ -435,10 +372,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       imposter_player_id: randomImposter.player_id,
       round_number: (gameState.round_number || 1) + 1,
       player_answers: {},
-      player_defenses: {},
       votes: {},
-      current_defending_player: null,
-      current_defending_index: null,
       vote_counts: {},
       suspected_imposter: null,
       was_imposter_caught: null
@@ -475,11 +409,6 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     return currentQuestion.normal_prompt;
   };
 
-  const getCurrentDefendingPlayerName = () => {
-    if (!currentDefendingPlayer) return "";
-    const player = players.find(p => p.player_id === currentDefendingPlayer);
-    return player ? player.player_name : "";
-  };
 
   const renderPlayerIcon = (player: Player, isActive = false) => {
     const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
@@ -544,7 +473,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
               <div className="text-center space-y-2 sm:space-y-3">
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   Everyone gets the same prompt except one secret <strong>Imposter</strong> who gets a different one. 
-                  Answer, defend your choice briefly, then vote to find the Imposter!
+                  Answer the prompt, then vote to find the Imposter!
                 </p>
                 <div className="flex justify-center gap-2 sm:gap-4 text-xs">
                   <span className="text-green-600">Find Imposter: +1⭐ each</span>
@@ -701,247 +630,99 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    );
-  }
 
-  if (phase === "defending") {
-    const defendingPlayer = players.find(p => p.player_id === currentDefendingPlayer);
-    const isMyTurn = currentPlayer.player_id === currentDefendingPlayer;
-    const hasSubmittedDefense = gameState.player_defenses?.[currentPlayer.player_id];
-    
-    return (
-      <div className="min-h-screen gradient-bg p-4">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-primary">Defense Phase</h1>
-            <div className="flex items-center justify-center gap-4">
-              <Badge variant="default">Round {roundNumber}</Badge>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                <span className="font-mono text-lg">{timeLeft}s</span>
-              </div>
-            </div>
+          {/* Leave Game Button */}
+          <div className="text-center">
+            <Button variant="outline" onClick={leaveGame} className="mt-4">
+              <LogOut className="w-4 h-4 mr-2" />
+              Leave Game
+            </Button>
           </div>
-
-          {/* Current Defender */}
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="text-center">
-                {isMyTurn ? "Your Turn to Defend!" : `${getCurrentDefendingPlayerName()}'s Turn`}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              {defendingPlayer && (
-                <div className="flex justify-center">
-                  {renderPlayerIcon(defendingPlayer, true)}
-                </div>
-              )}
-              
-              {defendingPlayer && (
-                <div className="bg-muted p-4 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">Their answer:</p>
-                  <p className="font-semibold text-lg">
-                    "{gameState.player_answers?.[defendingPlayer.player_id]}"
-                  </p>
-                </div>
-              )}
-
-              {isMyTurn && !hasSubmittedDefense && (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="defense">Defend your answer (30 seconds):</Label>
-                    <Textarea
-                      id="defense"
-                      value={myDefense}
-                      onChange={(e) => setMyDefense(e.target.value)}
-                      placeholder="Explain why you chose this answer..."
-                      className="mt-2"
-                      rows={3}
-                    />
-                  </div>
-                  <Button onClick={submitDefense} disabled={!myDefense.trim()}>
-                    Submit Defense
-                  </Button>
-                </div>
-              )}
-
-              {hasSubmittedDefense && isMyTurn && (
-                <div className="text-green-600">
-                  <p>✓ Defense submitted! Time remaining: {timeLeft}s</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* All Answers So Far */}
-          <Card>
-            <CardHeader>
-              <CardTitle>All Answers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {players.map((player) => {
-                  const answer = gameState.player_answers?.[player.player_id];
-                  const defense = gameState.player_defenses?.[player.player_id];
-                  const hasDefended = !!defense;
-                  
-                  return (
-                    <div key={player.id} className={`p-4 rounded-lg border ${
-                      player.player_id === currentDefendingPlayer ? 'border-primary bg-primary/5' : 'bg-muted/50'
-                    }`}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10">
-                          {renderPlayerIcon(player)}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold">{player.player_name}</p>
-                          <p className="text-sm font-medium">"{answer}"</p>
-                        </div>
-                        <Badge variant={hasDefended ? "default" : "outline"}>
-                          {hasDefended ? "Defended" : "Pending"}
-                        </Badge>
-                      </div>
-                      {defense && (
-                        <div className="mt-2 pl-13 text-sm text-muted-foreground">
-                          <strong>Defense:</strong> {defense}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     );
   }
 
-  if (phase === "discussion") {
-    return (
-      <div className="min-h-screen gradient-bg p-4">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-primary">Discussion Phase</h1>
-            <div className="flex items-center justify-center gap-4">
-              <Badge variant="default">Round {roundNumber}</Badge>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                <span className="font-mono text-lg">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
-              </div>
-            </div>
-            <p className="text-muted-foreground">Discuss and figure out who the imposter is!</p>
-          </div>
-
-          {/* All Answers and Defenses */}
-          <Card>
-            <CardHeader>
-              <CardTitle>All Answers & Defenses</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {players.map((player) => {
-                  const answer = gameState.player_answers?.[player.player_id];
-                  const defense = gameState.player_defenses?.[player.player_id];
-                  
-                  return (
-                    <div key={player.id} className="p-4 rounded-lg bg-muted/50 border">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12">
-                          {renderPlayerIcon(player)}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-lg">{player.player_name}</p>
-                          <p className="text-lg font-medium text-primary">"{answer}"</p>
-                        </div>
-                      </div>
-                      {defense && (
-                        <div className="pl-15 text-muted-foreground">
-                          <strong>Defense:</strong> {defense}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Move to Voting */}
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Button 
-                onClick={() => updateGameState({ phase: "voting" })}
-                size="lg"
-                disabled={!currentPlayer.is_host}
-              >
-                <MessageSquare className="w-5 h-5 mr-2" />
-                Move to Voting
-              </Button>
-              {!currentPlayer.is_host && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Waiting for host to move to voting phase...
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   if (phase === "voting") {
     const hasVoted = gameState.votes?.[currentPlayer.player_id];
     const voteCount = Object.keys(gameState.votes || {}).length;
     
     return (
-      <div className="min-h-screen gradient-bg p-4">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="min-h-screen gradient-bg p-2 sm:p-4">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-primary">Voting Phase</h1>
-            <Badge variant="default">Round {roundNumber}</Badge>
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary">Who's the Imposter?</h1>
+            <div className="flex items-center justify-center gap-2 sm:gap-4">
+              <Badge variant="default">Round {roundNumber}</Badge>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span className="font-mono text-lg">{timeLeft}s</span>
+              </div>
+            </div>
             <Progress value={(voteCount / players.length) * 100} className="w-full max-w-md mx-auto" />
-            <p className="text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {voteCount} of {players.length} players have voted
             </p>
           </div>
+
+          {/* All Answers Display */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">All Answers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:gap-4">
+                {players.map((player) => {
+                  const answer = gameState.player_answers?.[player.player_id];
+                  
+                  return (
+                    <div key={player.id} className="p-3 sm:p-4 rounded-lg bg-muted/50 border">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-12 sm:h-12">
+                          {renderPlayerIcon(player)}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm sm:text-base">{player.player_name}</p>
+                          <p className="text-sm sm:text-lg font-medium text-primary">"{answer}"</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Voting */}
           {!hasVoted && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-center">Who do you think is the imposter?</CardTitle>
+                <CardTitle className="text-center">Vote for the Imposter</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
                   {players.map((player) => (
                     <button
                       key={player.id}
                       onClick={() => setSelectedVote(player.player_id)}
-                      className={`p-4 rounded-lg border-2 transition-all ${
+                      className={`p-2 sm:p-4 rounded-lg border-2 transition-all ${
                         selectedVote === player.player_id 
                           ? 'border-primary bg-primary/10' 
                           : 'border-muted-foreground/20 hover:border-muted-foreground/40'
                       }`}
                     >
-                      <div className="flex flex-col items-center gap-2">
+                      <div className="flex flex-col items-center gap-1 sm:gap-2">
                         {renderPlayerIcon(player)}
-                        <span className="font-medium">{player.player_name}</span>
-                        <p className="text-sm text-muted-foreground text-center">
-                          "{gameState.player_answers?.[player.player_id]}"
-                        </p>
+                        <span className="font-medium text-xs sm:text-sm text-center">{player.player_name}</span>
                       </div>
                     </button>
                   ))}
                 </div>
                 <Button 
                   onClick={submitVote} 
-                  className="w-full mt-6" 
+                  className="w-full mt-4 sm:mt-6" 
                   size="lg"
                   disabled={!selectedVote}
                 >
@@ -958,33 +739,21 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
                 <CardTitle className="text-green-600 text-center">Vote Submitted ✓</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p>You voted for: <strong>{players.find(p => p.player_id === hasVoted)?.player_name}</strong></p>
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-sm sm:text-base">You voted for: <strong>{players.find(p => p.player_id === hasVoted)?.player_name}</strong></p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                   Waiting for other players to vote...
                 </p>
               </CardContent>
             </Card>
           )}
 
-          {/* Players */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Players</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap justify-center gap-4">
-                {players.map((player) => (
-                  <div key={player.id} className="flex flex-col items-center gap-2">
-                    {renderPlayerIcon(player)}
-                    <span className="text-sm font-medium">{player.player_name}</span>
-                    <Badge variant={gameState.votes?.[player.player_id] ? "default" : "outline"}>
-                      {gameState.votes?.[player.player_id] ? "Voted" : "Voting..."}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Leave Game Button */}
+          <div className="text-center">
+            <Button variant="outline" onClick={leaveGame} className="mt-4">
+              <LogOut className="w-4 h-4 mr-2" />
+              Leave Game
+            </Button>
+          </div>
         </div>
       </div>
     );
