@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Crown, Users, SkipForward } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { getCatImageUrl } from '@/assets/catImages';
 
 interface Question {
   id: number;
@@ -17,6 +19,13 @@ interface Player {
   is_host: boolean;
   room_id: string;
   joined_at: string;
+  selected_character_id?: string;
+}
+
+interface CatCharacter {
+  id: string;
+  name: string;
+  icon_url: string;
 }
 
 interface Room {
@@ -178,10 +187,37 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   const [gamePhase, setGamePhase] = useState<'waiting' | 'question' | 'results' | 'finished'>('waiting');
   const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>({});
   const [scores, setScores] = useState<Record<string, number>>({});
+  const [characterData, setCharacterData] = useState<Record<string, CatCharacter>>({});
 
   const currentQuestion = questions[currentQuestionIndex];
   const isHost = currentPlayer.is_host;
   const allPlayersAnswered = Object.keys(playerAnswers).length === players.length;
+
+  // Load cat characters
+  useEffect(() => {
+    const loadCharacters = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cat_characters')
+          .select('*');
+        
+        if (error) {
+          console.error('Error loading characters:', error);
+          return;
+        }
+
+        const charactersMap: Record<string, CatCharacter> = {};
+        data?.forEach((char) => {
+          charactersMap[char.id] = char;
+        });
+        setCharacterData(charactersMap);
+      } catch (error) {
+        console.error('Error loading characters:', error);
+      }
+    };
+
+    loadCharacters();
+  }, []);
 
   // Check if all players have answered
   useEffect(() => {
@@ -313,16 +349,26 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
             <CardContent className="p-6">
               <h3 className="text-xl font-semibold mb-4">Final Scores</h3>
               <div className="space-y-2">
-                {sortedScores.map((item, index) => (
-                  <div key={item.player?.player_id} className="flex items-center justify-between p-3 bg-muted rounded">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold">{index + 1}.</span>
-                      {index === 0 && <Crown className="h-5 w-5 text-yellow-500" />}
-                      <span>{item.player?.player_name}</span>
+                {sortedScores.map((item, index) => {
+                  const playerCharacter = item.player?.selected_character_id ? characterData[item.player.selected_character_id] : null;
+                  return (
+                    <div key={item.player?.player_id} className="flex items-center justify-between p-3 bg-muted rounded">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-lg">{index + 1}.</span>
+                        {index === 0 && <Crown className="h-5 w-5 text-yellow-500" />}
+                        {playerCharacter && (
+                          <img
+                            src={getCatImageUrl(playerCharacter.icon_url)}
+                            alt={playerCharacter.name}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        )}
+                        <span className="font-medium">{item.player?.player_name}</span>
+                      </div>
+                      <span className="font-bold text-lg">{item.score}/{questions.length}</span>
                     </div>
-                    <span className="font-bold">{item.score}/{questions.length}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -412,13 +458,25 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         <Card>
           <CardContent className="p-4">
             <h3 className="font-semibold mb-2">Current Scores</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {players.map((player) => (
-                <div key={player.id} className="flex justify-between p-2 bg-muted rounded text-sm">
-                  <span>{player.player_name}</span>
-                  <span>{scores[player.player_id] || 0}</span>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {players.map((player) => {
+                const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+                return (
+                  <div key={player.id} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                    <div className="flex items-center gap-2">
+                      {playerCharacter && (
+                        <img
+                          src={getCatImageUrl(playerCharacter.icon_url)}
+                          alt={playerCharacter.name}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      )}
+                      <span>{player.player_name}</span>
+                    </div>
+                    <span className="font-semibold">{scores[player.player_id] || 0}</span>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
