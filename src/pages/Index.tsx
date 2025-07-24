@@ -305,6 +305,77 @@ const Index = () => {
               </div>
             </Card>
 
+            {/* Dogpatch Game */}
+            <Card 
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 overflow-hidden h-full"
+              onClick={() => handleGameClick("dogpatch")}
+            >
+              <div className="aspect-video bg-gradient-to-br from-blue-500 to-indigo-600 relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-white text-4xl font-bold">❓</div>
+                </div>
+                <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                    DEMO
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Dogpatch game</CardTitle>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Dogpatch game</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            Kahoot-style Guess Who game featuring team members! Look at photos and identify who's who with multiple choice answers.
+                          </p>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">How to Play:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• View a photo of a team member</li>
+                              <li>• Choose from 4 name options</li>
+                              <li>• 15 seconds to answer each question</li>
+                              <li>• Earn points for correct answers</li>
+                              <li>• Compete for the highest score!</li>
+                            </ul>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Features:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• 16 hardcoded questions</li>
+                              <li>• Real-time scoring system</li>
+                              <li>• Perfect for presentations</li>
+                              <li>• Team building activity</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <span>Quiz Game</span>
+                    <span>•</span>
+                    <span>2+ Players</span>
+                  </div>
+                </CardHeader>
+              </div>
+            </Card>
+
           </div>
         </div>
       </div>
