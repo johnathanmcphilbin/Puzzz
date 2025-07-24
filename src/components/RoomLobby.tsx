@@ -46,6 +46,44 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Real-time subscription for room updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('room-lobby-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rooms',
+          filter: `id=eq.${room.id}`
+        },
+        (payload) => {
+          if (payload.new) {
+            onUpdateRoom(payload.new as Room);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'players',
+          filter: `room_id=eq.${room.id}`
+        },
+        () => {
+          // Trigger a re-fetch when players change
+          window.location.reload();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [room.id]);
+
   const generateQRCode = async () => {
     try {
       const joinUrl = `${window.location.origin}/join/${room.room_code}`;
