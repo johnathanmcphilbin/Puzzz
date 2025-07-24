@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useRoom } from "@/hooks/useRoom";
 import { RoomLobby } from "@/components/RoomLobby";
 import { WouldYouRatherGame } from "@/components/WouldYouRatherGame";
-import { ParanoiaGame } from "@/components/ParanoiaGame";
+import { ParanoiaGameV2 } from "@/components/ParanoiaGameV2";
 import { OddOneOutGame } from "@/components/OddOneOutGame";
 import AIChatbot from "@/components/AIChatbot";
 import { Loader2 } from "lucide-react";
@@ -64,7 +64,7 @@ export const Room = () => {
           onUpdateRoom={updateRoom}
         />
       ) : currentGame === "paranoia" ? (
-        <ParanoiaGame 
+        <ParanoiaGameV2 
           room={room} 
           players={players} 
           currentPlayer={currentPlayer}
