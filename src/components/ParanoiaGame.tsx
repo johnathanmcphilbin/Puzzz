@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +56,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   const [isFlipping, setIsFlipping] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
+  const initializationRef = useRef<boolean>(false);
 
   const gameState = room.game_state || {};
   const phase = gameState.phase || "waiting";
@@ -156,6 +157,11 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         },
         (payload) => {
           if (payload.new) {
+            console.log("📡 Paranoia: Received real-time update", { 
+              phase: payload.new.game_state?.phase,
+              playerOrder: payload.new.game_state?.playerOrder?.length,
+              isInitialized: payload.new.game_state?.isInitialized
+            });
             onUpdateRoom(payload.new as Room);
           }
         }
@@ -177,11 +183,26 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   // Auto-initialize game if it's in playing phase but not properly set up
   useEffect(() => {
     const isInitialized = gameState.isInitialized;
-    if (phase === "playing" && (!playerOrder || playerOrder.length === 0) && players.length >= 3 && !isLoading && !isInitialized) {
-      console.log("🔄 Auto-initializing Paranoia game...");
+    const hasValidPlayerOrder = playerOrder && playerOrder.length > 0;
+    
+    if (phase === "playing" && !hasValidPlayerOrder && players.length >= 3 && !isLoading && !isInitialized && !initializationRef.current) {
+      console.log("🔄 Auto-initializing Paranoia game...", { 
+        phase, 
+        hasValidPlayerOrder, 
+        playersCount: players.length, 
+        isLoading, 
+        isInitialized,
+        alreadyInitializing: initializationRef.current
+      });
+      initializationRef.current = true;
       initializeGame();
     }
-  }, [phase, playerOrder.length, players.length, gameState.isInitialized]); // Check initialization flag
+    
+    // Reset ref when game state changes phases away from playing
+    if (phase !== "playing") {
+      initializationRef.current = false;
+    }
+  }, [phase, players.length]); // Only depend on phase and player count, not the changing game state
 
   // Load character data
   useEffect(() => {
@@ -212,10 +233,15 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   }, [players]);
 
   const initializeGame = async () => {
-    if (players.length < 3 || isLoading) return;
+    if (players.length < 3 || isLoading || initializationRef.current) {
+      console.log("🚫 Skipping initialization:", { playersLength: players.length, isLoading, alreadyInitializing: initializationRef.current });
+      return;
+    }
     
-    console.log("🎮 Paranoia: Initializing game...");
+    console.log("🎮 Paranoia: Starting initialization...");
+    initializationRef.current = true;
     setIsLoading(true);
+    
     try {
       const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
       
@@ -232,17 +258,23 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         isInitialized: true // Flag to prevent re-initialization
       };
 
-      await supabase
+      const { error } = await supabase
         .from("rooms")
         .update({ game_state: newGameState })
         .eq("id", room.id);
 
+      if (error) {
+        console.error("🚫 Error updating room:", error);
+        throw error;
+      }
+
       onUpdateRoom({ ...room, game_state: newGameState });
       
-      console.log("🎮 Paranoia game initialized with player order:", shuffledPlayers.map(p => p.player_name));
+      console.log("✅ Paranoia game initialized with player order:", shuffledPlayers.map(p => p.player_name));
       
     } catch (error) {
-      console.error("Error initializing game:", error);
+      console.error("🚫 Error initializing game:", error);
+      initializationRef.current = false; // Reset on error
     } finally {
       setIsLoading(false);
     }
