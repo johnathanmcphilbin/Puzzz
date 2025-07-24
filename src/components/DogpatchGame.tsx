@@ -42,97 +42,97 @@ interface DogpatchGameProps {
 const questions: Question[] = [
   {
     id: 1,
-    image: '/guess-who/person-1.jpg',
+    image: '/guess-who/deirbhile.jpg',
     correctAnswer: 'Deirbhile Gorman',
     options: ['Deirbhile Gorman', 'Patrick Walsh', 'Andrew McCann', 'Cristina Bob']
   },
   {
     id: 2,
-    image: '/guess-who/person-2.jpg',
+    image: '/guess-who/joe-g.jpg',
     correctAnswer: 'Joe Gorman',
     options: ['Joe Gorman', 'Ben Beattie', 'Patrick Curran', 'Gleb Sapunenko']
   },
   {
     id: 3,
-    image: '/guess-who/person-3.jpg',
+    image: '/guess-who/ruairi.jpg',
     correctAnswer: 'Ruairi Forde',
     options: ['Ruairi Forde', 'Jill Drennan', 'Jennifer Breathnach', 'Joe Lanzillotta']
   },
   {
     id: 4,
-    image: '/guess-who/person-4.jpg',
+    image: '/guess-who/menno.jpg',
     correctAnswer: 'Menno Axt',
     options: ['Menno Axt', 'Conor Burke', 'Marcos Escobar', 'Monica Zavala']
   },
   {
     id: 5,
-    image: '/guess-who/person-5.jpg',
+    image: '/guess-who/paige.jpg',
     correctAnswer: 'Paige Haaroff',
     options: ['Paige Haaroff', 'Maria Reyes', 'Dave Power', 'Elizabeth Fingleton']
   },
   {
     id: 6,
-    image: '/guess-who/person-6.jpg',
+    image: '/guess-who/tim.jpg',
     correctAnswer: 'Tim',
     options: ['Tim', 'Tamara Leigh', 'Raquel Nogueira da Silva', 'Roisin Murphy']
   },
   {
     id: 7,
-    image: '/guess-who/person-7.jpg',
+    image: '/guess-who/aisling.jpg',
     correctAnswer: 'Aisling Conlon',
     options: ['Aisling Conlon', 'Alexander O\'Sullivan', 'Emma Heaton-Esposito', 'Paige Haaroff']
   },
   {
     id: 8,
-    image: '/guess-who/person-8.jpg',
+    image: '/guess-who/malaika.jpg',
     correctAnswer: 'Malaika Judd',
     options: ['Malaika Judd', 'Ciaran Kelly', 'Mark Farrelly', 'Niamh Sterling']
   },
   {
     id: 9,
-    image: '/guess-who/person-10.jpg',
+    image: '/guess-who/gleb.jpg',
     correctAnswer: 'Gleb Sapunenko',
     options: ['Gleb Sapunenko', 'Madison Roche', 'Menno Axt', 'Malaika Judd']
   },
   {
     id: 10,
-    image: '/guess-who/person-11.jpg',
+    image: '/guess-who/elizabeth.jpg',
     correctAnswer: 'Elizabeth Fingleton',
     options: ['Elizabeth Fingleton', 'Ian Browne', 'Lorraine Curham', 'Reta Octania']
   },
   {
     id: 11,
-    image: '/guess-who/person-12.jpg',
+    image: '/guess-who/raquel.jpg',
     correctAnswer: 'Raquel Nogueira da Silva',
     options: ['Raquel Nogueira da Silva', 'Joe Gorman', 'Lizzy Hayashida', 'Deirbhile Gorman']
   },
   {
     id: 12,
-    image: '/guess-who/person-13.jpg',
+    image: '/guess-who/ben.jpg',
     correctAnswer: 'Ben Beattie',
     options: ['Ben Beattie', 'Patrick Walsh', 'Andrew McCann', 'Cristina Bob']
   },
   {
     id: 13,
-    image: '/guess-who/person-14.jpg',
+    image: '/guess-who/mark.jpg',
     correctAnswer: 'Mark Farrelly',
     options: ['Mark Farrelly', 'Patrick Curran', 'Gleb Sapunenko', 'Jill Drennan']
   },
   {
     id: 14,
-    image: '/guess-who/person-15.jpg',
+    image: '/guess-who/maria.jpg',
     correctAnswer: 'Maria Reyes',
     options: ['Maria Reyes', 'Jennifer Breathnach', 'Joe Lanzillotta', 'Conor Burke']
   },
   {
     id: 15,
-    image: '/guess-who/person-16.jpg',
+    image: '/guess-who/conor.jpg',
     correctAnswer: 'Conor Burke',
     options: ['Conor Burke', 'Marcos Escobar', 'Monica Zavala', 'Maria Reyes']
   },
   {
     id: 16,
-    image: '/guess-who/person-1.jpg',
+    image: '/guess-who/andrew.jpg',
     correctAnswer: 'Andrew McCann',
     options: ['Andrew McCann', 'Dave Power', 'Elizabeth Fingleton', 'Tamara Leigh']
   }
