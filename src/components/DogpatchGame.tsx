@@ -250,6 +250,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
 
   const startGame = async () => {
     const initialState = {
+      phase: 'question', // For Room component compatibility
       gamePhase: 'question',
       currentQuestion: 0,
       scores: {},
@@ -296,6 +297,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     await onUpdateRoom({
       game_state: {
         ...room.game_state,
+        phase: 'results', // For Room component compatibility
         gamePhase: 'results',
         scores: newScores,
         questionResults: newQuestionResults
@@ -316,6 +318,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
       await onUpdateRoom({
         game_state: {
           ...room.game_state,
+          phase: 'finished', // For Room component compatibility
           gamePhase: 'finished'
         }
       });
@@ -327,6 +330,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     await onUpdateRoom({
       game_state: {
         ...room.game_state,
+        phase: 'question', // For Room component compatibility
         gamePhase: 'question',
         currentQuestion: currentQuestionIndex + 1,
         playerAnswers: {}
@@ -339,6 +343,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     
     await onUpdateRoom({
       game_state: {
+        phase: 'lobby', // For Room component compatibility - goes back to lobby
         gamePhase: 'waiting',
         currentQuestion: 0,
         scores: {},
