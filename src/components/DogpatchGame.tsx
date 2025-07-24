@@ -188,16 +188,25 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>({});
   const [scores, setScores] = useState<Record<string, number>>({});
   const [characterData, setCharacterData] = useState<Record<string, CatCharacter>>({});
+  const [questionResults, setQuestionResults] = useState<Array<{questionId: number, playerAnswers: Record<string, string>, correctAnswer: string}>>([]);
 
   // Sync game state from room
   useEffect(() => {
-    if (room.game_state?.gamePhase) {
-      setGamePhase(room.game_state.gamePhase);
+    if (room.game_state) {
+      if (room.game_state.gamePhase) {
+        setGamePhase(room.game_state.gamePhase);
+      }
       if (room.game_state.currentQuestion !== undefined) {
         setCurrentQuestionIndex(room.game_state.currentQuestion);
       }
       if (room.game_state.scores) {
         setScores(room.game_state.scores);
+      }
+      if (room.game_state.playerAnswers) {
+        setPlayerAnswers(room.game_state.playerAnswers);
+      }
+      if (room.game_state.questionResults) {
+        setQuestionResults(room.game_state.questionResults);
       }
     }
   }, [room.game_state]);
@@ -232,39 +241,43 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     loadCharacters();
   }, []);
 
-  // Check if all players have answered
+  // Check if all players have answered (only host handles this)
   useEffect(() => {
-    if (gamePhase === 'question' && allPlayersAnswered) {
-      showQuestionResults();
+    if (isHost && gamePhase === 'question' && allPlayersAnswered && Object.keys(playerAnswers).length > 0) {
+      setTimeout(() => showQuestionResults(), 1000);
     }
-  }, [playerAnswers, gamePhase, allPlayersAnswered]);
+  }, [playerAnswers, gamePhase, allPlayersAnswered, isHost]);
 
   const startGame = async () => {
-    setGamePhase('question');
-    setCurrentQuestionIndex(0);
-    setScores({});
+    const initialState = {
+      gamePhase: 'question',
+      currentQuestion: 0,
+      scores: {},
+      playerAnswers: {},
+      questionResults: []
+    };
+    
     await onUpdateRoom({
-      game_state: {
-        phase: 'question',
-        currentQuestion: 0,
-        scores: {},
-        gamePhase: 'question'
-      }
+      game_state: initialState
     });
   };
 
-  const handleAnswerSelect = (answer: string) => {
+  const handleAnswerSelect = async (answer: string) => {
     if (selectedAnswer || gamePhase !== 'question') return;
     
     setSelectedAnswer(answer);
     const newAnswers = { ...playerAnswers, [currentPlayer.player_id]: answer };
-    setPlayerAnswers(newAnswers);
+    
+    // Update room state with new answer
+    await onUpdateRoom({
+      game_state: {
+        ...room.game_state,
+        playerAnswers: newAnswers
+      }
+    });
   };
 
-  const showQuestionResults = () => {
-    setGamePhase('results');
-    setShowResults(true);
-    
+  const showQuestionResults = async () => {
     // Calculate scores
     const newScores = { ...scores };
     Object.entries(playerAnswers).forEach(([playerId, answer]) => {
@@ -272,7 +285,22 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         newScores[playerId] = (newScores[playerId] || 0) + 1;
       }
     });
-    setScores(newScores);
+    
+    // Store this question's results
+    const newQuestionResults = [...questionResults, {
+      questionId: currentQuestion.id,
+      playerAnswers: { ...playerAnswers },
+      correctAnswer: currentQuestion.correctAnswer
+    }];
+    
+    await onUpdateRoom({
+      game_state: {
+        ...room.game_state,
+        gamePhase: 'results',
+        scores: newScores,
+        questionResults: newQuestionResults
+      }
+    });
     
     setTimeout(() => {
       nextQuestion();
@@ -283,26 +311,41 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     showQuestionResults();
   };
 
-  const nextQuestion = () => {
+  const nextQuestion = async () => {
     if (currentQuestionIndex + 1 >= questions.length) {
-      setGamePhase('finished');
+      await onUpdateRoom({
+        game_state: {
+          ...room.game_state,
+          gamePhase: 'finished'
+        }
+      });
       return;
     }
     
-    setCurrentQuestionIndex(prev => prev + 1);
     setSelectedAnswer(null);
-    setPlayerAnswers({});
-    setShowResults(false);
-    setGamePhase('question');
+    
+    await onUpdateRoom({
+      game_state: {
+        ...room.game_state,
+        gamePhase: 'question',
+        currentQuestion: currentQuestionIndex + 1,
+        playerAnswers: {}
+      }
+    });
   };
 
-  const resetGame = () => {
-    setGamePhase('waiting');
-    setCurrentQuestionIndex(0);
+  const resetGame = async () => {
     setSelectedAnswer(null);
-    setPlayerAnswers({});
-    setScores({});
-    setShowResults(false);
+    
+    await onUpdateRoom({
+      game_state: {
+        gamePhase: 'waiting',
+        currentQuestion: 0,
+        scores: {},
+        playerAnswers: {},
+        questionResults: []
+      }
+    });
   };
 
   if (gamePhase === 'waiting') {
@@ -383,6 +426,61 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                     </div>
                   );
                 })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Question Results</h3>
+              <div className="space-y-4">
+                {questionResults.map((result, qIndex) => (
+                  <div key={result.questionId} className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-2">Question {qIndex + 1}</h4>
+                    <p className="text-sm text-muted-foreground mb-3">Correct Answer: {result.correctAnswer}</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <h5 className="text-sm font-medium text-green-600 mb-1">✓ Correct</h5>
+                        {players.filter(p => result.playerAnswers[p.player_id] === result.correctAnswer).map(player => {
+                          const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+                          return (
+                            <div key={player.player_id} className="flex items-center gap-2 text-sm p-1">
+                              {playerCharacter && (
+                                <img
+                                  src={getCatImageUrl(playerCharacter.icon_url)}
+                                  alt={playerCharacter.name}
+                                  className="w-4 h-4 rounded-full object-cover"
+                                />
+                              )}
+                              <span>{player.player_name}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      <div>
+                        <h5 className="text-sm font-medium text-red-600 mb-1">✗ Incorrect</h5>
+                        {players.filter(p => result.playerAnswers[p.player_id] && result.playerAnswers[p.player_id] !== result.correctAnswer).map(player => {
+                          const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+                          return (
+                            <div key={player.player_id} className="flex items-center gap-2 text-sm p-1">
+                              {playerCharacter && (
+                                <img
+                                  src={getCatImageUrl(playerCharacter.icon_url)}
+                                  alt={playerCharacter.name}
+                                  className="w-4 h-4 rounded-full object-cover"
+                                />
+                              )}
+                              <span>{player.player_name}</span>
+                              <span className="text-muted-foreground">({result.playerAnswers[player.player_id]})</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
