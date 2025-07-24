@@ -4,9 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useRoomActions } from "@/hooks/useRoomActions";
 import { Loader2, Crown, Users } from "lucide-react";
 
 interface CreateRoomProps {
@@ -15,100 +13,15 @@ interface CreateRoomProps {
 }
 
 export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
-  
   const [playerName, setPlayerName] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const { createRoom, loading } = useRoomActions();
 
-  const generateRoomCode = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  const createRoom = async (e: React.FormEvent) => {
+  const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!playerName.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter your name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsCreating(true);
-    
-    try {
-      const roomCode = generateRoomCode();
-      const hostId = crypto.randomUUID();
-
-      console.log("Creating room with code:", roomCode);
-      console.log("Host ID:", hostId);
-
-      // Create room and player atomically using RPC function
-      const { data: result, error: rpcError } = await supabase
-        .rpc('create_room_with_host', {
-          p_room_code: roomCode,
-          p_room_name: `${playerName.trim()}'s Room`,
-          p_host_id: hostId,
-          p_player_name: playerName.trim(),
-          p_current_game: selectedGame
-        });
-
-      if (rpcError) {
-        console.error("Room creation RPC error:", rpcError);
-        throw rpcError;
-      }
-
-      // Type guard for the result
-      const rpcResult = result as any;
-      console.log("Full RPC result:", rpcResult);
-      
-      if (!rpcResult?.success) {
-        console.error("Room creation failed:", rpcResult?.error, rpcResult?.error_detail);
-        throw new Error(rpcResult?.error || "Failed to create room");
-      }
-
-      if (rpcResult?.player_count !== 1) {
-        console.error("Player was not created properly. Player count:", rpcResult?.player_count);
-        throw new Error("Player creation failed - please try again");
-      }
-
-      console.log("Room and player created successfully:", rpcResult);
-      console.log("Player data:", rpcResult?.player);
-
-      // Store player info in localStorage
-      localStorage.setItem("puzzz_player_id", hostId);
-      localStorage.setItem("puzzz_player_name", playerName.trim());
-
-      toast({
-        title: "Room Created!",
-        description: `Room ${roomCode} has been created successfully`,
-        className: "bg-success text-success-foreground",
-      });
-
-      // Wait a moment to ensure database transaction is committed
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Navigate to room
-      navigate(`/room/${roomCode}`);
+    const roomCode = await createRoom(playerName, selectedGame);
+    if (roomCode) {
       onClose?.();
-
-    } catch (error: any) {
-      console.error("Error creating room:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create room",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -118,6 +31,8 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
         return "Would You Rather";
       case "paranoia":
         return "Paranoia";
+      case "odd_one_out":
+        return "Odd One Out";
       default:
         return gameType;
     }
@@ -141,7 +56,7 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={createRoom} className="space-y-4">
+        <form onSubmit={handleCreateRoom} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="playerName">Your Name</Label>
             <Input
@@ -151,7 +66,7 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               maxLength={20}
-              disabled={isCreating}
+              disabled={loading}
               autoComplete="given-name"
             />
           </div>
@@ -159,9 +74,9 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={isCreating}
+            disabled={loading}
           >
-            {isCreating ? (
+            {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Creating Room...
