@@ -51,49 +51,29 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
       console.log("Creating room with code:", roomCode);
       console.log("Host ID:", hostId);
 
-      // Create room
-      const { data: roomData, error: roomError } = await supabase
-        .from("rooms")
-        .insert({
-          room_code: roomCode,
-          name: `${playerName.trim()}'s Room`,
-          host_id: hostId,
-          current_game: selectedGame,
-          game_state: {
-            phase: "lobby",
-            votes: {},
-            currentQuestion: null
-          },
-          is_active: true
-        })
-        .select()
-        .single();
+      // Create room and player atomically using RPC function
+      const { data: result, error: rpcError } = await supabase
+        .rpc('create_room_with_host', {
+          p_room_code: roomCode,
+          p_room_name: `${playerName.trim()}'s Room`,
+          p_host_id: hostId,
+          p_player_name: playerName.trim(),
+          p_current_game: selectedGame
+        });
 
-      if (roomError) {
-        console.error("Room creation error:", roomError);
-        throw roomError;
+      if (rpcError) {
+        console.error("Room creation RPC error:", rpcError);
+        throw rpcError;
       }
 
-      console.log("Room created successfully:", roomData);
-
-      // Add host as player
-      const { data: playerData, error: playerError } = await supabase
-        .from("players")
-        .insert({
-          room_id: roomData.id,
-          player_id: hostId,
-          player_name: playerName.trim(),
-          is_host: true
-        })
-        .select()
-        .single();
-
-      if (playerError) {
-        console.error("Player creation error:", playerError);
-        throw playerError;
+      // Type guard for the result
+      const rpcResult = result as any;
+      if (!rpcResult?.success) {
+        console.error("Room creation failed:", rpcResult?.error);
+        throw new Error(rpcResult?.error || "Failed to create room");
       }
 
-      console.log("Player created successfully:", playerData);
+      console.log("Room and player created successfully:", result);
 
       // Store player info in localStorage
       localStorage.setItem("puzzz_player_id", hostId);
