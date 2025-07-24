@@ -31,7 +31,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <AIChatbot />
+          
           <BackgroundMusic 
             audioSrc="/puzzzz-music.mp3" 
             volume={0.2}

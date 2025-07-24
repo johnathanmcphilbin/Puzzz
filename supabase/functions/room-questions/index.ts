@@ -31,11 +31,24 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Get the actual room UUID from the room code
+    const { data: roomData, error: roomError } = await supabase
+      .from('rooms')
+      .select('id')
+      .eq('room_code', roomCode)
+      .single();
+
+    if (roomError || !roomData) {
+      throw new Error(`Room not found for code: ${roomCode}`);
+    }
+
+    const roomId = roomData.id;
+
     // Clear existing questions for this room
     await supabase
       .from('room_questions')
       .delete()
-      .eq('room_id', roomCode);
+      .eq('room_id', roomId);
 
     const crazynessDescription = crazynessLevel <= 20 ? "very mild and safe" :
                                 crazynessLevel <= 40 ? "mild with some fun edge" :
@@ -139,7 +152,7 @@ serve(async (req) => {
     // Store Would You Rather questions
     if (questions.would_you_rather && Array.isArray(questions.would_you_rather)) {
       const wourQuestions = questions.would_you_rather.map((q: any) => ({
-        room_id: roomCode,
+        room_id: roomId,
         game_type: 'would_you_rather',
         question_data: q
       }));
@@ -157,7 +170,7 @@ serve(async (req) => {
     // Store Paranoia questions
     if (questions.paranoia && Array.isArray(questions.paranoia)) {
       const paranoiaQuestions = questions.paranoia.map((q: any) => ({
-        room_id: roomCode,
+        room_id: roomId,
         game_type: 'paranoia',
         question_data: q
       }));
@@ -175,7 +188,7 @@ serve(async (req) => {
     // Store Odd One Out questions
     if (questions.odd_one_out && Array.isArray(questions.odd_one_out)) {
       const oddOneOutQuestions = questions.odd_one_out.map((q: any) => ({
-        room_id: roomCode,
+        room_id: roomId,
         game_type: 'odd_one_out',
         question_data: q
       }));

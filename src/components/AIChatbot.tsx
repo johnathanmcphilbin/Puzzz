@@ -47,23 +47,31 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     const loadRoomState = async () => {
       if (roomCode) {
         // Check for existing customization
-        const { data: customizationData } = await supabase
-          .from('ai_chat_customizations')
-          .select('customization_text')
-          .eq('room_id', roomCode)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        if (customizationData?.customization_text) {
-          setCustomization(customizationData.customization_text);
-        }
+      const { data: customizationData } = await supabase
+        .from('ai_chat_customizations')
+        .select('customization_text')
+        .eq('room_id', roomCode)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (customizationData?.customization_text) {
+        setCustomization(customizationData.customization_text);
+      }
 
+      // Get room UUID first
+      const { data: roomData } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('room_code', roomCode)
+        .single();
+
+      if (roomData) {
         // Check if room-specific questions already exist
-        const { data: roomQuestions, error: roomQuestionsError } = await supabase
+        const { data: roomQuestions } = await supabase
           .from('room_questions')
           .select('id')
-          .eq('room_id', roomCode)
+          .eq('room_id', roomData.id)
           .limit(1);
 
         const hasExistingQuestions = roomQuestions && roomQuestions.length > 0;
@@ -74,6 +82,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         } else if (!hasExistingQuestions) {
           addMessage("Describe your group and I'll generate custom questions instantly!");
         }
+      }
       }
     };
     

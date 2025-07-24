@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 import { CharacterSelection } from "./CharacterSelection";
 import { getCatImageUrl } from "@/assets/catImages";
+import GameCustomizer from "./GameCustomizer";
 
 interface Room {
   id: string;
@@ -256,32 +257,42 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           </p>
         </div>
 
-        {/* QR Code Section */}
+        {/* QR Code and AI Customizer Section */}
         <div className="flex justify-center mb-8">
-          <Card className="w-fit">
-            <CardContent className="p-6 text-center">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <QrCode className="h-5 w-5" />
-                <h3 className="font-semibold">Quick Join</h3>
-              </div>
-              {qrCodeUrl ? (
-                <div className="space-y-3">
-                  <img 
-                    src={qrCodeUrl} 
-                    alt="QR Code to join room" 
-                    className="mx-auto rounded-lg border"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Scan to join the room instantly
-                  </p>
+          <div className="grid md:grid-cols-2 gap-6 w-full max-w-4xl">
+            {/* QR Code */}
+            <Card className="w-full">
+              <CardContent className="p-6 text-center">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <QrCode className="h-5 w-5" />
+                  <h3 className="font-semibold">Quick Join</h3>
                 </div>
-              ) : (
-                <div className="w-[200px] h-[200px] bg-muted rounded-lg flex items-center justify-center">
-                  <div className="text-muted-foreground">Generating QR code...</div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                {qrCodeUrl ? (
+                  <div className="space-y-3">
+                    <img 
+                      src={qrCodeUrl} 
+                      alt="QR Code to join room" 
+                      className="mx-auto rounded-lg border"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Scan to join the room instantly
+                    </p>
+                  </div>
+                ) : (
+                  <div className="w-[200px] h-[200px] bg-muted rounded-lg flex items-center justify-center mx-auto">
+                    <div className="text-muted-foreground">Generating QR code...</div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* AI Game Customizer */}
+            <GameCustomizer 
+              roomCode={room.room_code}
+              roomId={room.id}
+              isHost={currentPlayer.is_host}
+            />
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
