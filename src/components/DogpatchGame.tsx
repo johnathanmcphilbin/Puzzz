@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Crown, Users, Timer } from 'lucide-react';
+import { Crown, Users, SkipForward } from 'lucide-react';
 
 interface Question {
   id: number;
@@ -42,97 +42,97 @@ interface DogpatchGameProps {
 const questions: Question[] = [
   {
     id: 1,
-    image: '/guess-who/deirbhile.jpg',
+    image: '/1.png',
     correctAnswer: 'Deirbhile Gorman',
     options: ['Deirbhile Gorman', 'Patrick Walsh', 'Andrew McCann', 'Cristina Bob']
   },
   {
     id: 2,
-    image: '/guess-who/joe-g.jpg',
+    image: '/2.png',
     correctAnswer: 'Joe Gorman',
     options: ['Joe Gorman', 'Ben Beattie', 'Patrick Curran', 'Gleb Sapunenko']
   },
   {
     id: 3,
-    image: '/guess-who/ruairi.jpg',
+    image: '/3.png',
     correctAnswer: 'Ruairi Forde',
     options: ['Ruairi Forde', 'Jill Drennan', 'Jennifer Breathnach', 'Joe Lanzillotta']
   },
   {
     id: 4,
-    image: '/guess-who/menno.jpg',
+    image: '/4.png',
     correctAnswer: 'Menno Axt',
     options: ['Menno Axt', 'Conor Burke', 'Marcos Escobar', 'Monica Zavala']
   },
   {
     id: 5,
-    image: '/guess-who/paige.jpg',
+    image: '/5.png',
     correctAnswer: 'Paige Haaroff',
     options: ['Paige Haaroff', 'Maria Reyes', 'Dave Power', 'Elizabeth Fingleton']
   },
   {
     id: 6,
-    image: '/guess-who/tim.jpg',
+    image: '/6.png',
     correctAnswer: 'Tim',
     options: ['Tim', 'Tamara Leigh', 'Raquel Nogueira da Silva', 'Roisin Murphy']
   },
   {
     id: 7,
-    image: '/guess-who/aisling.jpg',
+    image: '/7.png',
     correctAnswer: 'Aisling Conlon',
     options: ['Aisling Conlon', 'Alexander O\'Sullivan', 'Emma Heaton-Esposito', 'Paige Haaroff']
   },
   {
     id: 8,
-    image: '/guess-who/malaika.jpg',
+    image: '/8.png',
     correctAnswer: 'Malaika Judd',
     options: ['Malaika Judd', 'Ciaran Kelly', 'Mark Farrelly', 'Niamh Sterling']
   },
   {
     id: 9,
-    image: '/guess-who/gleb.jpg',
+    image: '/9.png',
     correctAnswer: 'Gleb Sapunenko',
     options: ['Gleb Sapunenko', 'Madison Roche', 'Menno Axt', 'Malaika Judd']
   },
   {
     id: 10,
-    image: '/guess-who/elizabeth.jpg',
+    image: '/10.png',
     correctAnswer: 'Elizabeth Fingleton',
     options: ['Elizabeth Fingleton', 'Ian Browne', 'Lorraine Curham', 'Reta Octania']
   },
   {
     id: 11,
-    image: '/guess-who/raquel.jpg',
+    image: '/11.png',
     correctAnswer: 'Raquel Nogueira da Silva',
     options: ['Raquel Nogueira da Silva', 'Joe Gorman', 'Lizzy Hayashida', 'Deirbhile Gorman']
   },
   {
     id: 12,
-    image: '/guess-who/ben.jpg',
+    image: '/12.png',
     correctAnswer: 'Ben Beattie',
     options: ['Ben Beattie', 'Patrick Walsh', 'Andrew McCann', 'Cristina Bob']
   },
   {
     id: 13,
-    image: '/guess-who/mark.jpg',
+    image: '/13.png',
     correctAnswer: 'Mark Farrelly',
     options: ['Mark Farrelly', 'Patrick Curran', 'Gleb Sapunenko', 'Jill Drennan']
   },
   {
     id: 14,
-    image: '/guess-who/maria.jpg',
+    image: '/14.png',
     correctAnswer: 'Maria Reyes',
     options: ['Maria Reyes', 'Jennifer Breathnach', 'Joe Lanzillotta', 'Conor Burke']
   },
   {
     id: 15,
-    image: '/guess-who/conor.jpg',
+    image: '/15.png',
     correctAnswer: 'Conor Burke',
     options: ['Conor Burke', 'Marcos Escobar', 'Monica Zavala', 'Maria Reyes']
   },
   {
     id: 16,
-    image: '/guess-who/andrew.jpg',
+    image: '/16.png',
     correctAnswer: 'Andrew McCann',
     options: ['Andrew McCann', 'Dave Power', 'Elizabeth Fingleton', 'Tamara Leigh']
   }
@@ -147,35 +147,29 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [timer, setTimer] = useState(15);
   const [gamePhase, setGamePhase] = useState<'waiting' | 'question' | 'results' | 'finished'>('waiting');
   const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>({});
   const [scores, setScores] = useState<Record<string, number>>({});
 
   const currentQuestion = questions[currentQuestionIndex];
   const isHost = currentPlayer.is_host;
+  const allPlayersAnswered = Object.keys(playerAnswers).length === players.length;
 
+  // Check if all players have answered
   useEffect(() => {
-    if (gamePhase === 'question' && timer > 0) {
-      const interval = setInterval(() => {
-        setTimer(prev => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    } else if (timer === 0 && gamePhase === 'question') {
-      handleTimeUp();
+    if (gamePhase === 'question' && allPlayersAnswered) {
+      showQuestionResults();
     }
-  }, [timer, gamePhase]);
+  }, [playerAnswers, gamePhase, allPlayersAnswered]);
 
   const startGame = async () => {
     setGamePhase('question');
-    setTimer(15);
     setCurrentQuestionIndex(0);
     setScores({});
     await onUpdateRoom({
       game_state: {
         phase: 'question',
         currentQuestion: 0,
-        timer: 15,
         scores: {}
       }
     });
@@ -189,7 +183,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     setPlayerAnswers(newAnswers);
   };
 
-  const handleTimeUp = () => {
+  const showQuestionResults = () => {
     setGamePhase('results');
     setShowResults(true);
     
@@ -207,6 +201,10 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     }, 3000);
   };
 
+  const handleSkipQuestion = () => {
+    showQuestionResults();
+  };
+
   const nextQuestion = () => {
     if (currentQuestionIndex + 1 >= questions.length) {
       setGamePhase('finished');
@@ -218,7 +216,6 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     setPlayerAnswers({});
     setShowResults(false);
     setGamePhase('question');
-    setTimer(15);
   };
 
   const resetGame = () => {
@@ -228,7 +225,6 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     setPlayerAnswers({});
     setScores({});
     setShowResults(false);
-    setTimer(15);
   };
 
   if (gamePhase === 'waiting') {
@@ -320,14 +316,27 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
           <h1 className="text-4xl font-bold mb-4 text-primary">Guess Who</h1>
           
           <div className="flex items-center justify-center gap-6 mb-6">
-            <div className="flex items-center gap-2">
-              <Timer className="h-5 w-5" />
-              <span className="text-lg font-semibold">{timer}s</span>
-            </div>
             <div className="text-lg">
               Question {currentQuestionIndex + 1} of {questions.length}
             </div>
+            <div className="text-sm text-muted-foreground">
+              {Object.keys(playerAnswers).length}/{players.length} players answered
+            </div>
           </div>
+          
+          {isHost && gamePhase === 'question' && (
+            <div className="mb-4">
+              <Button 
+                onClick={handleSkipQuestion} 
+                variant="outline" 
+                size="sm"
+                className="mb-2"
+              >
+                <SkipForward className="h-4 w-4 mr-2" />
+                Skip Question (Host)
+              </Button>
+            </div>
+          )}
         </div>
 
         <Card className="mb-6">
