@@ -176,11 +176,12 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
   // Auto-initialize game if it's in playing phase but not properly set up
   useEffect(() => {
-    if (phase === "playing" && (!playerOrder || playerOrder.length === 0) && players.length >= 3) {
-      console.log("Auto-initializing Paranoia game...");
+    const isInitialized = gameState.isInitialized;
+    if (phase === "playing" && (!playerOrder || playerOrder.length === 0) && players.length >= 3 && !isLoading && !isInitialized) {
+      console.log("🔄 Auto-initializing Paranoia game...");
       initializeGame();
     }
-  }, [phase, playerOrder, players.length]);
+  }, [phase, playerOrder.length, players.length, gameState.isInitialized]); // Check initialization flag
 
   // Load character data
   useEffect(() => {
@@ -211,8 +212,9 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
   }, [players]);
 
   const initializeGame = async () => {
-    if (players.length < 3) return;
+    if (players.length < 3 || isLoading) return;
     
+    console.log("🎮 Paranoia: Initializing game...");
     setIsLoading(true);
     try {
       const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
@@ -226,7 +228,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         currentAnswer: null,
         lastRevealResult: null,
         targetPlayerId: null,
-        usedAskers: [] // Track who has asked in current round
+        usedAskers: [], // Track who has asked in current round
+        isInitialized: true // Flag to prevent re-initialization
       };
 
       await supabase
@@ -236,7 +239,7 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
 
       onUpdateRoom({ ...room, game_state: newGameState });
       
-      console.log("Paranoia game initialized with player order:", shuffledPlayers.map(p => p.player_name));
+      console.log("🎮 Paranoia game initialized with player order:", shuffledPlayers.map(p => p.player_name));
       
     } catch (error) {
       console.error("Error initializing game:", error);
@@ -312,7 +315,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         currentQuestion: null,
         currentAnswer: null,
         targetPlayerId: null,
-        usedAskers: []
+        usedAskers: [],
+        isInitialized: true
       };
 
       await supabase
@@ -559,8 +563,11 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
       
       if (allPlayersAsked) {
         // Complete round - randomize order and start new round
+        console.log("🔄 Starting new round - shuffling player order");
         const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
         const newPlayerOrder = shuffledPlayers.map(p => p.player_id);
+        
+        console.log("🎯 New player order for round", currentRound + 1, ":", shuffledPlayers.map(p => p.player_name));
         
         const newGameState = {
           ...gameState,
@@ -652,7 +659,8 @@ export function ParanoiaGame({ room, players, currentPlayer, onUpdateRoom }: Par
         currentQuestion: null,
         currentAnswer: null,
         lastRevealResult: null,
-        targetPlayerId: null
+        targetPlayerId: null,
+        isInitialized: false
       };
 
       await supabase
