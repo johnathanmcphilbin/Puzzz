@@ -205,7 +205,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
       if (error) throw error;
 
-      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : "Would You Rather";
+      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Dogpatch game" : "Would You Rather";
       
       toast({
         title: "Game Started!",
@@ -482,17 +482,37 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                     }`}
                     onClick={() => currentPlayer.is_host && setSelectedGame("odd-one-out")}
                   >
+                     <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold">Odd One Out</h4>
+                          <p className="text-sm text-muted-foreground">Find the imposter (3+ players)</p>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-6 h-6 bg-amber-500 rounded text-xs flex items-center justify-center text-white font-bold">🎭</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dogpatch Game */}
+                  <div 
+                    className={`relative p-4 border rounded-lg transition-all ${
+                      currentPlayer.is_host
+                        ? `cursor-pointer ${selectedGame === "dogpatch" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                        : "border-muted"
+                    }`}
+                    onClick={() => currentPlayer.is_host && setSelectedGame("dogpatch")}
+                  >
                     <div className="flex items-center justify-between">
                        <div>
-                         <h4 className="font-semibold">Odd One Out</h4>
-                         <p className="text-sm text-muted-foreground">Find the imposter (3+ players)</p>
+                         <h4 className="font-semibold">Dogpatch game</h4>
+                         <p className="text-sm text-muted-foreground">Kahoot-style Guess Who game</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-amber-500 rounded text-xs flex items-center justify-center text-white font-bold">🎭</div>
+                        <div className="w-6 h-6 bg-blue-500 rounded text-xs flex items-center justify-center text-white font-bold">❓</div>
                      </div>
                    </div>
                  </div>
-               </div>
+                </div>
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4">

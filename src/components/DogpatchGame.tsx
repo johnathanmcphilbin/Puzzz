@@ -1,0 +1,391 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Crown, Users, Timer } from 'lucide-react';
+
+interface Question {
+  id: number;
+  image: string;
+  correctAnswer: string;
+  options: string[];
+}
+
+interface Player {
+  id: string;
+  player_id: string;
+  player_name: string;
+  is_host: boolean;
+  room_id: string;
+  joined_at: string;
+}
+
+interface Room {
+  id: string;
+  room_code: string;
+  name: string;
+  host_id: string;
+  current_game: string;
+  game_state: any;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface DogpatchGameProps {
+  room: Room;
+  players: Player[];
+  currentPlayer: Player;
+  onUpdateRoom: (updates: Partial<Room>) => Promise<void>;
+}
+
+// Hardcoded questions with correct answers matching the PDF
+const questions: Question[] = [
+  {
+    id: 1,
+    image: '/guess-who/person-1.jpg',
+    correctAnswer: 'Deirbhile Gorman',
+    options: ['Deirbhile Gorman', 'Patrick Walsh', 'Andrew McCann', 'Cristina Bob']
+  },
+  {
+    id: 2,
+    image: '/guess-who/person-2.jpg',
+    correctAnswer: 'Joe Gorman',
+    options: ['Joe Gorman', 'Ben Beattie', 'Patrick Curran', 'Gleb Sapunenko']
+  },
+  {
+    id: 3,
+    image: '/guess-who/person-3.jpg',
+    correctAnswer: 'Ruairi Forde',
+    options: ['Ruairi Forde', 'Jill Drennan', 'Jennifer Breathnach', 'Joe Lanzillotta']
+  },
+  {
+    id: 4,
+    image: '/guess-who/person-4.jpg',
+    correctAnswer: 'Menno Axt',
+    options: ['Menno Axt', 'Conor Burke', 'Marcos Escobar', 'Monica Zavala']
+  },
+  {
+    id: 5,
+    image: '/guess-who/person-5.jpg',
+    correctAnswer: 'Paige Haaroff',
+    options: ['Paige Haaroff', 'Maria Reyes', 'Dave Power', 'Elizabeth Fingleton']
+  },
+  {
+    id: 6,
+    image: '/guess-who/person-6.jpg',
+    correctAnswer: 'Tim',
+    options: ['Tim', 'Tamara Leigh', 'Raquel Nogueira da Silva', 'Roisin Murphy']
+  },
+  {
+    id: 7,
+    image: '/guess-who/person-7.jpg',
+    correctAnswer: 'Aisling Conlon',
+    options: ['Aisling Conlon', 'Alexander O\'Sullivan', 'Emma Heaton-Esposito', 'Paige Haaroff']
+  },
+  {
+    id: 8,
+    image: '/guess-who/person-8.jpg',
+    correctAnswer: 'Malaika Judd',
+    options: ['Malaika Judd', 'Ciaran Kelly', 'Mark Farrelly', 'Niamh Sterling']
+  },
+  {
+    id: 9,
+    image: '/guess-who/person-10.jpg',
+    correctAnswer: 'Gleb Sapunenko',
+    options: ['Gleb Sapunenko', 'Madison Roche', 'Menno Axt', 'Malaika Judd']
+  },
+  {
+    id: 10,
+    image: '/guess-who/person-11.jpg',
+    correctAnswer: 'Elizabeth Fingleton',
+    options: ['Elizabeth Fingleton', 'Ian Browne', 'Lorraine Curham', 'Reta Octania']
+  },
+  {
+    id: 11,
+    image: '/guess-who/person-12.jpg',
+    correctAnswer: 'Raquel Nogueira da Silva',
+    options: ['Raquel Nogueira da Silva', 'Joe Gorman', 'Lizzy Hayashida', 'Deirbhile Gorman']
+  },
+  {
+    id: 12,
+    image: '/guess-who/person-13.jpg',
+    correctAnswer: 'Ben Beattie',
+    options: ['Ben Beattie', 'Patrick Walsh', 'Andrew McCann', 'Cristina Bob']
+  },
+  {
+    id: 13,
+    image: '/guess-who/person-14.jpg',
+    correctAnswer: 'Mark Farrelly',
+    options: ['Mark Farrelly', 'Patrick Curran', 'Gleb Sapunenko', 'Jill Drennan']
+  },
+  {
+    id: 14,
+    image: '/guess-who/person-15.jpg',
+    correctAnswer: 'Maria Reyes',
+    options: ['Maria Reyes', 'Jennifer Breathnach', 'Joe Lanzillotta', 'Conor Burke']
+  },
+  {
+    id: 15,
+    image: '/guess-who/person-16.jpg',
+    correctAnswer: 'Conor Burke',
+    options: ['Conor Burke', 'Marcos Escobar', 'Monica Zavala', 'Maria Reyes']
+  },
+  {
+    id: 16,
+    image: '/guess-who/person-1.jpg',
+    correctAnswer: 'Andrew McCann',
+    options: ['Andrew McCann', 'Dave Power', 'Elizabeth Fingleton', 'Tamara Leigh']
+  }
+];
+
+export const DogpatchGame: React.FC<DogpatchGameProps> = ({
+  room,
+  players,
+  currentPlayer,
+  onUpdateRoom
+}) => {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const [timer, setTimer] = useState(15);
+  const [gamePhase, setGamePhase] = useState<'waiting' | 'question' | 'results' | 'finished'>('waiting');
+  const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>({});
+  const [scores, setScores] = useState<Record<string, number>>({});
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const isHost = currentPlayer.is_host;
+
+  useEffect(() => {
+    if (gamePhase === 'question' && timer > 0) {
+      const interval = setInterval(() => {
+        setTimer(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else if (timer === 0 && gamePhase === 'question') {
+      handleTimeUp();
+    }
+  }, [timer, gamePhase]);
+
+  const startGame = async () => {
+    setGamePhase('question');
+    setTimer(15);
+    setCurrentQuestionIndex(0);
+    setScores({});
+    await onUpdateRoom({
+      game_state: {
+        phase: 'question',
+        currentQuestion: 0,
+        timer: 15,
+        scores: {}
+      }
+    });
+  };
+
+  const handleAnswerSelect = (answer: string) => {
+    if (selectedAnswer || gamePhase !== 'question') return;
+    
+    setSelectedAnswer(answer);
+    const newAnswers = { ...playerAnswers, [currentPlayer.player_id]: answer };
+    setPlayerAnswers(newAnswers);
+  };
+
+  const handleTimeUp = () => {
+    setGamePhase('results');
+    setShowResults(true);
+    
+    // Calculate scores
+    const newScores = { ...scores };
+    Object.entries(playerAnswers).forEach(([playerId, answer]) => {
+      if (answer === currentQuestion.correctAnswer) {
+        newScores[playerId] = (newScores[playerId] || 0) + 1;
+      }
+    });
+    setScores(newScores);
+    
+    setTimeout(() => {
+      nextQuestion();
+    }, 3000);
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestionIndex + 1 >= questions.length) {
+      setGamePhase('finished');
+      return;
+    }
+    
+    setCurrentQuestionIndex(prev => prev + 1);
+    setSelectedAnswer(null);
+    setPlayerAnswers({});
+    setShowResults(false);
+    setGamePhase('question');
+    setTimer(15);
+  };
+
+  const resetGame = () => {
+    setGamePhase('waiting');
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setPlayerAnswers({});
+    setScores({});
+    setShowResults(false);
+    setTimer(15);
+  };
+
+  if (gamePhase === 'waiting') {
+    return (
+      <div className="min-h-screen gradient-bg p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-4 text-primary">Guess Who</h1>
+            <h2 className="text-2xl mb-6 text-muted-foreground">Dogpatch Game</h2>
+            
+            <Card className="mb-6">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-center gap-4 mb-4">
+                  <Users className="h-6 w-6" />
+                  <span className="text-lg font-semibold">{players.length} Players</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {players.map((player) => (
+                    <div key={player.id} className="flex items-center gap-2 p-2 bg-muted rounded">
+                      {player.is_host && <Crown className="h-4 w-4 text-yellow-500" />}
+                      <span className="text-sm">{player.player_name}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {isHost && (
+              <Button onClick={startGame} size="lg" className="text-lg px-8 py-4">
+                Start Guess Who Game
+              </Button>
+            )}
+            
+            {!isHost && (
+              <p className="text-muted-foreground">Waiting for host to start the game...</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (gamePhase === 'finished') {
+    const sortedScores = Object.entries(scores)
+      .map(([playerId, score]) => ({
+        player: players.find(p => p.player_id === playerId),
+        score
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    return (
+      <div className="min-h-screen gradient-bg p-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl font-bold mb-4 text-primary">Game Over!</h1>
+          <h2 className="text-2xl mb-8 text-muted-foreground">Final Results</h2>
+          
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Final Scores</h3>
+              <div className="space-y-2">
+                {sortedScores.map((item, index) => (
+                  <div key={item.player?.player_id} className="flex items-center justify-between p-3 bg-muted rounded">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold">{index + 1}.</span>
+                      {index === 0 && <Crown className="h-5 w-5 text-yellow-500" />}
+                      <span>{item.player?.player_name}</span>
+                    </div>
+                    <span className="font-bold">{item.score}/{questions.length}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {isHost && (
+            <Button onClick={resetGame} size="lg">
+              Play Again
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen gradient-bg p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4 text-primary">Guess Who</h1>
+          
+          <div className="flex items-center justify-center gap-6 mb-6">
+            <div className="flex items-center gap-2">
+              <Timer className="h-5 w-5" />
+              <span className="text-lg font-semibold">{timer}s</span>
+            </div>
+            <div className="text-lg">
+              Question {currentQuestionIndex + 1} of {questions.length}
+            </div>
+          </div>
+        </div>
+
+        <Card className="mb-6">
+          <CardContent className="p-6 text-center">
+            <img 
+              src={currentQuestion.image} 
+              alt="Guess who this is" 
+              className="w-64 h-64 object-cover rounded-lg mx-auto mb-6"
+            />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+              {currentQuestion.options.map((option, index) => (
+                <Button
+                  key={index}
+                  variant={selectedAnswer === option ? "default" : "outline"}
+                  size="lg"
+                  onClick={() => handleAnswerSelect(option)}
+                  disabled={selectedAnswer !== null || showResults}
+                  className={`p-4 text-left h-auto ${
+                    showResults && option === currentQuestion.correctAnswer
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : showResults && selectedAnswer === option && option !== currentQuestion.correctAnswer
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : ''
+                  }`}
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+
+            {showResults && (
+              <div className="mt-6 p-4 bg-muted rounded-lg">
+                <p className="text-lg font-semibold">
+                  Correct Answer: {currentQuestion.correctAnswer}
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Next question in 3 seconds...
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="font-semibold mb-2">Current Scores</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {players.map((player) => (
+                <div key={player.id} className="flex justify-between p-2 bg-muted rounded text-sm">
+                  <span>{player.player_name}</span>
+                  <span>{scores[player.player_id] || 0}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
