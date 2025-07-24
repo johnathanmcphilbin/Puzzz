@@ -39,104 +39,132 @@ interface DogpatchGameProps {
 }
 
 // Hardcoded questions with correct answers matching the PDF
-const questions: Question[] = [
+const questionsData: Omit<Question, 'options'>[] = [
   {
     id: 1,
     image: '/1.png',
-    correctAnswer: 'Deirbhile Gorman',
-    options: ['Deirbhile Gorman', 'Patrick Walsh', 'Andrew McCann', 'Cristina Bob']
+    correctAnswer: 'Deirbhile Gorman'
   },
   {
     id: 2,
     image: '/2.png',
-    correctAnswer: 'Joe Gorman',
-    options: ['Joe Gorman', 'Ben Beattie', 'Patrick Curran', 'Gleb Sapunenko']
+    correctAnswer: 'Joe Gorman'
   },
   {
     id: 3,
     image: '/3.png',
-    correctAnswer: 'Ruairi Forde',
-    options: ['Ruairi Forde', 'Jill Drennan', 'Jennifer Breathnach', 'Joe Lanzillotta']
+    correctAnswer: 'Ruairi Forde'
   },
   {
     id: 4,
     image: '/4.png',
-    correctAnswer: 'Menno Axt',
-    options: ['Menno Axt', 'Conor Burke', 'Marcos Escobar', 'Monica Zavala']
+    correctAnswer: 'Menno Axt'
   },
   {
     id: 5,
     image: '/5.png',
-    correctAnswer: 'Paige Haaroff',
-    options: ['Paige Haaroff', 'Maria Reyes', 'Dave Power', 'Elizabeth Fingleton']
+    correctAnswer: 'Paige Haaroff'
   },
   {
     id: 6,
     image: '/6.png',
-    correctAnswer: 'Tim',
-    options: ['Tim', 'Tamara Leigh', 'Raquel Nogueira da Silva', 'Roisin Murphy']
+    correctAnswer: 'Tim'
   },
   {
     id: 7,
     image: '/7.png',
-    correctAnswer: 'Aisling Conlon',
-    options: ['Aisling Conlon', 'Alexander O\'Sullivan', 'Emma Heaton-Esposito', 'Paige Haaroff']
+    correctAnswer: 'Aisling Conlon'
   },
   {
     id: 8,
     image: '/8.png',
-    correctAnswer: 'Malaika Judd',
-    options: ['Malaika Judd', 'Ciaran Kelly', 'Mark Farrelly', 'Niamh Sterling']
+    correctAnswer: 'Malaika Judd'
   },
   {
     id: 9,
     image: '/9.png',
-    correctAnswer: 'Gleb Sapunenko',
-    options: ['Gleb Sapunenko', 'Madison Roche', 'Menno Axt', 'Malaika Judd']
+    correctAnswer: 'Gleb Sapunenko'
   },
   {
     id: 10,
     image: '/10.png',
-    correctAnswer: 'Elizabeth Fingleton',
-    options: ['Elizabeth Fingleton', 'Ian Browne', 'Lorraine Curham', 'Reta Octania']
+    correctAnswer: 'Elizabeth Fingleton'
   },
   {
     id: 11,
     image: '/11.png',
-    correctAnswer: 'Raquel Nogueira da Silva',
-    options: ['Raquel Nogueira da Silva', 'Joe Gorman', 'Lizzy Hayashida', 'Deirbhile Gorman']
+    correctAnswer: 'Raquel Nogueira da Silva'
   },
   {
     id: 12,
     image: '/12.png',
-    correctAnswer: 'Ben Beattie',
-    options: ['Ben Beattie', 'Patrick Walsh', 'Andrew McCann', 'Cristina Bob']
+    correctAnswer: 'Ben Beattie'
   },
   {
     id: 13,
     image: '/13.png',
-    correctAnswer: 'Mark Farrelly',
-    options: ['Mark Farrelly', 'Patrick Curran', 'Gleb Sapunenko', 'Jill Drennan']
+    correctAnswer: 'Mark Farrelly'
   },
   {
     id: 14,
     image: '/14.png',
-    correctAnswer: 'Maria Reyes',
-    options: ['Maria Reyes', 'Jennifer Breathnach', 'Joe Lanzillotta', 'Conor Burke']
+    correctAnswer: 'Maria Reyes'
   },
   {
     id: 15,
     image: '/15.png',
-    correctAnswer: 'Conor Burke',
-    options: ['Conor Burke', 'Marcos Escobar', 'Monica Zavala', 'Maria Reyes']
+    correctAnswer: 'Conor Burke'
   },
   {
     id: 16,
     image: '/16.png',
-    correctAnswer: 'Andrew McCann',
-    options: ['Andrew McCann', 'Dave Power', 'Elizabeth Fingleton', 'Tamara Leigh']
+    correctAnswer: 'Andrew McCann'
   }
 ];
+
+// All possible names for wrong answers
+const allNames = [
+  'Patrick Walsh', 'Andrew McCann', 'Cristina Bob', 'Ben Beattie', 'Patrick Curran', 
+  'Gleb Sapunenko', 'Jill Drennan', 'Jennifer Breathnach', 'Joe Lanzillotta', 
+  'Conor Burke', 'Marcos Escobar', 'Monica Zavala', 'Ruairi Forde', 'Maria Reyes', 
+  'Dave Power', 'Elizabeth Fingleton', 'Tamara Leigh', 'Raquel Nogueira da Silva', 
+  'Roisin Murphy', 'Alexander O\'Sullivan', 'Emma Heaton-Esposito', 'Paige Haaroff', 
+  'Aisling Conlon', 'Ciaran Kelly', 'Mark Farrelly', 'Niamh Sterling', 'Madison Roche', 
+  'Menno Axt', 'Malaika Judd', 'Ian Browne', 'Lorraine Curham', 'Reta Octania', 
+  'Joe Gorman', 'Lizzy Hayashida', 'Deirbhile Gorman', 'Tim'
+];
+
+// Function to shuffle array
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+// Generate questions with randomized options
+const generateQuestions = (): Question[] => {
+  return questionsData.map(questionData => {
+    // Get 3 random wrong answers (excluding the correct answer)
+    const wrongAnswers = allNames
+      .filter(name => name !== questionData.correctAnswer)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+    
+    // Combine correct answer with wrong answers and shuffle
+    const allOptions = [questionData.correctAnswer, ...wrongAnswers];
+    const shuffledOptions = shuffleArray(allOptions);
+    
+    return {
+      ...questionData,
+      options: shuffledOptions
+    };
+  });
+};
+
+const questions: Question[] = generateQuestions();
 
 export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   room,
@@ -344,7 +372,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
             <img 
               src={currentQuestion.image} 
               alt="Guess who this is" 
-              className="w-64 h-64 object-cover rounded-lg mx-auto mb-6"
+              className="w-80 h-80 object-contain rounded-lg mx-auto mb-6 bg-white/10"
             />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
