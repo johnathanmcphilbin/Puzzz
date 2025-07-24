@@ -90,40 +90,51 @@ export const Room = () => {
       console.log("Room loaded successfully:", roomData);
       setRoom(roomData);
 
-      // Load players
-      const { data: playersData, error: playersError } = await supabase
-        .from("players")
-        .select("*, selected_character_id")
-        .eq("room_id", roomData.id)
-        .order("joined_at", { ascending: true });
+      // Load players with retry mechanism for race condition
+      const loadPlayersWithRetry = async (retryCount = 0) => {
+        const { data: playersData, error: playersError } = await supabase
+          .from("players")
+          .select("*, selected_character_id")
+          .eq("room_id", roomData.id)
+          .order("joined_at", { ascending: true });
 
-      if (playersError) {
-        console.error("Players loading error:", playersError);
-        throw new Error("Failed to load players");
-      }
+        if (playersError) {
+          console.error("Players loading error:", playersError);
+          throw new Error("Failed to load players");
+        }
 
-      console.log("Players loaded successfully:", playersData);
-      setPlayers(playersData || []);
+        console.log("Players loaded successfully:", playersData);
+        setPlayers(playersData || []);
 
-      // Find current player
-      const playerId = localStorage.getItem("puzzz_player_id");
-      const currentPlayerData = playersData?.find(p => p.player_id === playerId);
-      
-      if (!currentPlayerData) {
-        toast({
-          title: "Player Not Found",
-          description: "You are not a member of this room.",
-          variant: "destructive",
-        });
-        navigate("/");
-        return;
-      }
+        // Find current player
+        const playerId = localStorage.getItem("puzzz_player_id");
+        const currentPlayerData = playersData?.find(p => p.player_id === playerId);
+        
+        // If player not found and we haven't retried yet, wait and retry
+        if (!currentPlayerData && retryCount < 3) {
+          console.log(`Player not found, retrying... (attempt ${retryCount + 1})`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return loadPlayersWithRetry(retryCount + 1);
+        }
+        
+        if (!currentPlayerData) {
+          toast({
+            title: "Player Not Found",
+            description: "You are not a member of this room.",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
 
-      console.log("Current player found:", currentPlayerData);
-      setCurrentPlayer(currentPlayerData);
+        console.log("Current player found:", currentPlayerData);
+        setCurrentPlayer(currentPlayerData);
 
-      // Set up real-time subscriptions
-      setupRealtimeSubscriptions(roomData);
+        // Set up real-time subscriptions
+        setupRealtimeSubscriptions(roomData);
+      };
+
+      await loadPlayersWithRetry();
 
     } catch (error) {
       console.error("Error loading room data:", error);
