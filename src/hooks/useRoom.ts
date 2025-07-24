@@ -139,7 +139,7 @@ export const useRoom = (roomCode: string) => {
 
   // Real-time subscriptions
   useEffect(() => {
-    if (!room) return;
+    if (!roomCode) return;
 
     // Subscribe to room changes
     const roomChannel = supabase
@@ -157,6 +157,19 @@ export const useRoom = (roomCode: string) => {
           setRoom(payload.new as Room);
         }
       )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(roomChannel);
+    };
+  }, [roomCode]);
+
+  // Separate subscription for players (only after room is loaded)
+  useEffect(() => {
+    if (!room) return;
+
+    const playersChannel = supabase
+      .channel(`players_${room.id}`)
       .on(
         'postgres_changes',
         {
@@ -206,9 +219,9 @@ export const useRoom = (roomCode: string) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(roomChannel);
+      supabase.removeChannel(playersChannel);
     };
-  }, [room, roomCode, loadRoom, toast, navigate]);
+  }, [room, toast, navigate]);
 
   // Initial load
   useEffect(() => {
