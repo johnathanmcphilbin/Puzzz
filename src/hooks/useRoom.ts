@@ -188,8 +188,19 @@ export const useRoom = (roomCode: string) => {
             }
           }
           
-          // Reload players
-          loadRoom();
+          // Update players state directly instead of reloading entire room
+          if (payload.eventType === 'INSERT') {
+            setPlayers(prev => [...prev, payload.new as Player]);
+          } else if (payload.eventType === 'UPDATE') {
+            setPlayers(prev => prev.map(p => p.id === payload.new.id ? payload.new as Player : p));
+            // Update current player if it's the one being updated
+            const currentPlayerId = localStorage.getItem('puzzz_player_id');
+            if (currentPlayerId && payload.new.player_id === currentPlayerId) {
+              setCurrentPlayer(payload.new as Player);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
+          }
         }
       )
       .subscribe();

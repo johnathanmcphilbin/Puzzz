@@ -189,6 +189,19 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   const [scores, setScores] = useState<Record<string, number>>({});
   const [characterData, setCharacterData] = useState<Record<string, CatCharacter>>({});
 
+  // Sync game state from room
+  useEffect(() => {
+    if (room.game_state?.gamePhase) {
+      setGamePhase(room.game_state.gamePhase);
+      if (room.game_state.currentQuestion !== undefined) {
+        setCurrentQuestionIndex(room.game_state.currentQuestion);
+      }
+      if (room.game_state.scores) {
+        setScores(room.game_state.scores);
+      }
+    }
+  }, [room.game_state]);
+
   const currentQuestion = questions[currentQuestionIndex];
   const isHost = currentPlayer.is_host;
   const allPlayersAnswered = Object.keys(playerAnswers).length === players.length;
@@ -234,7 +247,8 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
       game_state: {
         phase: 'question',
         currentQuestion: 0,
-        scores: {}
+        scores: {},
+        gamePhase: 'question'
       }
     });
   };
