@@ -94,7 +94,7 @@ export const Room = () => {
       const loadPlayersWithRetry = async (retryCount = 0) => {
         const { data: playersData, error: playersError } = await supabase
           .from("players")
-          .select("*, selected_character_id")
+          .select("*")
           .eq("room_id", roomData.id)
           .order("joined_at", { ascending: true });
 
@@ -213,7 +213,7 @@ export const Room = () => {
   const loadPlayers = async (roomId: string) => {
     const { data: playersData } = await supabase
       .from("players")
-      .select("*, selected_character_id")
+      .select("*")
       .eq("room_id", roomId)
       .order("joined_at", { ascending: true });
 

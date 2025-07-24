@@ -106,7 +106,7 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
       });
 
       // Wait a moment to ensure database transaction is committed
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Navigate to room
       navigate(`/room/${roomCode}`);
