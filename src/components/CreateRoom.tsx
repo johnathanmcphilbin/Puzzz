@@ -68,12 +68,20 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
 
       // Type guard for the result
       const rpcResult = result as any;
+      console.log("Full RPC result:", rpcResult);
+      
       if (!rpcResult?.success) {
-        console.error("Room creation failed:", rpcResult?.error);
+        console.error("Room creation failed:", rpcResult?.error, rpcResult?.error_detail);
         throw new Error(rpcResult?.error || "Failed to create room");
       }
 
-      console.log("Room and player created successfully:", result);
+      if (rpcResult?.player_count !== 1) {
+        console.error("Player was not created properly. Player count:", rpcResult?.player_count);
+        throw new Error("Player creation failed - please try again");
+      }
+
+      console.log("Room and player created successfully:", rpcResult);
+      console.log("Player data:", rpcResult?.player);
 
       // Store player info in localStorage
       localStorage.setItem("puzzz_player_id", hostId);
