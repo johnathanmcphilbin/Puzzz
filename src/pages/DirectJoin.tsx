@@ -94,6 +94,9 @@ export const DirectJoin = () => {
         className: "bg-success text-success-foreground",
       });
 
+      // Wait a moment to ensure database transaction is committed
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       navigate(`/room/${roomCode.toUpperCase()}`);
     } catch (error) {
       console.error("Error joining room:", error);

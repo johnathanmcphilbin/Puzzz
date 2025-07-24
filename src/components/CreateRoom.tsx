@@ -105,6 +105,9 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
         className: "bg-success text-success-foreground",
       });
 
+      // Wait a moment to ensure database transaction is committed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Navigate to room
       navigate(`/room/${roomCode}`);
       onClose?.();
