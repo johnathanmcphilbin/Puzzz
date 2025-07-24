@@ -36,6 +36,8 @@ export const useRoom = (roomCode: string) => {
   const navigate = useNavigate();
 
   const loadRoom = useCallback(async () => {
+    if (!roomCode) return;
+    
     try {
       setLoading(true);
       setError(null);
@@ -87,7 +89,7 @@ export const useRoom = (roomCode: string) => {
     } finally {
       setLoading(false);
     }
-  }, [roomCode]);
+  }, []);
 
   const updateRoom = useCallback(async (updates: Partial<Room>) => {
     if (!room) return;
@@ -137,13 +139,12 @@ export const useRoom = (roomCode: string) => {
     }
   }, [room, currentPlayer, toast]);
 
-  // Real-time subscriptions
+  // Combined real-time subscription for room and players
   useEffect(() => {
-    if (!roomCode) return;
+    if (!roomCode || !room) return;
 
-    // Subscribe to room changes
-    const roomChannel = supabase
-      .channel(`room_${roomCode}`)
+    const channel = supabase
+      .channel(`room_${roomCode}_combined`)
       .on(
         'postgres_changes',
         {
@@ -153,23 +154,18 @@ export const useRoom = (roomCode: string) => {
           filter: `room_code=eq.${roomCode}`,
         },
         (payload) => {
-          console.log('Room updated:', payload.new);
-          setRoom(payload.new as Room);
+          setRoom(prev => {
+            if (!prev) return payload.new as Room;
+            // Only update if there are actual changes to prevent unnecessary re-renders
+            const newRoom = payload.new as Room;
+            if (JSON.stringify(prev.game_state) !== JSON.stringify(newRoom.game_state) ||
+                prev.current_game !== newRoom.current_game) {
+              return newRoom;
+            }
+            return prev;
+          });
         }
       )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(roomChannel);
-    };
-  }, [roomCode]);
-
-  // Separate subscription for players (only after room is loaded)
-  useEffect(() => {
-    if (!room) return;
-
-    const playersChannel = supabase
-      .channel(`players_${room.id}`)
       .on(
         'postgres_changes',
         {
@@ -179,8 +175,6 @@ export const useRoom = (roomCode: string) => {
           filter: `room_id=eq.${room.id}`,
         },
         (payload) => {
-          console.log('Players updated:', payload);
-          
           // Handle player kick detection
           if (payload.eventType === 'DELETE') {
             const deletedPlayer = payload.old;
@@ -199,31 +193,34 @@ export const useRoom = (roomCode: string) => {
               navigate('/');
               return;
             }
-          }
-          
-          // Update players state directly instead of reloading entire room
-          if (payload.eventType === 'INSERT') {
-            setPlayers(prev => [...prev, payload.new as Player]);
+            
+            setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
+          } else if (payload.eventType === 'INSERT') {
+            setPlayers(prev => {
+              // Prevent duplicate players
+              if (prev.some(p => p.id === payload.new.id)) return prev;
+              return [...prev, payload.new as Player];
+            });
           } else if (payload.eventType === 'UPDATE') {
-            setPlayers(prev => prev.map(p => p.id === payload.new.id ? payload.new as Player : p));
+            const updatedPlayer = payload.new as Player;
+            setPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
+            
             // Update current player if it's the one being updated
             const currentPlayerId = localStorage.getItem('puzzz_player_id');
-            if (currentPlayerId && payload.new.player_id === currentPlayerId) {
-              setCurrentPlayer(payload.new as Player);
+            if (currentPlayerId && updatedPlayer.player_id === currentPlayerId) {
+              setCurrentPlayer(updatedPlayer);
             }
-          } else if (payload.eventType === 'DELETE') {
-            setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
           }
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(playersChannel);
+      supabase.removeChannel(channel);
     };
-  }, [room, toast, navigate]);
+  }, [roomCode, room?.id, toast, navigate]);
 
-  // Initial load
+  // Initial load - only run once when component mounts
   useEffect(() => {
     if (!roomCode) return;
     
@@ -236,7 +233,7 @@ export const useRoom = (roomCode: string) => {
     }
 
     loadRoom();
-  }, [roomCode, loadRoom]);
+  }, [roomCode]);
 
   return {
     room,
