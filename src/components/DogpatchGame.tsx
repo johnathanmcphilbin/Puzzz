@@ -183,7 +183,6 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
 }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [showResults, setShowResults] = useState(false);
   const [gamePhase, setGamePhase] = useState<'waiting' | 'question' | 'results' | 'finished'>('waiting');
   const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>({});
   const [scores, setScores] = useState<Record<string, number>>({});
@@ -214,6 +213,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   const currentQuestion = questions[currentQuestionIndex];
   const isHost = currentPlayer.is_host;
   const allPlayersAnswered = Object.keys(playerAnswers).length === players.length;
+  const showResults = gamePhase === 'results';
 
   // Load cat characters
   useEffect(() => {
@@ -319,7 +319,10 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         game_state: {
           ...room.game_state,
           phase: 'finished', // For Room component compatibility
-          gamePhase: 'finished'
+          gamePhase: 'finished',
+          // Preserve all final data
+          scores: room.game_state.scores || scores,
+          questionResults: room.game_state.questionResults || questionResults
         }
       });
       return;
@@ -333,7 +336,10 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         phase: 'question', // For Room component compatibility
         gamePhase: 'question',
         currentQuestion: currentQuestionIndex + 1,
-        playerAnswers: {}
+        playerAnswers: {},
+        // Keep existing questionResults and scores
+        questionResults: room.game_state.questionResults || [],
+        scores: room.game_state.scores || {}
       }
     });
   };
