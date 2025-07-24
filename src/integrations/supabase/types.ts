@@ -561,7 +561,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_room_with_host: {
+        Args: {
+          p_room_code: string
+          p_room_name: string
+          p_host_id: string
+          p_player_name: string
+          p_current_game?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
