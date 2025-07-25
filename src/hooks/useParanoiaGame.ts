@@ -288,6 +288,12 @@ export const useParanoiaGame = (room: Room, players: Player[], currentPlayer: Pl
   };
 
   const isCurrentPlayerTurn = () => {
+    if (!gameState.playerOrder || gameState.playerOrder.length === 0) {
+      return false;
+    }
+    if (gameState.currentTurnIndex >= gameState.playerOrder.length) {
+      return false;
+    }
     return gameState.playerOrder[gameState.currentTurnIndex] === currentPlayer.player_id;
   };
 
