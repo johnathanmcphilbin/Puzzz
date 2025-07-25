@@ -46,7 +46,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Real-time subscription for room updates
+  // Real-time subscription for room updates only - player updates handled by useRoom hook
   useEffect(() => {
     const channel = supabase
       .channel('room-lobby-updates')
@@ -62,19 +62,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           if (payload.new) {
             onUpdateRoom(payload.new as Room);
           }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'players',
-          filter: `room_id=eq.${room.id}`
-        },
-        () => {
-          // Trigger a re-fetch when players change
-          window.location.reload();
         }
       )
       .subscribe();
