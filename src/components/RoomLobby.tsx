@@ -178,16 +178,27 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     try {
       const { error } = await supabase
         .from("rooms")
-         .update({
-           current_game: selectedGame,
-           game_state: {
-             phase: (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "setup" : "playing",
-             currentQuestion: null,
-             questionIndex: 0,
-             votes: {},
-             showResults: false
-           }
-         })
+        .update({
+          current_game: selectedGame,
+          game_state: selectedGame === "paranoia" ? {
+            phase: "waiting",
+            currentTurnIndex: 0,
+            playerOrder: [],
+            currentRound: 1,
+            currentQuestion: null,
+            currentAnswer: null,
+            targetPlayerId: null,
+            usedAskers: [],
+            lastRevealResult: null,
+            isFlipping: false
+          } : {
+            phase: (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "setup" : "playing",
+            currentQuestion: null,
+            questionIndex: 0,
+            votes: {},
+            showResults: false
+          }
+        })
         .eq("id", room.id);
 
       if (error) throw error;
