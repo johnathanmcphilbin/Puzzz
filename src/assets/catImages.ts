@@ -17,6 +17,19 @@ export const catImageMap: Record<string, string> = {
   '/cats/Orange cat.png': orangeCat,
   '/cats/Pirate cat.png': pirateCat,
   '/cats/auracat.png': auraCat,
+  '/cats/Ballet cat.jpg': '/cats/Ballet cat.jpg',
+  '/cats/Chill cat.jpg': '/cats/Chill cat.jpg',
+  '/cats/Dino cat.jpg': '/cats/Dino cat.jpg',
+  '/cats/Flower cat.jpg': '/cats/Flower cat.jpg',
+  '/cats/French cat.jpg': '/cats/French cat.jpg',
+  '/cats/Jumper cat.jpg': '/cats/Jumper cat.jpg',
+  '/cats/King cat.jpg': '/cats/King cat.jpg',
+  '/cats/Milk cat.jpg': '/cats/Milk cat.jpg',
+  '/cats/Science cat.jpg': '/cats/Science cat.jpg',
+  '/cats/Sick cat.jpg': '/cats/Sick cat.jpg',
+  '/cats/Silly cat.jpg': '/cats/Silly cat.jpg',
+  '/cats/Tomato cat.jpg': '/cats/Tomato cat.jpg',
+  '/cats/Tuff cat.jpg': '/cats/Tuff cat.jpg',
 };
 
 export const getCatImageUrl = (iconUrl: string | null): string => {
