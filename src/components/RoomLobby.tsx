@@ -77,12 +77,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
   const loadCharacterData = async () => {
     const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
-    console.log('Loading character data for IDs:', characterIds);
-    
-    if (characterIds.length === 0) {
-      console.log('No character IDs to load');
-      return;
-    }
+    if (characterIds.length === 0) return;
 
     try {
       const { data, error } = await supabase
@@ -90,17 +85,13 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         .select('*')
         .in('id', characterIds);
 
-      if (error) {
-        console.error('Error loading character data:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       const characterMap = data?.reduce((acc, char) => {
         acc[char.id] = char;
         return acc;
       }, {} as any) || {};
 
-      console.log('Loaded character data:', characterMap);
       setCharacterData(characterMap);
     } catch (error) {
       console.error('Error loading character data:', error);
@@ -108,17 +99,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   };
 
   const handleCharacterSelected = async (characterId: string) => {
-    console.log('Character selected callback triggered:', characterId);
-    
-    // Wait a moment for real-time update to propagate, then force reload
-    setTimeout(async () => {
-      console.log('Forcing player data refresh...');
-      // Force reload character data after a delay to let real-time updates process
-      await loadCharacterData();
-      
-      // Also force a re-render by checking current player data
-      console.log('Current players after character selection:', players.map(p => ({ name: p.player_name, characterId: p.selected_character_id })));
-    }, 1000);
+    // Immediately update character data after selection
+    await loadCharacterData();
     
     toast({
       title: "Character Selected!",

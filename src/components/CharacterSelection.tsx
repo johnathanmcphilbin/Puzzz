@@ -63,22 +63,15 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
     setLoading(true);
     try {
-      console.log('Updating player character:', { playerId, roomId, selectedCharacter });
-      
       const { error } = await supabase
         .from('players')
         .update({ selected_character_id: selectedCharacter })
         .eq('player_id', playerId)
         .eq('room_id', roomId);
 
-      if (error) {
-        console.error('Database update error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Character selection successful, calling callback');
-      
-      // Call the callback immediately with the selected character ID
+      // Call the callback immediately
       onCharacterSelected(selectedCharacter);
       
       toast({
@@ -86,16 +79,13 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
         description: "Your character has been chosen",
       });
       
-      // Close dialog after a short delay
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      onClose();
       
     } catch (error) {
       console.error('Error selecting character:', error);
       toast({
         title: "Error",
-        description: "Failed to select character. Please try again.",
+        description: "Failed to select character",
         variant: "destructive",
       });
     } finally {
