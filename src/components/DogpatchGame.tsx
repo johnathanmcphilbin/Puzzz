@@ -210,13 +210,10 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     }
   }, [room.game_state]);
 
-  // Reset selected answer when playerAnswers is empty (new question started)
+  // Reset selected answer when question changes
   useEffect(() => {
-    if (gamePhase === 'question' && Object.keys(playerAnswers).length === 0 && selectedAnswer !== null) {
-      console.log('Resetting selectedAnswer for new question');
-      setSelectedAnswer(null);
-    }
-  }, [playerAnswers, gamePhase, selectedAnswer]);
+    setSelectedAnswer(null);
+  }, [currentQuestionIndex]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isHost = currentPlayer.is_host;
