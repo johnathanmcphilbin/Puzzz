@@ -176,7 +176,7 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
               <Slider
                 id="craziness"
                 max={100}
-                step={5}
+                step={1}
                 value={crazynessLevel}
                 onValueChange={setCrazynessLevel}
                 disabled={isLoading}
