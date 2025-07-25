@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getCatImageUrl } from "@/assets/catImages";
@@ -20,6 +21,63 @@ interface CharacterSelectionProps {
   onCharacterSelected: (characterId: string) => void;
 }
 
+// Cache characters data globally to avoid reloading
+let cachedCharacters: CatCharacter[] | null = null;
+
+// Memoized character card component for better performance
+const CharacterCard = React.memo(({ 
+  character, 
+  isSelected, 
+  onClick 
+}: { 
+  character: CatCharacter; 
+  isSelected: boolean; 
+  onClick: () => void;
+}) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const imageUrl = useMemo(() => getCatImageUrl(character.icon_url), [character.icon_url]);
+
+  return (
+    <div
+      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+        isSelected
+          ? 'border-primary bg-primary/5'
+          : 'border-gray-200 hover:border-primary/50'
+      }`}
+      onClick={onClick}
+    >
+      <div className="text-center">
+        <div className="relative w-20 h-20 mx-auto mb-3">
+          {!imageLoaded && !imageError && (
+            <Skeleton className="w-20 h-20 rounded-full" />
+          )}
+          {character.icon_url && !imageError ? (
+            <img
+              src={imageUrl}
+              alt={character.name}
+              className={`w-20 h-20 rounded-full object-contain bg-white p-1 transition-opacity duration-200 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0 absolute'
+              }`}
+              loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
+              🐱
+            </div>
+          )}
+        </div>
+        <h3 className="font-bold text-lg">{character.name}</h3>
+      </div>
+    </div>
+  );
+});
+
+CharacterCard.displayName = 'CharacterCard';
+
 export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
   isOpen,
   onClose,
@@ -30,15 +88,17 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
   const [characters, setCharacters] = useState<CatCharacter[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (isOpen) {
-      loadCharacters();
+  const loadCharacters = useCallback(async () => {
+    // Use cached data if available
+    if (cachedCharacters) {
+      setCharacters(cachedCharacters);
+      return;
     }
-  }, [isOpen]);
 
-  const loadCharacters = async () => {
+    setInitialLoading(true);
     try {
       const { data, error } = await supabase
         .from('cat_characters')
@@ -47,7 +107,9 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
       if (error) throw error;
       
-      setCharacters(data || []);
+      const charactersData = data || [];
+      setCharacters(charactersData);
+      cachedCharacters = charactersData; // Cache for next time
     } catch (error) {
       console.error('Error loading characters:', error);
       toast({
@@ -55,8 +117,16 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
         description: "Failed to load characters",
         variant: "destructive",
       });
+    } finally {
+      setInitialLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadCharacters();
+    }
+  }, [isOpen, loadCharacters]);
 
   const handleSelectCharacter = async () => {
     if (!selectedCharacter) return;
@@ -101,36 +171,29 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
         </DialogHeader>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-          {characters.map((character) => (
-            <div
-              key={character.id}
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                selectedCharacter === character.id
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-primary/50'
-              }`}
-              onClick={() => setSelectedCharacter(character.id)}
-            >
-              <div className="text-center">
-                {character.icon_url ? (
-                  <img
-                    src={getCatImageUrl(character.icon_url)}
-                    alt={character.name}
-                    className="w-20 h-20 mx-auto rounded-full object-contain bg-white p-1 mb-3"
-                    loading="eager"
-                  />
-                ) : (
-                  <div className="w-20 h-20 mx-auto rounded-full bg-gray-200 flex items-center justify-center mb-3">
-                    🐱
-                  </div>
-                )}
-                <h3 className="font-bold text-lg">{character.name}</h3>
+          {initialLoading ? (
+            // Show skeleton placeholders while loading
+            Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="border-2 rounded-lg p-4 border-gray-200">
+                <div className="text-center">
+                  <Skeleton className="w-20 h-20 mx-auto rounded-full mb-3" />
+                  <Skeleton className="h-4 w-16 mx-auto" />
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            characters.map((character) => (
+              <CharacterCard
+                key={character.id}
+                character={character}
+                isSelected={selectedCharacter === character.id}
+                onClick={() => setSelectedCharacter(character.id)}
+              />
+            ))
+          )}
         </div>
 
-        {characters.length === 0 && (
+        {!initialLoading && characters.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             No characters available yet. Check back soon!
           </div>
