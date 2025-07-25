@@ -71,13 +71,19 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
       if (error) throw error;
 
+      // Call the callback immediately
       onCharacterSelected(selectedCharacter);
-      onClose();
       
       toast({
         title: "Character Selected!",
         description: "Your character has been chosen",
       });
+      
+      // Close dialog after a short delay to let the toast show
+      setTimeout(() => {
+        onClose();
+      }, 500);
+      
     } catch (error) {
       console.error('Error selecting character:', error);
       toast({
