@@ -31,6 +31,7 @@ const Index = () => {
               }}
               variant="outline"
               size="sm"
+              className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
             >
               Join Room
             </Button>
@@ -43,7 +44,7 @@ const Index = () => {
                 setActiveTab("join");
                 setShowDialog(true);
               }}
-              className="absolute top-0 right-0"
+              className="absolute top-0 right-0 bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
               variant="outline"
             >
               Join Room

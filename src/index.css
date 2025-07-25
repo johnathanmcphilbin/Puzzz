@@ -39,6 +39,9 @@
     --hover: 220 13% 91%;
     --active: 220 13% 86%;
     
+    /* Join Game Button Color */
+    --join-game: 200 64% 75%;
+    
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(262 52% 47%));
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 98%));
