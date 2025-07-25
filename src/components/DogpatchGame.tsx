@@ -135,7 +135,7 @@ const questionsData: Omit<Question, 'options'>[] = [
 const allNames = [
   'Patrick Walsh', 'Andrew McCann', 'Cristina Bob', 'Ben Beattie', 'Patrick Curran', 
   'Gleb Sapunenko', 'Jill Drennan', 'Jennifer Breathnach', 'Joe Lanzillotta', 
-  'Conor Burke', 'Marcos Escobar', 'Monica Zavala', 'Ruairi Forde', 'Maria Reyes', 
+  'Conor Burke', 'Marcos Escobar', 'Lucy Daly', 'Ruairi Forde', 'Maria Reyes',
   'Dave Power', 'Elizabeth Fingleton', 'Tamara Leigh', 'Raquel Nogueira da Silva', 
   'Roisin Murphy', 'Alexander O\'Sullivan', 'Emma Heaton-Esposito', 'Paige Haaroff', 
   'Aisling Conlon', 'Ciaran Kelly', 'Mark Farrelly', 'Niamh Sterling', 'Madison Roche', 
