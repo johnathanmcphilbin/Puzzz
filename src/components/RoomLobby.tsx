@@ -77,7 +77,12 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
   const loadCharacterData = async () => {
     const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
-    if (characterIds.length === 0) return;
+    console.log('Loading character data for IDs:', characterIds);
+    
+    if (characterIds.length === 0) {
+      console.log('No character IDs to load');
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -85,13 +90,17 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         .select('*')
         .in('id', characterIds);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading character data:', error);
+        throw error;
+      }
 
       const characterMap = data?.reduce((acc, char) => {
         acc[char.id] = char;
         return acc;
       }, {} as any) || {};
 
+      console.log('Loaded character data:', characterMap);
       setCharacterData(characterMap);
     } catch (error) {
       console.error('Error loading character data:', error);
@@ -99,11 +108,10 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   };
 
   const handleCharacterSelected = async (characterId: string) => {
-    // Force reload of character data and refresh player list
-    await loadCharacterData();
+    console.log('Character selected callback triggered:', characterId);
     
-    // No need to manually update - real-time subscription will handle this
-    console.log('Character selected:', characterId);
+    // Force reload of character data to ensure UI updates
+    await loadCharacterData();
     
     toast({
       title: "Character Selected!",
