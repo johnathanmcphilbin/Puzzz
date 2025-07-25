@@ -564,9 +564,9 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                   onClick={() => handleAnswerSelect(option)}
                   disabled={selectedAnswer !== null || showResults}
                   className={`p-4 text-left h-auto ${
-                    showResults && option === currentQuestion.correctAnswer
+                    gamePhase === 'results' && option === currentQuestion.correctAnswer
                       ? 'bg-green-500 hover:bg-green-600 text-white'
-                      : showResults && selectedAnswer === option && option !== currentQuestion.correctAnswer
+                      : gamePhase === 'results' && selectedAnswer === option && option !== currentQuestion.correctAnswer
                       ? 'bg-red-500 hover:bg-red-600 text-white'
                       : ''
                   }`}
