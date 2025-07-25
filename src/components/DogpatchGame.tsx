@@ -326,8 +326,8 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
           phase: 'finished', // For Room component compatibility
           gamePhase: 'finished',
           // Preserve all final data
-          scores: room.game_state.scores || scores,
-          questionResults: room.game_state.questionResults || questionResults
+          scores: scores,
+          questionResults: questionResults
         }
       });
       return;
@@ -345,9 +345,9 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         playerAnswers: {},
         // Reset selectedAnswer for next question
         resetAnswers: true,
-        // Keep existing questionResults and scores
-        questionResults: room.game_state.questionResults || [],
-        scores: room.game_state.scores || {}
+        // Keep existing questionResults and scores from current state
+        questionResults: questionResults,
+        scores: scores
       }
     });
   };
