@@ -46,30 +46,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Real-time subscription for room updates only - player updates handled by useRoom hook
-  useEffect(() => {
-    const channel = supabase
-      .channel('room-lobby-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'rooms',
-          filter: `id=eq.${room.id}`
-        },
-        (payload) => {
-          if (payload.new) {
-            onUpdateRoom(payload.new as Room);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [room.id]);
+  // Remove the duplicate subscription since useRoom already handles all real-time updates
+  // The RoomLobby should only react to props changes from useRoom
 
   const generateQRCode = async () => {
     try {
