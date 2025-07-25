@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getCatImageUrl } from "@/assets/catImages";
@@ -163,43 +164,79 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
     }
   };
 
+  const firstEightCharacters = characters.slice(0, 8);
+  const remainingCharacters = characters.slice(8);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">Choose Your Cat Character</DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-          {initialLoading ? (
-            // Show skeleton placeholders while loading
-            Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="border-2 rounded-lg p-4 border-gray-200">
-                <div className="text-center">
-                  <Skeleton className="w-20 h-20 mx-auto rounded-full mb-3" />
-                  <Skeleton className="h-4 w-16 mx-auto" />
+        {initialLoading ? (
+          <div className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="border-2 rounded-lg p-4 border-gray-200">
+                  <div className="text-center">
+                    <Skeleton className="w-20 h-20 mx-auto rounded-full mb-3" />
+                    <Skeleton className="h-4 w-16 mx-auto" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* First 8 characters in island */}
+            {firstEightCharacters.length > 0 && (
+              <div className="p-4">
+                <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {firstEightCharacters.map((character) => (
+                      <CharacterCard
+                        key={character.id}
+                        character={character}
+                        isSelected={selectedCharacter === character.id}
+                        onClick={() => setSelectedCharacter(character.id)}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-            ))
-          ) : (
-            characters.map((character) => (
-              <CharacterCard
-                key={character.id}
-                character={character}
-                isSelected={selectedCharacter === character.id}
-                onClick={() => setSelectedCharacter(character.id)}
-              />
-            ))
-          )}
-        </div>
+            )}
 
-        {!initialLoading && characters.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No characters available yet. Check back soon!
-          </div>
+            {/* Remaining characters in scrollable area */}
+            {remainingCharacters.length > 0 && (
+              <div className="px-4">
+                <div className="text-sm text-muted-foreground mb-3 text-center">
+                  Scroll to see more cats
+                </div>
+                <ScrollArea className="h-64">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pr-4">
+                    {remainingCharacters.map((character) => (
+                      <CharacterCard
+                        key={character.id}
+                        character={character}
+                        isSelected={selectedCharacter === character.id}
+                        onClick={() => setSelectedCharacter(character.id)}
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+
+            {characters.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No characters available yet. Check back soon!
+              </div>
+            )}
+          </>
         )}
 
-        <div className="flex justify-center gap-4 mt-6">
+        <div className="flex justify-center gap-4 mt-6 p-4">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
