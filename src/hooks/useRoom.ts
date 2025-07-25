@@ -211,12 +211,16 @@ export const useRoom = (roomCode: string) => {
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedPlayer = payload.new as Player;
-            console.log('Updating player:', updatedPlayer);
-            setPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
+            console.log('REAL-TIME: Updating player:', updatedPlayer.player_name, 'character_id:', updatedPlayer.selected_character_id);
+            setPlayers(prev => {
+              const updated = prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p);
+              console.log('REAL-TIME: Updated players array:', updated.map(p => ({ name: p.player_name, characterId: p.selected_character_id })));
+              return updated;
+            });
             
             const currentPlayerId = localStorage.getItem('puzzz_player_id');
             if (currentPlayerId && updatedPlayer.player_id === currentPlayerId) {
-              console.log('Updating current player');
+              console.log('REAL-TIME: Updating current player with character:', updatedPlayer.selected_character_id);
               setCurrentPlayer(updatedPlayer);
             }
           }

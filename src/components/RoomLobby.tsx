@@ -110,8 +110,15 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const handleCharacterSelected = async (characterId: string) => {
     console.log('Character selected callback triggered:', characterId);
     
-    // Force reload of character data to ensure UI updates
-    await loadCharacterData();
+    // Wait a moment for real-time update to propagate, then force reload
+    setTimeout(async () => {
+      console.log('Forcing player data refresh...');
+      // Force reload character data after a delay to let real-time updates process
+      await loadCharacterData();
+      
+      // Also force a re-render by checking current player data
+      console.log('Current players after character selection:', players.map(p => ({ name: p.player_name, characterId: p.selected_character_id })));
+    }, 1000);
     
     toast({
       title: "Character Selected!",
