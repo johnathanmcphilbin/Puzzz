@@ -313,7 +313,11 @@ const Index = () => {
               <div className="aspect-video bg-gradient-to-br from-blue-500 to-indigo-600 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-white text-4xl font-bold">❓</div>
+                  <img 
+                    src="/lovable-uploads/8ccd92fd-4776-432c-98c6-8098017d1b36.png" 
+                    alt="Dogpatch Game - Dog silhouette"
+                    className="w-full h-full object-contain p-4"
+                  />
                 </div>
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
                   <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
