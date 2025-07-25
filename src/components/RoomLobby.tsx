@@ -90,8 +90,12 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
   useEffect(() => {
     generateQRCode();
+  }, [room.room_code]);
+
+  // Load character data whenever players change
+  useEffect(() => {
     loadCharacterData();
-  }, [room.room_code, players]);
+  }, [players]);
 
   const loadCharacterData = async () => {
     const characterIds = players.map(p => p.selected_character_id).filter(Boolean);

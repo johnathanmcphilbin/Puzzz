@@ -141,7 +141,9 @@ export const useRoom = (roomCode: string) => {
 
   // Combined real-time subscription for room and players
   useEffect(() => {
-    if (!roomCode || !room) return;
+    if (!roomCode) return;
+
+    console.log('Setting up real-time subscriptions for room:', roomCode);
 
     const channel = supabase
       .channel(`room_${roomCode}_combined`)
@@ -154,12 +156,14 @@ export const useRoom = (roomCode: string) => {
           filter: `room_code=eq.${roomCode}`,
         },
         (payload) => {
+          console.log('Room update detected:', payload);
           setRoom(prev => {
             if (!prev) return payload.new as Room;
             // Only update if there are actual changes to prevent unnecessary re-renders
             const newRoom = payload.new as Room;
             if (JSON.stringify(prev.game_state) !== JSON.stringify(newRoom.game_state) ||
                 prev.current_game !== newRoom.current_game) {
+              console.log('Applying room update');
               return newRoom;
             }
             return prev;
@@ -172,7 +176,7 @@ export const useRoom = (roomCode: string) => {
           event: '*',
           schema: 'public',
           table: 'players',
-          filter: `room_id=eq.${room.id}`,
+          filter: room ? `room_id=eq.${room.id}` : 'room_id=eq.never',
         },
         (payload) => {
           console.log('Player change detected:', payload.eventType, payload);
@@ -208,7 +212,9 @@ export const useRoom = (roomCode: string) => {
                 return prev;
               }
               console.log('Adding new player to list');
-              return [...prev, payload.new as Player];
+              return [...prev, payload.new as Player].sort((a, b) => 
+                new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
+              );
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedPlayer = payload.new as Player;
@@ -224,9 +230,12 @@ export const useRoom = (roomCode: string) => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up real-time subscriptions');
       supabase.removeChannel(channel);
     };
   }, [roomCode, room?.id, toast, navigate]);
