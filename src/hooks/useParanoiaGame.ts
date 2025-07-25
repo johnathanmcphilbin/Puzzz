@@ -160,16 +160,25 @@ export const useParanoiaGame = (room: Room, players: Player[], currentPlayer: Pl
   const selectQuestion = useCallback(async (questionText: string) => {
     if (isLoading) return;
 
-    const nextPlayerIndex = (gameState.currentTurnIndex + 1) % gameState.playerOrder.length;
-    const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
-    const currentAskerPlayerId = gameState.playerOrder[gameState.currentTurnIndex];
+    try {
+      const nextPlayerIndex = (gameState.currentTurnIndex + 1) % gameState.playerOrder.length;
+      const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+      const currentAskerPlayerId = gameState.playerOrder[gameState.currentTurnIndex];
 
-    await updateGameState({
-      phase: 'answering',
-      currentQuestion: questionText,
-      targetPlayerId: nextPlayerId,
-      usedAskers: [...gameState.usedAskers, currentAskerPlayerId]
-    });
+      await updateGameState({
+        phase: 'answering',
+        currentQuestion: questionText,
+        targetPlayerId: nextPlayerId,
+        usedAskers: [...gameState.usedAskers, currentAskerPlayerId]
+      });
+    } catch (error) {
+      console.error("Error selecting question:", error);
+      toast({
+        title: "Error",
+        description: "Failed to select question. Please try again.",
+        variant: "destructive",
+      });
+    }
   }, [gameState, isLoading]);
 
   const submitAnswer = useCallback(async (answer: string) => {
