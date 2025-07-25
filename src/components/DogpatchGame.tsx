@@ -310,7 +310,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     });
     
     setTimeout(() => {
-      nextQuestion();
+      nextQuestion(newScores, newQuestionResults);
     }, 3000);
   };
 
@@ -318,7 +318,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     showQuestionResults();
   };
 
-  const nextQuestion = async () => {
+  const nextQuestion = async (preservedScores?: Record<string, number>, preservedResults?: Array<{questionId: number, playerAnswers: Record<string, string>, correctAnswer: string}>) => {
     if (currentQuestionIndex + 1 >= questions.length) {
       await onUpdateRoom({
         game_state: {
@@ -326,8 +326,8 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
           phase: 'finished', // For Room component compatibility
           gamePhase: 'finished',
           // Preserve all final data
-          scores: scores,
-          questionResults: questionResults
+          scores: preservedScores || scores,
+          questionResults: preservedResults || questionResults
         }
       });
       return;
@@ -345,9 +345,9 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         playerAnswers: {},
         // Reset selectedAnswer for next question
         resetAnswers: true,
-        // Keep existing questionResults and scores from current state
-        questionResults: questionResults,
-        scores: scores
+        // Keep existing questionResults and scores from parameters or current state
+        questionResults: preservedResults || questionResults,
+        scores: preservedScores || scores
       }
     });
   };
