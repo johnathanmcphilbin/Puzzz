@@ -559,17 +559,19 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
               {currentQuestion.options.map((option, index) => (
                 <Button
                   key={index}
-                  variant={selectedAnswer === option ? "default" : "outline"}
+                  variant={
+                    gamePhase === 'results' && option === currentQuestion.correctAnswer
+                      ? "default"
+                      : gamePhase === 'results' && selectedAnswer === option && option !== currentQuestion.correctAnswer
+                      ? "destructive"
+                      : selectedAnswer === option
+                      ? "default"
+                      : "outline"
+                  }
                   size="lg"
                   onClick={() => handleAnswerSelect(option)}
-                  disabled={selectedAnswer !== null || showResults}
-                  className={`p-4 text-left h-auto ${
-                    gamePhase === 'results' && option === currentQuestion.correctAnswer
-                      ? 'bg-green-500 hover:bg-green-600 text-white'
-                      : gamePhase === 'results' && selectedAnswer === option && option !== currentQuestion.correctAnswer
-                      ? 'bg-red-500 hover:bg-red-600 text-white'
-                      : ''
-                  }`}
+                  disabled={selectedAnswer !== null || gamePhase === 'results'}
+                  className="p-4 text-left h-auto"
                 >
                   {option}
                 </Button>
