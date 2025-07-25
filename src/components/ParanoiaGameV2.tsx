@@ -69,10 +69,22 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
     onTimeUp: () => {
       toast({
         title: "Time's up!",
-        description: "Question selection time expired",
+        description: "Auto-submitting question...",
         variant: "destructive",
       });
-      nextTurn();
+      
+      // Auto-submit custom question if there's text, otherwise use a random question
+      if (customQuestion.trim()) {
+        selectQuestion(customQuestion.trim());
+        setCustomQuestion("");
+      } else if (questions.length > 0) {
+        // Use a random question from available questions
+        const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+        selectQuestion(randomQuestion.question);
+      } else {
+        // Fallback to a default question if no questions are available
+        selectQuestion("Who is most likely to become famous?");
+      }
     }
   });
 
