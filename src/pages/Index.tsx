@@ -316,7 +316,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/8ccd92fd-4776-432c-98c6-8098017d1b36.png" 
                     alt="Dogpatch Game - Dog silhouette"
-                    className="w-full h-full object-contain p-4"
+                    className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
