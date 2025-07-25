@@ -175,6 +175,8 @@ export const useRoom = (roomCode: string) => {
           filter: `room_id=eq.${room.id}`,
         },
         (payload) => {
+          console.log('Player change detected:', payload.eventType, payload);
+          
           // Handle player kick detection
           if (payload.eventType === 'DELETE') {
             const deletedPlayer = payload.old;
@@ -190,24 +192,33 @@ export const useRoom = (roomCode: string) => {
                 variant: 'destructive',
               });
               
+              console.log('Player was kicked, navigating to home');
               navigate('/');
               return;
             }
             
+            console.log('Removing player from list:', deletedPlayer);
             setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
           } else if (payload.eventType === 'INSERT') {
+            console.log('Adding new player:', payload.new);
             setPlayers(prev => {
               // Prevent duplicate players
-              if (prev.some(p => p.id === payload.new.id)) return prev;
+              if (prev.some(p => p.id === payload.new.id)) {
+                console.log('Player already exists, not adding duplicate');
+                return prev;
+              }
+              console.log('Adding new player to list');
               return [...prev, payload.new as Player];
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedPlayer = payload.new as Player;
+            console.log('Updating player:', updatedPlayer);
             setPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
             
             // Update current player if it's the one being updated
             const currentPlayerId = localStorage.getItem('puzzz_player_id');
             if (currentPlayerId && updatedPlayer.player_id === currentPlayerId) {
+              console.log('Updating current player');
               setCurrentPlayer(updatedPlayer);
             }
           }

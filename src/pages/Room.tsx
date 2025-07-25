@@ -12,8 +12,11 @@ export const Room = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
   
+  console.log('Room component rendered with roomCode:', roomCode);
+  
   // Redirect if no room code
   if (!roomCode) {
+    console.log('No room code, redirecting to home');
     navigate("/");
     return null;
   }
