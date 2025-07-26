@@ -604,8 +604,8 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
           <div className="text-center space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold text-primary">Round {roundNumber}</h1>
             <div className="flex items-center justify-center gap-2">
-              <Badge variant={isImposter ? "destructive" : "default"} className="text-xs sm:text-sm">
-                {isImposter ? "🎭 You are the IMPOSTER!" : "🕵️ Find the imposter"}
+              <Badge variant="default" className="text-xs sm:text-sm">
+                🕵️ Find the odd one out
               </Badge>
             </div>
             <Progress value={(answeredCount / players.length) * 100} className="w-full" />
@@ -615,7 +615,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
           </div>
 
           {/* Your Prompt */}
-          <Card className={isImposter ? "border-destructive" : ""}>
+          <Card>
             <CardHeader>
               <CardTitle className="text-center">Your Prompt</CardTitle>
             </CardHeader>
@@ -623,11 +623,6 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
               <p className="text-base sm:text-lg font-medium p-3 sm:p-4 bg-muted rounded-lg">
                 {myPrompt}
               </p>
-              {isImposter && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Remember: Blend in with the other players!
-                </p>
-              )}
             </CardContent>
           </Card>
 
