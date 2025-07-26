@@ -171,71 +171,66 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Fixed Header */}
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">Choose Your Cat Character</DialogTitle>
         </DialogHeader>
         
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {initialLoading ? (
-            <div className="p-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <div key={index} className="border-2 rounded-lg p-4 border-gray-200">
-                    <div className="text-center">
-                      <Skeleton className="w-20 h-20 mx-auto rounded-full mb-3" />
-                      <Skeleton className="h-4 w-16 mx-auto" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <ScrollArea className="flex-1">
-              <div className="p-4 space-y-4">
-                {/* Character grid */}
-                {displayedCharacters.length > 0 && (
-                  <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {displayedCharacters.map((character) => (
-                        <CharacterCard
-                          key={character.id}
-                          character={character}
-                          isSelected={selectedCharacter === character.id}
-                          onClick={() => setSelectedCharacter(character.id)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Load More button */}
-                {!showingMore && remainingCharacters.length > 0 && (
+        {initialLoading ? (
+          <div className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="border-2 rounded-lg p-4 border-gray-200">
                   <div className="text-center">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setShowingMore(true)}
-                      className="w-full"
-                    >
-                      Load More Cats ({remainingCharacters.length} more)
-                    </Button>
+                    <Skeleton className="w-20 h-20 mx-auto rounded-full mb-3" />
+                    <Skeleton className="h-4 w-16 mx-auto" />
                   </div>
-                )}
-
-                {characters.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    No characters available yet. Check back soon!
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Character grid */}
+            {displayedCharacters.length > 0 && (
+              <div className="p-4">
+                <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {displayedCharacters.map((character) => (
+                      <CharacterCard
+                        key={character.id}
+                        character={character}
+                        isSelected={selectedCharacter === character.id}
+                        onClick={() => setSelectedCharacter(character.id)}
+                      />
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
-            </ScrollArea>
-          )}
-        </div>
+            )}
 
-        {/* Fixed Footer */}
-        <div className="flex justify-center gap-4 p-4 border-t bg-background flex-shrink-0">
+            {/* Load More button */}
+            {!showingMore && remainingCharacters.length > 0 && (
+              <div className="text-center px-4 pb-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowingMore(true)}
+                  className="w-full"
+                >
+                  Load More Cats ({remainingCharacters.length} more)
+                </Button>
+              </div>
+            )}
+
+            {characters.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No characters available yet. Check back soon!
+              </div>
+            )}
+          </>
+        )}
+
+        <div className="flex justify-center gap-4 mt-6 p-4">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
