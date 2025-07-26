@@ -7,6 +7,19 @@ import lilCat from './cats/lil-cat.png';
 import orangeCat from './cats/orange-cat.png';
 import pirateCat from './cats/pirate-cat.png';
 import auraCat from './cats/aura-cat.png';
+import balletCat from './cats/ballet-cat.jpg';
+import chillCat from './cats/chill-cat.jpg';
+import dinoCat from './cats/dino-cat.jpg';
+import flowerCat from './cats/flower-cat.jpg';
+import frenchCat from './cats/french-cat.jpg';
+import jumperCat from './cats/jumper-cat.jpg';
+import kingCat from './cats/king-cat.jpg';
+import milkCat from './cats/milk-cat.jpg';
+import scienceCat from './cats/science-cat.jpg';
+import sickCat from './cats/sick-cat.jpg';
+import sillyCat from './cats/silly-cat.jpg';
+import tomatoCat from './cats/tomato-cat.jpg';
+import tuffCat from './cats/tuff-cat.jpg';
 
 export const catImageMap: Record<string, string> = {
   '/cats/Angry cat.png': angryCat,
@@ -17,19 +30,19 @@ export const catImageMap: Record<string, string> = {
   '/cats/Orange cat.png': orangeCat,
   '/cats/Pirate cat.png': pirateCat,
   '/cats/auracat.png': auraCat,
-  '/cats/Ballet cat.jpg': '/cats/Ballet cat.jpg',
-  '/cats/Chill cat.jpg': '/cats/Chill cat.jpg',
-  '/cats/Dino cat.jpg': '/cats/Dino cat.jpg',
-  '/cats/Flower cat.jpg': '/cats/Flower cat.jpg',
-  '/cats/French cat.jpg': '/cats/French cat.jpg',
-  '/cats/Jumper cat.jpg': '/cats/Jumper cat.jpg',
-  '/cats/King cat.jpg': '/cats/King cat.jpg',
-  '/cats/Milk cat.jpg': '/cats/Milk cat.jpg',
-  '/cats/Science cat.jpg': '/cats/Science cat.jpg',
-  '/cats/Sick cat.jpg': '/cats/Sick cat.jpg',
-  '/cats/Silly cat.jpg': '/cats/Silly cat.jpg',
-  '/cats/Tomato cat.jpg': '/cats/Tomato cat.jpg',
-  '/cats/Tuff cat.jpg': '/cats/Tuff cat.jpg',
+  '/cats/Ballet cat.jpg': balletCat,
+  '/cats/Chill cat.jpg': chillCat,
+  '/cats/Dino cat.jpg': dinoCat,
+  '/cats/Flower cat.jpg': flowerCat,
+  '/cats/French cat.jpg': frenchCat,
+  '/cats/Jumper cat.jpg': jumperCat,
+  '/cats/King cat.jpg': kingCat,
+  '/cats/Milk cat.jpg': milkCat,
+  '/cats/Science cat.jpg': scienceCat,
+  '/cats/Sick cat.jpg': sickCat,
+  '/cats/Silly cat.jpg': sillyCat,
+  '/cats/Tomato cat.jpg': tomatoCat,
+  '/cats/Tuff cat.jpg': tuffCat,
 };
 
 export const getCatImageUrl = (iconUrl: string | null): string => {
