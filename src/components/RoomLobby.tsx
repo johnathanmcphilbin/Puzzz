@@ -473,7 +473,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                     </div>
                   </div>
 
-                  {/* Dogpatch Game */}
+                  {/* Dogpatch Game - Hidden for now, can be easily restored */}
+                  {/*
                   <div 
                     className={`relative p-4 border rounded-lg transition-all ${
                       currentPlayer.is_host
@@ -492,6 +493,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                      </div>
                    </div>
                  </div>
+                 */}
                 </div>
 
               {/* Action Buttons */}
