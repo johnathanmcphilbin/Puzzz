@@ -35,59 +35,13 @@ const CharacterCard = React.memo(({
   isSelected: boolean; 
   onClick: () => void;
 }) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
   const imageUrl = useMemo(() => {
     const url = getCatImageUrl(character.icon_url);
     console.log(`Image URL for ${character.name}:`, url);
     return url;
   }, [character.icon_url]);
-
-  // Reset states when character changes and preload image
-  useEffect(() => {
-    setImageLoaded(false);
-    setImageError(false);
-    setRetryCount(0);
-    
-    // Preload the image to ensure it's cached
-    const img = new Image();
-    img.onload = () => {
-      console.log(`Image preloaded successfully for ${character.name}`);
-      setImageLoaded(true);
-    };
-    img.onerror = () => {
-      console.log(`Image preload failed for ${character.name}:`, imageUrl);
-    };
-    img.src = imageUrl;
-  }, [character.id, imageUrl, character.name]);
-
-  const handleImageLoad = () => {
-    console.log(`Image loaded in component for ${character.name}`);
-    setImageLoaded(true);
-    setImageError(false);
-  };
-
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.log(`Image load failed for ${character.name}:`, imageUrl, 'Retry count:', retryCount);
-    
-    if (retryCount < 3) {
-      const img = e.currentTarget;
-      const newRetryCount = retryCount + 1;
-      setRetryCount(newRetryCount);
-      
-      // Force reload with different cache busting strategies
-      setTimeout(() => {
-        const cacheBuster = `?v=${Date.now()}&retry=${newRetryCount}`;
-        console.log(`Retrying image load for ${character.name} with:`, imageUrl + cacheBuster);
-        img.src = imageUrl + cacheBuster;
-      }, newRetryCount * 300);
-    } else {
-      console.error(`Failed to load image after 3 retries for ${character.name}:`, imageUrl);
-      setImageError(true);
-    }
-  };
 
   return (
     <div
@@ -100,20 +54,16 @@ const CharacterCard = React.memo(({
     >
       <div className="text-center">
         <div className="relative w-20 h-20 mx-auto mb-3">
-          {!imageLoaded && !imageError && (
-            <Skeleton className="w-20 h-20 rounded-full" />
-          )}
           {character.icon_url && !imageError ? (
             <img
-              key={`${character.id}-${retryCount}`}
               src={imageUrl}
               alt={character.name}
-              className={`w-20 h-20 rounded-full object-contain bg-white p-1 transition-opacity duration-200 ${
-                imageLoaded ? 'opacity-100' : 'opacity-0 absolute'
-              }`}
+              className="w-20 h-20 rounded-full object-contain bg-white p-1"
               loading="eager"
-              onLoad={handleImageLoad}
-              onError={handleImageError}
+              onError={() => {
+                console.log(`Image failed to load: ${character.name} - ${imageUrl}`);
+                setImageError(true);
+              }}
             />
           ) : (
             <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
