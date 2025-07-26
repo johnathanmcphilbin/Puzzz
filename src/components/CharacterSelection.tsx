@@ -193,32 +193,34 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
           <>
             {/* Character grid with scroll area */}
             {displayedCharacters.length > 0 && (
-              <ScrollArea className="flex-1 min-h-0 px-4">
-                <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {displayedCharacters.map((character) => (
-                      <CharacterCard
-                        key={character.id}
-                        character={character}
-                        isSelected={selectedCharacter === character.id}
-                        onClick={() => setSelectedCharacter(character.id)}
-                      />
-                    ))}
+              <ScrollArea className="flex-1 min-h-0 max-h-[400px]">
+                <div className="px-4 pb-4">
+                  <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {displayedCharacters.map((character) => (
+                        <CharacterCard
+                          key={character.id}
+                          character={character}
+                          isSelected={selectedCharacter === character.id}
+                          onClick={() => setSelectedCharacter(character.id)}
+                        />
+                      ))}
+                    </div>
                   </div>
+                  
+                  {/* Load More button inside scroll area */}
+                  {!showingMore && remainingCharacters.length > 0 && (
+                    <div className="text-center pt-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowingMore(true)}
+                        className="w-full"
+                      >
+                        Load More Cats ({remainingCharacters.length} more)
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                
-                {/* Load More button inside scroll area */}
-                {!showingMore && remainingCharacters.length > 0 && (
-                  <div className="text-center py-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setShowingMore(true)}
-                      className="w-full"
-                    >
-                      Load More Cats ({remainingCharacters.length} more)
-                    </Button>
-                  </div>
-                )}
               </ScrollArea>
             )}
 
