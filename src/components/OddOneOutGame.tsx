@@ -56,6 +56,8 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
   const [selectedVote, setSelectedVote] = useState("");
   const [scores, setScores] = useState<{ [playerId: string]: number }>({});
   const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const [isSubmittingVote, setIsSubmittingVote] = useState(false);
   
   // Game state from room
   const gameState = room.game_state || {};
@@ -288,24 +290,39 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       return;
     }
 
-    const updatedAnswers = { 
-      ...gameState.player_answers, 
-      [currentPlayer.player_id]: myAnswer.trim() 
-    };
+    if (isSubmittingAnswer) return;
+
+    setIsSubmittingAnswer(true);
     
-    await updateGameState({ player_answers: updatedAnswers });
-    
-    // Check if all players have answered
-    if (Object.keys(updatedAnswers).length === players.length) {
-      // Move directly to voting phase
-      await updateGameState({ phase: "voting" });
+    try {
+      const updatedAnswers = { 
+        ...gameState.player_answers, 
+        [currentPlayer.player_id]: myAnswer.trim() 
+      };
+      
+      await updateGameState({ player_answers: updatedAnswers });
+      
+      // Check if all players have answered
+      if (Object.keys(updatedAnswers).length === players.length) {
+        // Move directly to voting phase
+        await updateGameState({ phase: "voting" });
+      }
+      
+      setMyAnswer("");
+      toast({
+        title: "Answer Submitted Successfully! ✓",
+        description: "Waiting for other players to finish...",
+      });
+    } catch (error) {
+      console.error("Error submitting answer:", error);
+      toast({
+        title: "Submission Failed",
+        description: "Please try submitting your answer again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingAnswer(false);
     }
-    
-    setMyAnswer("");
-    toast({
-      title: "Answer Submitted!",
-      description: "Waiting for other players...",
-    });
   };
 
 
@@ -319,23 +336,38 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       return;
     }
 
-    const updatedVotes = { 
-      ...gameState.votes, 
-      [currentPlayer.player_id]: selectedVote 
-    };
+    if (isSubmittingVote) return;
+
+    setIsSubmittingVote(true);
     
-    await updateGameState({ votes: updatedVotes });
-    
-    // Check if all players have voted
-    if (Object.keys(updatedVotes).length === players.length) {
-      await revealResults(updatedVotes);
+    try {
+      const updatedVotes = { 
+        ...gameState.votes, 
+        [currentPlayer.player_id]: selectedVote 
+      };
+      
+      await updateGameState({ votes: updatedVotes });
+      
+      // Check if all players have voted
+      if (Object.keys(updatedVotes).length === players.length) {
+        await revealResults(updatedVotes);
+      }
+      
+      setSelectedVote("");
+      toast({
+        title: "Vote Submitted Successfully! ✓",
+        description: "Waiting for other players to vote...",
+      });
+    } catch (error) {
+      console.error("Error submitting vote:", error);
+      toast({
+        title: "Vote Submission Failed",
+        description: "Please try voting again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingVote(false);
     }
-    
-    setSelectedVote("");
-    toast({
-      title: "Vote Submitted!",
-      description: "Waiting for other players...",
-    });
   };
 
   const revealResults = async (finalVotes: { [playerId: string]: string }) => {
@@ -611,8 +643,12 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
                     rows={3}
                   />
                 </div>
-                <Button onClick={submitAnswer} className="w-full" disabled={!myAnswer.trim()}>
-                  Submit Answer
+                <Button 
+                  onClick={submitAnswer} 
+                  className="w-full" 
+                  disabled={!myAnswer.trim() || isSubmittingAnswer}
+                >
+                  {isSubmittingAnswer ? "Submitting..." : "Submit Answer"}
                 </Button>
               </CardContent>
             </Card>
@@ -748,9 +784,9 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
                   onClick={submitVote} 
                   className="w-full mt-4 sm:mt-6" 
                   size="lg"
-                  disabled={!selectedVote}
+                  disabled={!selectedVote || isSubmittingVote}
                 >
-                  Vote for {selectedVote ? players.find(p => p.player_id === selectedVote)?.player_name : "..."}
+                  {isSubmittingVote ? "Submitting Vote..." : `Vote for ${selectedVote ? players.find(p => p.player_id === selectedVote)?.player_name : "..."}`}
                 </Button>
               </CardContent>
             </Card>
