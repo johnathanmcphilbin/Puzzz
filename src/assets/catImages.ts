@@ -1,15 +1,33 @@
 export const getCatImageUrl = (iconUrl: string | null): string => {
-  if (!iconUrl) return '/placeholder.svg';
+  if (!iconUrl) {
+    console.log('No iconUrl provided, returning placeholder');
+    return '/placeholder.svg';
+  }
   
-  // URL encode the path to handle spaces and special characters
-  // Split by '/' to only encode the filename part
-  const pathParts = iconUrl.split('/');
-  const encodedPath = pathParts.map((part, index) => {
-    // Don't encode the first empty part or 'cats', only encode filenames
-    if (index === 0 || part === 'cats') return part;
-    return encodeURIComponent(part);
-  }).join('/');
+  console.log('Original iconUrl:', iconUrl);
+  console.log('Testing direct path access...');
   
-  console.log(`Original path: ${iconUrl}, Encoded path: ${encodedPath}`);
+  // Test the original path first
+  const originalPath = iconUrl;
+  console.log('Trying original path:', originalPath);
+  
+  // Also try URL encoded version
+  const encodedPath = iconUrl.replace(/ /g, '%20');
+  console.log('Trying encoded path:', encodedPath);
+  
+  // For debugging, let's try both approaches
+  const img = new Image();
+  img.onload = () => console.log('✅ Image loaded successfully:', originalPath);
+  img.onerror = () => {
+    console.log('❌ Image failed to load:', originalPath);
+    // Try encoded version
+    const imgEncoded = new Image();
+    imgEncoded.onload = () => console.log('✅ Encoded image loaded successfully:', encodedPath);
+    imgEncoded.onerror = () => console.log('❌ Encoded image also failed:', encodedPath);
+    imgEncoded.src = encodedPath;
+  };
+  img.src = originalPath;
+  
+  // Return the encoded version for production
   return encodedPath;
 };
