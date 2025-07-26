@@ -90,6 +90,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
+  const [showingMore, setShowingMore] = useState(false);
   const { toast } = useToast();
 
   const loadCharacters = useCallback(async () => {
@@ -164,8 +165,9 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
     }
   };
 
-  const firstEightCharacters = characters.slice(0, 8);
-  const remainingCharacters = characters.slice(8);
+  const initialCharacters = characters.slice(0, 10);
+  const remainingCharacters = characters.slice(10);
+  const displayedCharacters = showingMore ? characters : initialCharacters;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -189,12 +191,12 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
           </div>
         ) : (
           <>
-            {/* First 8 characters in island */}
-            {firstEightCharacters.length > 0 && (
+            {/* Character grid */}
+            {displayedCharacters.length > 0 && (
               <div className="p-4">
                 <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {firstEightCharacters.map((character) => (
+                    {displayedCharacters.map((character) => (
                       <CharacterCard
                         key={character.id}
                         character={character}
@@ -207,24 +209,16 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
               </div>
             )}
 
-            {/* Remaining characters in scrollable area */}
-            {remainingCharacters.length > 0 && (
-              <div className="px-4">
-                <div className="text-sm text-muted-foreground mb-3 text-center">
-                  Scroll to see more cats
-                </div>
-                <ScrollArea className="h-64">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pr-4">
-                    {remainingCharacters.map((character) => (
-                      <CharacterCard
-                        key={character.id}
-                        character={character}
-                        isSelected={selectedCharacter === character.id}
-                        onClick={() => setSelectedCharacter(character.id)}
-                      />
-                    ))}
-                  </div>
-                </ScrollArea>
+            {/* Load More button */}
+            {!showingMore && remainingCharacters.length > 0 && (
+              <div className="text-center px-4 pb-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowingMore(true)}
+                  className="w-full"
+                >
+                  Load More Cats ({remainingCharacters.length} more)
+                </Button>
               </div>
             )}
 
@@ -244,7 +238,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
             onClick={handleSelectCharacter}
             disabled={!selectedCharacter || loading}
           >
-            {loading ? "Selecting..." : "Choose Character"}
+            {loading ? "Confirming..." : "Confirm"}
           </Button>
         </div>
       </DialogContent>
