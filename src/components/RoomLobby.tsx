@@ -358,7 +358,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {player.player_id === currentPlayer.player_id && !player.selected_character_id && (
+                        {player.player_id === currentPlayer.player_id && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -366,7 +366,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                             className="gap-1"
                           >
                             <Cat className="h-3 w-3" />
-                            Pick Cat
+                            {player.selected_character_id ? "Change Cat" : "Pick Cat"}
                           </Button>
                         )}
                         {player.is_host && (
