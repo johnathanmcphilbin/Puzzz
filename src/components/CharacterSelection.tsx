@@ -191,9 +191,9 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
           </div>
         ) : (
           <>
-            {/* Character grid */}
+            {/* Character grid with scroll area */}
             {displayedCharacters.length > 0 && (
-              <div className="p-4">
+              <ScrollArea className="flex-1 px-4">
                 <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {displayedCharacters.map((character) => (
@@ -206,20 +206,20 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Load More button */}
-            {!showingMore && remainingCharacters.length > 0 && (
-              <div className="text-center px-4 pb-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowingMore(true)}
-                  className="w-full"
-                >
-                  Load More Cats ({remainingCharacters.length} more)
-                </Button>
-              </div>
+                
+                {/* Load More button inside scroll area */}
+                {!showingMore && remainingCharacters.length > 0 && (
+                  <div className="text-center py-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowingMore(true)}
+                      className="w-full"
+                    >
+                      Load More Cats ({remainingCharacters.length} more)
+                    </Button>
+                  </div>
+                )}
+              </ScrollArea>
             )}
 
             {characters.length === 0 && (
