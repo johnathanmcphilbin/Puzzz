@@ -1,4 +1,7 @@
-// Import all cat images as ES6 modules
+// Complete rebuild of cat image loading system
+// Import all cat images as ES6 modules for reliable bundling
+
+// PNG files
 import angryCat from './cats/angry-cat.png';
 import auraCat from './cats/aura-cat.png';
 import drumCat from './cats/drum-cat.png';
@@ -7,6 +10,8 @@ import happyCat from './cats/happy-cat.png';
 import lilCat from './cats/lil-cat.png';
 import orangeCat from './cats/orange-cat.png';
 import pirateCat from './cats/pirate-cat.png';
+
+// JPG files
 import balletCat from './cats/ballet-cat.jpg';
 import chillCat from './cats/chill-cat.jpg';
 import dinoCat from './cats/dino-cat.jpg';
@@ -21,8 +26,9 @@ import sillyCat from './cats/silly-cat.jpg';
 import tomatoCat from './cats/tomato-cat.jpg';
 import tuffCat from './cats/tuff-cat.jpg';
 
-// Map database paths to imported images
-const catImageMap: Record<string, string> = {
+// Clean mapping from database paths to actual imported images
+export const CAT_IMAGE_REGISTRY: Record<string, string> = {
+  // PNG mappings
   '/cats/Angry cat.png': angryCat,
   '/cats/auracat.png': auraCat,
   '/cats/Drum cat.png': drumCat,
@@ -31,6 +37,8 @@ const catImageMap: Record<string, string> = {
   '/cats/Lil Cat.png': lilCat,
   '/cats/Orange cat.png': orangeCat,
   '/cats/Pirate cat.png': pirateCat,
+  
+  // JPG mappings
   '/cats/Ballet cat.jpg': balletCat,
   '/cats/Chill cat.jpg': chillCat,
   '/cats/Dino cat.jpg': dinoCat,
@@ -46,16 +54,30 @@ const catImageMap: Record<string, string> = {
   '/cats/Tuff cat.jpg': tuffCat,
 };
 
+/**
+ * Simple, reliable cat image URL resolver
+ * Takes a database path and returns the proper bundled image URL
+ */
 export const getCatImageUrl = (iconUrl: string | null): string => {
-  if (!iconUrl) return '/placeholder.svg';
-  
-  // Use mapped image if available, otherwise return original path
-  const mappedImage = catImageMap[iconUrl];
-  if (mappedImage) {
-    console.log(`Using mapped image for ${iconUrl}:`, mappedImage);
-    return mappedImage;
+  if (!iconUrl) {
+    return '/placeholder.svg';
   }
+
+  // Look up the image in our registry
+  const resolvedImage = CAT_IMAGE_REGISTRY[iconUrl];
   
-  console.log(`No mapping found for ${iconUrl}, using original path`);
-  return iconUrl;
+  if (resolvedImage) {
+    return resolvedImage;
+  }
+
+  // If no mapping found, log warning but don't crash
+  console.warn(`No cat image mapping found for: ${iconUrl}`);
+  return '/placeholder.svg';
+};
+
+/**
+ * Get all available cat images for debugging
+ */
+export const getAllCatImages = () => {
+  return Object.entries(CAT_IMAGE_REGISTRY);
 };

@@ -25,7 +25,7 @@ interface CharacterSelectionProps {
 // Cache characters data globally to avoid reloading
 let cachedCharacters: CatCharacter[] | null = null;
 
-// Memoized character card component for better performance
+// Clean, simple character card component
 const CharacterCard = React.memo(({ 
   character, 
   isSelected, 
@@ -35,7 +35,7 @@ const CharacterCard = React.memo(({
   isSelected: boolean; 
   onClick: () => void;
 }) => {
-  const imageUrl = useMemo(() => getCatImageUrl(character.icon_url), [character.icon_url]);
+  const imageUrl = getCatImageUrl(character.icon_url);
 
   return (
     <div
@@ -47,12 +47,11 @@ const CharacterCard = React.memo(({
       onClick={onClick}
     >
       <div className="text-center">
-        <div className="relative w-20 h-20 mx-auto mb-3">
+        <div className="w-20 h-20 mx-auto mb-3">
           <img
             src={imageUrl}
             alt={character.name}
             className="w-20 h-20 rounded-full object-contain bg-white p-1"
-            loading="eager"
           />
         </div>
         <h3 className="font-bold text-lg">{character.name}</h3>
