@@ -61,9 +61,17 @@ const CharacterCard = React.memo(({
               className={`w-20 h-20 rounded-full object-contain bg-white p-1 transition-opacity duration-200 ${
                 imageLoaded ? 'opacity-100' : 'opacity-0 absolute'
               }`}
-              loading="lazy"
+              loading="eager"
               onLoad={() => setImageLoaded(true)}
-              onError={() => setImageError(true)}
+              onError={(e) => {
+                console.error(`Failed to load image for ${character.name}:`, imageUrl);
+                // Try reloading once
+                if (e.currentTarget.src === imageUrl) {
+                  e.currentTarget.src = imageUrl + '?retry=1';
+                } else {
+                  setImageError(true);
+                }
+              }}
             />
           ) : (
             <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
