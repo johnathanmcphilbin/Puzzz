@@ -39,16 +39,32 @@ const CharacterCard = React.memo(({
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  const imageUrl = useMemo(() => getCatImageUrl(character.icon_url), [character.icon_url]);
+  const imageUrl = useMemo(() => {
+    const url = getCatImageUrl(character.icon_url);
+    console.log(`Image URL for ${character.name}:`, url);
+    return url;
+  }, [character.icon_url]);
 
-  // Reset states when character changes
+  // Reset states when character changes and preload image
   useEffect(() => {
     setImageLoaded(false);
     setImageError(false);
     setRetryCount(0);
-  }, [character.id]);
+    
+    // Preload the image to ensure it's cached
+    const img = new Image();
+    img.onload = () => {
+      console.log(`Image preloaded successfully for ${character.name}`);
+      setImageLoaded(true);
+    };
+    img.onerror = () => {
+      console.log(`Image preload failed for ${character.name}:`, imageUrl);
+    };
+    img.src = imageUrl;
+  }, [character.id, imageUrl, character.name]);
 
   const handleImageLoad = () => {
+    console.log(`Image loaded in component for ${character.name}`);
     setImageLoaded(true);
     setImageError(false);
   };
@@ -57,16 +73,18 @@ const CharacterCard = React.memo(({
     console.log(`Image load failed for ${character.name}:`, imageUrl, 'Retry count:', retryCount);
     
     if (retryCount < 3) {
-      // Retry loading with cache busting and delay
       const img = e.currentTarget;
       const newRetryCount = retryCount + 1;
       setRetryCount(newRetryCount);
       
+      // Force reload with different cache busting strategies
       setTimeout(() => {
-        img.src = imageUrl + `?retry=${newRetryCount}&t=${Date.now()}`;
-      }, newRetryCount * 200); // Increasing delay with each retry
+        const cacheBuster = `?v=${Date.now()}&retry=${newRetryCount}`;
+        console.log(`Retrying image load for ${character.name} with:`, imageUrl + cacheBuster);
+        img.src = imageUrl + cacheBuster;
+      }, newRetryCount * 300);
     } else {
-      console.error(`Failed to load image after 3 retries for ${character.name}`);
+      console.error(`Failed to load image after 3 retries for ${character.name}:`, imageUrl);
       setImageError(true);
     }
   };
@@ -87,6 +105,7 @@ const CharacterCard = React.memo(({
           )}
           {character.icon_url && !imageError ? (
             <img
+              key={`${character.id}-${retryCount}`}
               src={imageUrl}
               alt={character.name}
               className={`w-20 h-20 rounded-full object-contain bg-white p-1 transition-opacity duration-200 ${
