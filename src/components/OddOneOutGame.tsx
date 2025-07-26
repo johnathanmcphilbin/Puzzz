@@ -414,21 +414,27 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     setMyAnswer("");
     setSelectedVote("");
     
+    // Load new question and get it for syncing
     await loadRandomQuestion();
     
-    // Select new imposter
-    const randomImposter = players[Math.floor(Math.random() * players.length)];
-    
-    await updateGameState({
-      phase: "answering",
-      imposter_player_id: randomImposter.player_id,
-      round_number: (gameState.round_number || 1) + 1,
-      player_answers: {},
-      votes: {},
-      vote_counts: {},
-      suspected_imposter: null,
-      was_imposter_caught: null
-    });
+    // Wait a bit to ensure question is loaded, then get the current question
+    setTimeout(async () => {
+      // Select new imposter
+      const randomImposter = players[Math.floor(Math.random() * players.length)];
+      
+      await updateGameState({
+        phase: "answering",
+        imposter_player_id: randomImposter.player_id,
+        question: currentQuestion, // Sync the question to all players
+        question_id: currentQuestion?.id,
+        round_number: (gameState.round_number || 1) + 1,
+        player_answers: {},
+        votes: {},
+        vote_counts: {},
+        suspected_imposter: null,
+        was_imposter_caught: null
+      });
+    }, 100);
   };
 
   const leaveGame = async () => {
