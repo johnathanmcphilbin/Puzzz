@@ -52,6 +52,7 @@ const CharacterCard = React.memo(({
             src={imageUrl}
             alt={character.name}
             className="w-20 h-20 rounded-full object-contain bg-white p-1"
+            loading="eager"
           />
         </div>
         <h3 className="font-bold text-lg">{character.name}</h3>
