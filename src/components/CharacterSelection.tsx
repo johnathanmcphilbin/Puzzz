@@ -171,7 +171,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-2xl font-bold text-center">Choose Your Cat Character</DialogTitle>
         </DialogHeader>
@@ -193,7 +193,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
           <>
             {/* Character grid with scroll area */}
             {displayedCharacters.length > 0 && (
-              <ScrollArea className="flex-1 min-h-0 max-h-[400px]">
+              <ScrollArea className="flex-1 min-h-0">
                 <div className="px-4 pb-4">
                   <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
