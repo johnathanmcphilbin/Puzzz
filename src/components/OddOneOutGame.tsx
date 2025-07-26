@@ -300,12 +300,23 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
         [currentPlayer.player_id]: myAnswer.trim() 
       };
       
+      // Update answers first
       await updateGameState({ player_answers: updatedAnswers });
       
-      // Check if all players have answered
-      if (Object.keys(updatedAnswers).length === players.length) {
-        // Move directly to voting phase
-        await updateGameState({ phase: "voting" });
+      console.log(`Player ${currentPlayer.player_name} submitted answer. Total answers: ${Object.keys(updatedAnswers).length} / ${players.length}`);
+      
+      // Check if all players have answered - be more careful about the timing
+      const totalAnswers = Object.keys(updatedAnswers).length;
+      if (totalAnswers >= players.length) {
+        console.log("All players have answered, moving to voting phase");
+        // Small delay to ensure all answer updates are processed
+        setTimeout(async () => {
+          try {
+            await updateGameState({ phase: "voting" });
+          } catch (error) {
+            console.error("Error moving to voting phase:", error);
+          }
+        }, 500);
       }
       
       setMyAnswer("");
