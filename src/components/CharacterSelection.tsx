@@ -37,8 +37,39 @@ const CharacterCard = React.memo(({
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const imageUrl = useMemo(() => getCatImageUrl(character.icon_url), [character.icon_url]);
+
+  // Reset states when character changes
+  useEffect(() => {
+    setImageLoaded(false);
+    setImageError(false);
+    setRetryCount(0);
+  }, [character.id]);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.log(`Image load failed for ${character.name}:`, imageUrl, 'Retry count:', retryCount);
+    
+    if (retryCount < 3) {
+      // Retry loading with cache busting and delay
+      const img = e.currentTarget;
+      const newRetryCount = retryCount + 1;
+      setRetryCount(newRetryCount);
+      
+      setTimeout(() => {
+        img.src = imageUrl + `?retry=${newRetryCount}&t=${Date.now()}`;
+      }, newRetryCount * 200); // Increasing delay with each retry
+    } else {
+      console.error(`Failed to load image after 3 retries for ${character.name}`);
+      setImageError(true);
+    }
+  };
 
   return (
     <div
@@ -62,16 +93,8 @@ const CharacterCard = React.memo(({
                 imageLoaded ? 'opacity-100' : 'opacity-0 absolute'
               }`}
               loading="eager"
-              onLoad={() => setImageLoaded(true)}
-              onError={(e) => {
-                console.error(`Failed to load image for ${character.name}:`, imageUrl);
-                // Try reloading once
-                if (e.currentTarget.src === imageUrl) {
-                  e.currentTarget.src = imageUrl + '?retry=1';
-                } else {
-                  setImageError(true);
-                }
-              }}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
             />
           ) : (
             <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
