@@ -708,12 +708,12 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                                  <div key={playerId} className="flex items-center gap-1">
                                    {playerCharacter ? (
                                      <div className="w-5 h-5 rounded-full overflow-hidden bg-white">
-                                         <img
-                                           src={getCatImageUrl(playerCharacter.icon_url)}
-                                           alt={playerCharacter.name}
-                                           className="w-full h-full object-contain p-0.5"
-                                           loading="eager"
-                                         />
+                                          <img
+                                            src={`/cats/${playerCharacter.icon_url}`}
+                                            alt={playerCharacter.name}
+                                            className="w-full h-full object-contain p-0.5"
+                                            loading="eager"
+                                          />
                                      </div>
                                    ) : null}
                                    <Badge variant="secondary" className="text-xs">
@@ -762,12 +762,12 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                                  <div key={playerId} className="flex items-center gap-1">
                                    {playerCharacter ? (
                                      <div className="w-5 h-5 rounded-full overflow-hidden bg-white">
-                                         <img
-                                           src={getCatImageUrl(playerCharacter.icon_url)}
-                                           alt={playerCharacter.name}
-                                           className="w-full h-full object-contain p-0.5"
-                                           loading="eager"
-                                         />
+                                          <img
+                                            src={`/cats/${playerCharacter.icon_url}`}
+                                            alt={playerCharacter.name}
+                                            className="w-full h-full object-contain p-0.5"
+                                            loading="eager"
+                                          />
                                      </div>
                                    ) : null}
                                    <Badge variant="secondary" className="text-xs">

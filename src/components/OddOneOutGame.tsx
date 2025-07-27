@@ -481,7 +481,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
 
   const renderPlayerIcon = (player: Player, isActive = false) => {
     const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
-    const catImageSrc = playerCharacter ? getCatImageUrl(playerCharacter.icon_url) : null;
+    const catImageSrc = playerCharacter ? `/cats/${playerCharacter.icon_url}` : null;
     
     return (
       <div className={`relative w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full border-2 sm:border-4 transition-all ${

@@ -392,11 +392,11 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                                            ) : playerCharacter ? (
                                               <div className="w-8 h-8 rounded-full overflow-hidden bg-white">
                                                  <img
-                                                   src={getCatImageUrl(playerCharacter.icon_url)}
-                                                   alt={playerCharacter.name}
-                                                   className="w-full h-full object-contain p-0.5"
-                                                   loading="eager"
-                                                 />
+                                                    src={`/cats/${playerCharacter.icon_url}`}
+                                                    alt={playerCharacter.name}
+                                                    className="w-full h-full object-contain p-0.5"
+                                                    loading="eager"
+                                                  />
                                               </div>
                                            ) : (
                                              <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-semibold">
