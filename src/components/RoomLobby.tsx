@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Play, Users, Crown, LogOut, QrCode, UserX } from "lucide-react";
+import { Copy, Play, Users, Crown, LogOut, QrCode, UserX, Cat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 import GameCustomizer from "./GameCustomizer";
+import { CharacterSelection } from "./CharacterSelection";
 
 interface Room {
   id: string;
@@ -24,7 +25,7 @@ interface Player {
   player_name: string;
   player_id: string;
   is_host: boolean;
-  
+  selected_character_id?: string;
 }
 
 interface RoomLobbyProps {
@@ -38,6 +39,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   const [isStarting, setIsStarting] = useState(false);
   const [selectedGame, setSelectedGame] = useState<string>(room.current_game || "would_you_rather");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+  const [showCharacterSelection, setShowCharacterSelection] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -162,6 +164,30 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     }
   };
 
+  const handleSelectCharacter = async (catName: string) => {
+    try {
+      const { error } = await supabase
+        .from("players")
+        .update({ selected_character_id: catName })
+        .eq("player_id", currentPlayer.player_id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Character Selected!",
+        description: `You chose ${catName.replace(/\.[^/.]+$/, "")}`,
+        className: "bg-success text-success-foreground",
+      });
+    } catch (error) {
+      console.error("Error selecting character:", error);
+      toast({
+        title: "Error",
+        description: "Failed to select character",
+        variant: "destructive",
+      });
+    }
+  };
+
   const leaveRoom = async () => {
     try {
       // Remove player from room
@@ -271,6 +297,18 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           </div>
         </div>
 
+        {/* Character Selection Button */}
+        <div className="text-center mb-8">
+          <Button
+            variant="outline"
+            onClick={() => setShowCharacterSelection(true)}
+            className="gap-2"
+          >
+            <Cat className="h-4 w-4" />
+            {currentPlayer.selected_character_id ? "Change Cat Avatar" : "Choose Cat Avatar"}
+          </Button>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-8">
           {/* Players List */}
           <Card>
@@ -291,9 +329,19 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                     className="flex items-center justify-between p-3 bg-muted rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
-                        {player.player_name.charAt(0).toUpperCase()}
-                      </div>
+                      {player.selected_character_id ? (
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary">
+                          <img 
+                            src={`/cats/${player.selected_character_id}`}
+                            alt={player.selected_character_id}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
+                          {player.player_name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div className="font-medium">{player.player_name}</div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -460,6 +508,13 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         </div>
       </div>
 
+      {/* Character Selection Modal */}
+      <CharacterSelection
+        isOpen={showCharacterSelection}
+        onClose={() => setShowCharacterSelection(false)}
+        onSelectCharacter={handleSelectCharacter}
+        currentCharacter={currentPlayer.selected_character_id}
+      />
     </div>
   );
 };
