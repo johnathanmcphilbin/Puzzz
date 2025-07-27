@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Crown, Users, SkipForward } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
+import { getCatImageUrl } from '@/assets/catImages';
 
 interface Question {
   id: number;
@@ -432,13 +432,13 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-lg">{index + 1}.</span>
                         {index === 0 && <Crown className="h-5 w-5 text-yellow-500" />}
-                         {playerCharacter && (
-                           <img
-                             src={`/cats/${playerCharacter.icon_url}`}
-                             alt={playerCharacter.name}
-                             className="w-8 h-8 rounded-full object-cover"
-                           />
-                         )}
+                        {playerCharacter && (
+                          <img
+                            src={getCatImageUrl(playerCharacter.icon_url)}
+                            alt={playerCharacter.name}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        )}
                         <span className="font-medium">{item.player?.player_name}</span>
                       </div>
                       <span className="font-bold text-lg">{item.score}/{questions.length}</span>
@@ -465,13 +465,13 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                           const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
                           return (
                             <div key={player.player_id} className="flex items-center gap-2 text-sm p-1">
-                               {playerCharacter && (
-                                 <img
-                                   src={`/cats/${playerCharacter.icon_url}`}
-                                   alt={playerCharacter.name}
-                                   className="w-4 h-4 rounded-full object-cover"
-                                 />
-                               )}
+                              {playerCharacter && (
+                                <img
+                                  src={getCatImageUrl(playerCharacter.icon_url)}
+                                  alt={playerCharacter.name}
+                                  className="w-4 h-4 rounded-full object-cover"
+                                />
+                              )}
                               <span>{player.player_name}</span>
                             </div>
                           );
@@ -484,13 +484,13 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                           const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
                           return (
                             <div key={player.player_id} className="flex items-center gap-2 text-sm p-1">
-                               {playerCharacter && (
-                                 <img
-                                   src={`/cats/${playerCharacter.icon_url}`}
-                                   alt={playerCharacter.name}
-                                   className="w-4 h-4 rounded-full object-cover"
-                                 />
-                               )}
+                              {playerCharacter && (
+                                <img
+                                  src={getCatImageUrl(playerCharacter.icon_url)}
+                                  alt={playerCharacter.name}
+                                  className="w-4 h-4 rounded-full object-cover"
+                                />
+                              )}
                               <span>{player.player_name}</span>
                               <span className="text-muted-foreground">({result.playerAnswers[player.player_id]})</span>
                             </div>
@@ -597,13 +597,13 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                 return (
                   <div key={player.id} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
                     <div className="flex items-center gap-2">
-                       {playerCharacter && (
-                         <img
-                           src={`/cats/${playerCharacter.icon_url}`}
-                           alt={playerCharacter.name}
-                           className="w-6 h-6 rounded-full object-cover"
-                         />
-                       )}
+                      {playerCharacter && (
+                        <img
+                          src={getCatImageUrl(playerCharacter.icon_url)}
+                          alt={playerCharacter.name}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      )}
                       <span>{player.player_name}</span>
                     </div>
                     <span className="font-semibold">{scores[player.player_id] || 0}</span>

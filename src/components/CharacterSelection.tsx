@@ -1,154 +1,230 @@
-import { useState } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { getCatImageUrl } from "@/assets/catImages";
+
+interface CatCharacter {
+  id: string;
+  name: string;
+  icon_url: string | null;
+}
 
 interface CharacterSelectionProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectCharacter: (catName: string) => void;
-  currentCharacter?: string;
+  playerId: string;
+  roomId: string;
+  onCharacterSelected: (characterId: string) => void;
 }
 
-// List of all cat images in public/cats/
-const ALL_CAT_IMAGES = [
-  "Angry cat.png",
-  "Ballet cat.jpg", 
-  "Chill cat.jpg",
-  "Dino cat.jpg",
-  "Drum cat.png",
-  "Flower cat.jpg",
-  "French cat.jpg",
-  "Glass cat.png",
-  "Happy cat.png",
-  "Jumper cat.jpg",
-  "King cat.jpg",
-  "Lil Cat.png",
-  "Milk cat.jpg",
-  "Orange cat.png",
-  "Pirate cat.png",
-  "Robo arm cat.png",
-  "Science cat.jpg",
-  "Sick cat.jpg",
-  "Silly cat.jpg",
-  "Tomato cat.jpg",
-  "Tuff cat.jpg",
-  "auracat.png"
-];
+// Cache characters data globally to avoid reloading
+let cachedCharacters: CatCharacter[] | null = null;
 
-const INITIAL_LOAD_COUNT = 9;
-const LOAD_MORE_COUNT = 6;
+// Clean, simple character card component
+const CharacterCard = React.memo(({ 
+  character, 
+  isSelected, 
+  onClick 
+}: { 
+  character: CatCharacter; 
+  isSelected: boolean; 
+  onClick: () => void;
+}) => {
+  const imageUrl = getCatImageUrl(character.icon_url);
 
-export const CharacterSelection = ({ 
-  isOpen, 
-  onClose, 
-  onSelectCharacter, 
-  currentCharacter 
-}: CharacterSelectionProps) => {
-  const [selectedCat, setSelectedCat] = useState<string>(currentCharacter || "");
-  const [visibleCount, setVisibleCount] = useState(INITIAL_LOAD_COUNT);
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  return (
+    <div
+      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+        isSelected
+          ? 'border-primary bg-primary/5'
+          : 'border-gray-200 hover:border-primary/50'
+      }`}
+      onClick={onClick}
+    >
+      <div className="text-center">
+        <div className="w-20 h-20 mx-auto mb-3">
+          <img
+            src={imageUrl}
+            alt={character.name}
+            className="w-20 h-20 rounded-full object-contain bg-white p-1"
+            loading="eager"
+          />
+        </div>
+        <h3 className="font-bold text-lg">{character.name}</h3>
+      </div>
+    </div>
+  );
+});
 
-  const handleImageLoad = (catName: string) => {
-    setLoadedImages(prev => new Set([...prev, catName]));
-  };
+CharacterCard.displayName = 'CharacterCard';
 
-  const handleImageError = (catName: string) => {
-    // Remove from loaded images if it fails to load
-    setLoadedImages(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(catName);
-      return newSet;
-    });
-  };
+export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
+  isOpen,
+  onClose,
+  playerId,
+  roomId,
+  onCharacterSelected
+}) => {
+  const [characters, setCharacters] = useState<CatCharacter[]>([]);
+  const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(false);
+  const [showingMore, setShowingMore] = useState(false);
+  const { toast } = useToast();
 
-  const handleLoadMore = () => {
-    setVisibleCount(prev => Math.min(prev + LOAD_MORE_COUNT, ALL_CAT_IMAGES.length));
-  };
+  const loadCharacters = useCallback(async () => {
+    // Use cached data if available
+    if (cachedCharacters) {
+      setCharacters(cachedCharacters);
+      return;
+    }
 
-  const handleConfirm = () => {
-    if (selectedCat) {
-      onSelectCharacter(selectedCat);
+    setInitialLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('cat_characters')
+        .select('id, name, icon_url')
+        .not('icon_url', 'is', null);
+
+      if (error) throw error;
+      
+      const charactersData = data || [];
+      setCharacters(charactersData);
+      cachedCharacters = charactersData; // Cache for next time
+    } catch (error) {
+      console.error('Error loading characters:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load characters",
+        variant: "destructive",
+      });
+    } finally {
+      setInitialLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadCharacters();
+    }
+  }, [isOpen, loadCharacters]);
+
+  const handleSelectCharacter = async () => {
+    if (!selectedCharacter) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('players')
+        .update({ selected_character_id: selectedCharacter })
+        .eq('player_id', playerId)
+        .eq('room_id', roomId);
+
+      if (error) throw error;
+
+      // Call the callback immediately
+      onCharacterSelected(selectedCharacter);
+      
+      toast({
+        title: "Character Selected!",
+        description: "Your character has been chosen",
+      });
+      
       onClose();
+      
+    } catch (error) {
+      console.error('Error selecting character:', error);
+      toast({
+        title: "Error",
+        description: "Failed to select character",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const visibleCats = ALL_CAT_IMAGES.slice(0, visibleCount);
-  const displayedCats = visibleCats.filter(cat => loadedImages.has(cat));
+  const initialCharacters = characters.slice(0, 10);
+  const remainingCharacters = characters.slice(10);
+  const displayedCharacters = showingMore ? characters : initialCharacters;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[95vh] flex flex-col">
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-center text-2xl font-bold">
-            Choose Your Cat Character
-          </DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-center">Choose Your Cat Character</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 h-[70vh]">
+        {initialLoading ? (
           <div className="p-4">
-            {/* Hidden images for preloading */}
-            {visibleCats.map((catName) => (
-              <img
-                key={catName}
-                src={`/cats/${catName}`}
-                alt=""
-                className="hidden"
-                onLoad={() => handleImageLoad(catName)}
-                onError={() => handleImageError(catName)}
-              />
-            ))}
-            
-            {/* Display grid of loaded cats */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {displayedCats.map((catName) => (
-                <div
-                  key={catName}
-                  className={`relative aspect-square cursor-pointer rounded-lg border-2 transition-all hover:scale-105 ${
-                    selectedCat === catName 
-                      ? "border-primary ring-2 ring-primary/20" 
-                      : "border-muted hover:border-primary/50"
-                  }`}
-                  onClick={() => setSelectedCat(catName)}
-                >
-                  <img
-                    src={`/cats/${catName}`}
-                    alt={catName.replace(/\.[^/.]+$/, "")}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <div className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-xs p-1 rounded text-center truncate">
-                    {catName.replace(/\.[^/.]+$/, "")}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="border-2 rounded-lg p-4 border-gray-200">
+                  <div className="text-center">
+                    <Skeleton className="w-20 h-20 mx-auto rounded-full mb-3" />
+                    <Skeleton className="h-4 w-16 mx-auto" />
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+        ) : (
+          <>
+            {/* Character grid with scroll area */}
+            {displayedCharacters.length > 0 && (
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="px-4 pb-4">
+                  <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {displayedCharacters.map((character) => (
+                        <CharacterCard
+                          key={character.id}
+                          character={character}
+                          isSelected={selectedCharacter === character.id}
+                          onClick={() => setSelectedCharacter(character.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Load More button inside scroll area */}
+                  {!showingMore && remainingCharacters.length > 0 && (
+                    <div className="text-center pt-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowingMore(true)}
+                        className="w-full"
+                      >
+                        Load More Cats ({remainingCharacters.length} more)
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
 
-            {/* Load More Button */}
-            {visibleCount < ALL_CAT_IMAGES.length && (
-              <div className="text-center">
-                <Button 
-                  variant="outline" 
-                  onClick={handleLoadMore}
-                  className="mb-4"
-                >
-                  Load More Cats
-                </Button>
+            {characters.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No characters available yet. Check back soon!
               </div>
             )}
-          </div>
-        </ScrollArea>
+          </>
+        )}
 
-        {/* Fixed footer with action buttons */}
-        <div className="flex-shrink-0 flex gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose} className="flex-1">
+        <div className="flex justify-center gap-4 mt-6 p-4 flex-shrink-0">
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleConfirm} 
-            disabled={!selectedCat}
-            className="flex-1"
+          <Button
+            onClick={handleSelectCharacter}
+            disabled={!selectedCharacter || loading}
           >
-            Confirm Selection
+            {loading ? "Confirming..." : "Confirm"}
           </Button>
         </div>
       </DialogContent>
