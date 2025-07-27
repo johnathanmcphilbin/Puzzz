@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, Users, RotateCcw, Crown, Trophy, AlertTriangle, FileText } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCatImageUrl } from "@/assets/catImages";
+
 
 interface Room {
   id: string;

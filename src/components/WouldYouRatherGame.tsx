@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTimer } from "@/hooks/useTimer";
 import { ChevronRight, Users, RotateCcw, Trophy, Clock, ArrowLeft, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getCatImageUrl } from "@/assets/catImages";
+
 
 interface Room {
   id: string;

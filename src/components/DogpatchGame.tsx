@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Crown, Users, SkipForward } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { getCatImageUrl } from '@/assets/catImages';
+
 
 interface Question {
   id: number;

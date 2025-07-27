@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getCatImageUrl } from '@/assets/catImages';
+
 import { Coins } from 'lucide-react';
 
 interface Player {
@@ -8,7 +8,7 @@ interface Player {
   player_name: string;
   player_id: string;
   is_host: boolean;
-  selected_character_id?: string;
+  
 }
 
 interface ParanoiaPlayerCircleProps {
@@ -32,35 +32,6 @@ export function ParanoiaPlayerCircle({
   isFlipping,
   currentAnswer
 }: ParanoiaPlayerCircleProps) {
-  const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
-
-  // Load character data
-  useEffect(() => {
-    const loadCharacterData = async () => {
-      const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
-      if (characterIds.length === 0) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('cat_characters')
-          .select('*')
-          .in('id', characterIds);
-
-        if (error) throw error;
-
-        const characterMap = data?.reduce((acc, char) => {
-          acc[char.id] = char;
-          return acc;
-        }, {} as any) || {};
-
-        setCharacterData(characterMap);
-      } catch (error) {
-        console.error('Error loading character data:', error);
-      }
-    };
-
-    loadCharacterData();
-  }, [players]);
 
   const getPlayerCirclePosition = (index: number, total: number) => {
     const angle = (index * 2 * Math.PI) / total - Math.PI / 2;
@@ -90,7 +61,6 @@ export function ParanoiaPlayerCircle({
         
         {playerOrder.map((playerId, index) => {
           const player = players.find(p => p.player_id === playerId);
-          const playerCharacter = player?.selected_character_id ? characterData[player.selected_character_id] : null;
           const { x, y } = getPlayerCirclePosition(index, playerOrder.length);
           const isCurrentTurn = index === currentTurnIndex;
           const isTarget = playerId === targetPlayerId;
@@ -98,7 +68,7 @@ export function ParanoiaPlayerCircle({
           
           return (
             <g key={playerId}>
-              {/* Cat icon background circle */}
+              {/* Player avatar circle */}
               <circle
                 cx={160 + x}
                 cy={160 + y}
@@ -109,30 +79,15 @@ export function ParanoiaPlayerCircle({
                 className={`transition-all duration-500 ${isCurrentTurn ? 'animate-pulse' : ''}`}
               />
               
-              {/* Cat icon */}
-              {playerCharacter && (
-                <image
-                  x={160 + x - 18}
-                  y={160 + y - 18}
-                  width="36"
-                  height="36"
-                  href={getCatImageUrl(playerCharacter.icon_url)}
-                  className="rounded-full"
-                  clipPath="circle(18px at 18px 18px)"
-                />
-              )}
-              
-              {/* Fallback initial if no character */}
-              {!playerCharacter && (
-                <text
-                  x={160 + x}
-                  y={160 + y + 6}
-                  textAnchor="middle"
-                  className="text-lg font-bold fill-background"
-                >
-                  {player?.player_name?.charAt(0)?.toUpperCase()}
-                </text>
-              )}
+              {/* Player initial */}
+              <text
+                x={160 + x}
+                y={160 + y + 6}
+                textAnchor="middle"
+                className="text-lg font-bold fill-background"
+              >
+                {player?.player_name?.charAt(0)?.toUpperCase()}
+              </text>
               
               <text
                 x={160 + x}

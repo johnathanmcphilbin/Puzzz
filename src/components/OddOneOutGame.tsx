@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTimer } from "@/hooks/useTimer";
 import { Users, Crown, Trophy, MessageSquare, Play, StopCircle, Clock, ArrowLeft, LogOut, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getCatImageUrl } from "@/assets/catImages";
+
 
 interface Room {
   id: string;
