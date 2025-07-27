@@ -7,8 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Copy, Play, Users, Crown, LogOut, QrCode, UserX, Cat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
-import { CharacterSelection } from "./CharacterSelection";
-import { getCatImageUrl } from "@/assets/catImages";
+import { CatAvatarSelection } from "./CatAvatarSelection";
+
 import GameCustomizer from "./GameCustomizer";
 
 interface Room {
@@ -336,16 +336,16 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                       className="flex items-center justify-between p-3 bg-muted rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        {playerCharacter ? (
-                          <div className="w-10 h-10 rounded-full overflow-hidden bg-white">
-                            <img
-                              src={getCatImageUrl(playerCharacter.icon_url)}
-                              alt={playerCharacter.name}
-                              className="w-full h-full object-contain p-0.5"
-                              loading="eager"
-                            />
-                          </div>
-                        ) : (
+                         {playerCharacter ? (
+                           <div className="w-10 h-10 rounded-full overflow-hidden bg-white">
+                             <img
+                               src={playerCharacter.icon_url || '/placeholder.svg'}
+                               alt={playerCharacter.name}
+                               className="w-full h-full object-cover"
+                               loading="eager"
+                             />
+                           </div>
+                         ) : (
                           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
                             {player.player_name.charAt(0).toUpperCase()}
                           </div>
@@ -533,8 +533,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         </div>
       </div>
 
-      {/* Character Selection Modal */}
-      <CharacterSelection
+      {/* Cat Avatar Selection Modal */}
+      <CatAvatarSelection
         isOpen={showCharacterSelection}
         onClose={() => setShowCharacterSelection(false)}
         playerId={currentPlayer.player_id}
