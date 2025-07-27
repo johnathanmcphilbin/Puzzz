@@ -120,7 +120,7 @@ export const CatAvatarSelection: React.FC<CatAvatarSelectionProps> = ({
           .from('cat_characters')
           .insert({
             name: cat.name,
-            icon_url: `/cats/${cat.filename}`,
+            icon_url: `/cats/${encodeURIComponent(cat.filename)}`,
           })
           .select('id')
           .single();
