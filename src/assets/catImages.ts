@@ -25,6 +25,7 @@ export const catImageMap: Record<string, string> = {
   '/cats/Jumper cat.jpg': '/cats/Jumper cat.jpg',
   '/cats/King cat.jpg': '/cats/King cat.jpg',
   '/cats/Milk cat.jpg': '/cats/Milk cat.jpg',
+  '/cats/Robo arm cat.png': '/cats/Robo arm cat.png',
   '/cats/Science cat.jpg': '/cats/Science cat.jpg',
   '/cats/Sick cat.jpg': '/cats/Sick cat.jpg',
   '/cats/Silly cat.jpg': '/cats/Silly cat.jpg',
