@@ -99,11 +99,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   };
 
   const handleCharacterSelected = async (characterId: string) => {
-    // Force reload of character data and refresh player list
+    // Immediately update character data after selection
     await loadCharacterData();
-    
-    // No need to manually update - real-time subscription will handle this
-    console.log('Character selected:', characterId);
     
     toast({
       title: "Character Selected!",
@@ -476,7 +473,8 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                     </div>
                   </div>
 
-                  {/* Dogpatch Game */}
+                  {/* Dogpatch Game - Hidden for now, can be easily restored */}
+                  {/*
                   <div 
                     className={`relative p-4 border rounded-lg transition-all ${
                       currentPlayer.is_host
@@ -495,6 +493,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                      </div>
                    </div>
                  </div>
+                 */}
                 </div>
 
               {/* Action Buttons */}

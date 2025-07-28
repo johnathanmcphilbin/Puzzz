@@ -306,7 +306,8 @@ const Index = () => {
               </div>
             </Card>
 
-            {/* Dogpatch Game */}
+            {/* Dogpatch Game - TEMPORARILY HIDDEN */}
+            {/* 
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 overflow-hidden h-full"
               onClick={() => handleGameClick("dogpatch")}
@@ -380,6 +381,7 @@ const Index = () => {
                 </CardHeader>
               </div>
             </Card>
+            */}
 
           </div>
         </div>
