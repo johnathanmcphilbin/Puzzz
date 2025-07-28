@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
+import { getCatImageUrl } from '@/assets/catImages';
 import { Coins } from 'lucide-react';
 
 interface Player {
@@ -116,7 +116,7 @@ export function ParanoiaPlayerCircle({
                   y={160 + y - 18}
                   width="36"
                   height="36"
-                  href={playerCharacter.icon_url || '/placeholder.svg'}
+                  href={getCatImageUrl(playerCharacter.icon_url)}
                   className="rounded-full"
                   clipPath="circle(18px at 18px 18px)"
                 />

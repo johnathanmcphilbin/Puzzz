@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Crown, Users, SkipForward } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
+import { getCatImageUrl } from '@/assets/catImages';
 
 interface Question {
   id: number;
@@ -434,7 +434,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                         {index === 0 && <Crown className="h-5 w-5 text-yellow-500" />}
                         {playerCharacter && (
                           <img
-                            src={playerCharacter.icon_url || '/placeholder.svg'}
+                            src={getCatImageUrl(playerCharacter.icon_url)}
                             alt={playerCharacter.name}
                             className="w-8 h-8 rounded-full object-cover"
                           />
@@ -467,7 +467,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                             <div key={player.player_id} className="flex items-center gap-2 text-sm p-1">
                               {playerCharacter && (
                                 <img
-                                   src={playerCharacter.icon_url || '/placeholder.svg'}
+                                  src={getCatImageUrl(playerCharacter.icon_url)}
                                   alt={playerCharacter.name}
                                   className="w-4 h-4 rounded-full object-cover"
                                 />
@@ -486,7 +486,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                             <div key={player.player_id} className="flex items-center gap-2 text-sm p-1">
                               {playerCharacter && (
                                 <img
-                                   src={playerCharacter.icon_url || '/placeholder.svg'}
+                                  src={getCatImageUrl(playerCharacter.icon_url)}
                                   alt={playerCharacter.name}
                                   className="w-4 h-4 rounded-full object-cover"
                                 />
@@ -599,7 +599,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                     <div className="flex items-center gap-2">
                       {playerCharacter && (
                         <img
-                          src={playerCharacter.icon_url || '/placeholder.svg'}
+                          src={getCatImageUrl(playerCharacter.icon_url)}
                           alt={playerCharacter.name}
                           className="w-6 h-6 rounded-full object-cover"
                         />

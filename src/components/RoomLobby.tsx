@@ -8,7 +8,7 @@ import { Copy, Play, Users, Crown, LogOut, QrCode, UserX, Cat } from "lucide-rea
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 import { CharacterSelection } from "./CharacterSelection";
-
+import { getCatImageUrl } from "@/assets/catImages";
 import GameCustomizer from "./GameCustomizer";
 
 interface Room {
@@ -99,8 +99,11 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   };
 
   const handleCharacterSelected = async (characterId: string) => {
-    // Immediately update character data after selection
+    // Force reload of character data and refresh player list
     await loadCharacterData();
+    
+    // No need to manually update - real-time subscription will handle this
+    console.log('Character selected:', characterId);
     
     toast({
       title: "Character Selected!",
@@ -336,16 +339,16 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                       className="flex items-center justify-between p-3 bg-muted rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                         {playerCharacter ? (
-                           <div className="w-10 h-10 rounded-full overflow-hidden bg-white">
-                             <img
-                               src={playerCharacter.icon_url || '/placeholder.svg'}
-                               alt={playerCharacter.name}
-                               className="w-full h-full object-cover"
-                               loading="eager"
-                             />
-                           </div>
-                         ) : (
+                        {playerCharacter ? (
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-white">
+                            <img
+                              src={getCatImageUrl(playerCharacter.icon_url)}
+                              alt={playerCharacter.name}
+                              className="w-full h-full object-contain p-0.5"
+                              loading="eager"
+                            />
+                          </div>
+                        ) : (
                           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
                             {player.player_name.charAt(0).toUpperCase()}
                           </div>
@@ -358,7 +361,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {player.player_id === currentPlayer.player_id && (
+                        {player.player_id === currentPlayer.player_id && !player.selected_character_id && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -366,7 +369,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                             className="gap-1"
                           >
                             <Cat className="h-3 w-3" />
-                            {player.selected_character_id ? "Change Cat" : "Pick Cat"}
+                            Pick Cat
                           </Button>
                         )}
                         {player.is_host && (
@@ -473,8 +476,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                     </div>
                   </div>
 
-                  {/* Dogpatch Game - Hidden for now, can be easily restored */}
-                  {/*
+                  {/* Dogpatch Game */}
                   <div 
                     className={`relative p-4 border rounded-lg transition-all ${
                       currentPlayer.is_host
@@ -493,7 +495,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                      </div>
                    </div>
                  </div>
-                 */}
                 </div>
 
               {/* Action Buttons */}
@@ -533,7 +534,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         </div>
       </div>
 
-      {/* Cat Avatar Selection Modal */}
+      {/* Character Selection Modal */}
       <CharacterSelection
         isOpen={showCharacterSelection}
         onClose={() => setShowCharacterSelection(false)}

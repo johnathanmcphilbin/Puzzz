@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
+import { getCatImageUrl } from "@/assets/catImages";
 
 interface CatCharacter {
   id: string;
@@ -22,47 +20,6 @@ interface CharacterSelectionProps {
   onCharacterSelected: (characterId: string) => void;
 }
 
-// Cache characters data globally to avoid reloading
-let cachedCharacters: CatCharacter[] | null = null;
-
-// Clean, simple character card component
-const CharacterCard = React.memo(({ 
-  character, 
-  isSelected, 
-  onClick 
-}: { 
-  character: CatCharacter; 
-  isSelected: boolean; 
-  onClick: () => void;
-}) => {
-  const imageUrl = character.icon_url || '/placeholder.svg';
-
-  return (
-    <div
-      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
-        isSelected
-          ? 'border-primary bg-primary/5'
-          : 'border-gray-200 hover:border-primary/50'
-      }`}
-      onClick={onClick}
-    >
-      <div className="text-center">
-        <div className="w-20 h-20 mx-auto mb-3">
-          <img
-            src={imageUrl}
-            alt={character.name}
-            className="w-20 h-20 rounded-full object-contain bg-white p-1"
-            loading="eager"
-          />
-        </div>
-        <h3 className="font-bold text-lg">{character.name}</h3>
-      </div>
-    </div>
-  );
-});
-
-CharacterCard.displayName = 'CharacterCard';
-
 export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
   isOpen,
   onClose,
@@ -73,18 +30,15 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
   const [characters, setCharacters] = useState<CatCharacter[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(false);
-  const [showingMore, setShowingMore] = useState(false);
   const { toast } = useToast();
 
-  const loadCharacters = useCallback(async () => {
-    // Use cached data if available
-    if (cachedCharacters) {
-      setCharacters(cachedCharacters);
-      return;
+  useEffect(() => {
+    if (isOpen) {
+      loadCharacters();
     }
+  }, [isOpen]);
 
-    setInitialLoading(true);
+  const loadCharacters = async () => {
     try {
       const { data, error } = await supabase
         .from('cat_characters')
@@ -93,9 +47,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
       if (error) throw error;
       
-      const charactersData = data || [];
-      setCharacters(charactersData);
-      cachedCharacters = charactersData; // Cache for next time
+      setCharacters(data || []);
     } catch (error) {
       console.error('Error loading characters:', error);
       toast({
@@ -103,16 +55,8 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
         description: "Failed to load characters",
         variant: "destructive",
       });
-    } finally {
-      setInitialLoading(false);
     }
-  }, [toast]);
-
-  useEffect(() => {
-    if (isOpen) {
-      loadCharacters();
-    }
-  }, [isOpen, loadCharacters]);
+  };
 
   const handleSelectCharacter = async () => {
     if (!selectedCharacter) return;
@@ -135,7 +79,10 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
         description: "Your character has been chosen",
       });
       
-      onClose();
+      // Close dialog after a short delay to let the toast show
+      setTimeout(() => {
+        onClose();
+      }, 500);
       
     } catch (error) {
       console.error('Error selecting character:', error);
@@ -149,74 +96,50 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
     }
   };
 
-  const initialCharacters = characters.slice(0, 10);
-  const remainingCharacters = characters.slice(10);
-  const displayedCharacters = showingMore ? characters : initialCharacters;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">Choose Your Cat Character</DialogTitle>
         </DialogHeader>
         
-        {initialLoading ? (
-          <div className="p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="border-2 rounded-lg p-4 border-gray-200">
-                  <div className="text-center">
-                    <Skeleton className="w-20 h-20 mx-auto rounded-full mb-3" />
-                    <Skeleton className="h-4 w-16 mx-auto" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+          {characters.map((character) => (
+            <div
+              key={character.id}
+              className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                selectedCharacter === character.id
+                  ? 'border-primary bg-primary/5'
+                  : 'border-gray-200 hover:border-primary/50'
+              }`}
+              onClick={() => setSelectedCharacter(character.id)}
+            >
+              <div className="text-center">
+                {character.icon_url ? (
+                  <img
+                    src={getCatImageUrl(character.icon_url)}
+                    alt={character.name}
+                    className="w-20 h-20 mx-auto rounded-full object-contain bg-white p-1 mb-3"
+                    loading="eager"
+                  />
+                ) : (
+                  <div className="w-20 h-20 mx-auto rounded-full bg-gray-200 flex items-center justify-center mb-3">
+                    🐱
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Character grid with scroll area */}
-            {displayedCharacters.length > 0 && (
-              <ScrollArea className="flex-1 min-h-0">
-                <div className="px-4 pb-4">
-                  <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {displayedCharacters.map((character) => (
-                        <CharacterCard
-                          key={character.id}
-                          character={character}
-                          isSelected={selectedCharacter === character.id}
-                          onClick={() => setSelectedCharacter(character.id)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Load More button inside scroll area */}
-                  {!showingMore && remainingCharacters.length > 0 && (
-                    <div className="text-center pt-4">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowingMore(true)}
-                        className="w-full"
-                      >
-                        Load More Cats ({remainingCharacters.length} more)
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            )}
-
-            {characters.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No characters available yet. Check back soon!
+                )}
+                <h3 className="font-bold text-lg">{character.name}</h3>
               </div>
-            )}
-          </>
+            </div>
+          ))}
+        </div>
+
+        {characters.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No characters available yet. Check back soon!
+          </div>
         )}
 
-        <div className="flex justify-center gap-4 mt-6 p-4 flex-shrink-0">
+        <div className="flex justify-center gap-4 mt-6">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
@@ -224,7 +147,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
             onClick={handleSelectCharacter}
             disabled={!selectedCharacter || loading}
           >
-            {loading ? "Confirming..." : "Confirm"}
+            {loading ? "Selecting..." : "Choose Character"}
           </Button>
         </div>
       </DialogContent>

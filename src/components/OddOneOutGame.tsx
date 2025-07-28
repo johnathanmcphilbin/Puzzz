@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTimer } from "@/hooks/useTimer";
 import { Users, Crown, Trophy, MessageSquare, Play, StopCircle, Clock, ArrowLeft, LogOut, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { getCatImageUrl } from "@/assets/catImages";
 
 interface Room {
   id: string;
@@ -56,8 +56,6 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
   const [selectedVote, setSelectedVote] = useState("");
   const [scores, setScores] = useState<{ [playerId: string]: number }>({});
   const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
-  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
-  const [isSubmittingVote, setIsSubmittingVote] = useState(false);
   
   // Game state from room
   const gameState = room.game_state || {};
@@ -290,50 +288,24 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       return;
     }
 
-    if (isSubmittingAnswer) return;
-
-    setIsSubmittingAnswer(true);
+    const updatedAnswers = { 
+      ...gameState.player_answers, 
+      [currentPlayer.player_id]: myAnswer.trim() 
+    };
     
-    try {
-      const updatedAnswers = { 
-        ...gameState.player_answers, 
-        [currentPlayer.player_id]: myAnswer.trim() 
-      };
-      
-      // Update answers first
-      await updateGameState({ player_answers: updatedAnswers });
-      
-      console.log(`Player ${currentPlayer.player_name} submitted answer. Total answers: ${Object.keys(updatedAnswers).length} / ${players.length}`);
-      
-      // Check if all players have answered - be more careful about the timing
-      const totalAnswers = Object.keys(updatedAnswers).length;
-      if (totalAnswers >= players.length) {
-        console.log("All players have answered, moving to voting phase");
-        // Small delay to ensure all answer updates are processed
-        setTimeout(async () => {
-          try {
-            await updateGameState({ phase: "voting" });
-          } catch (error) {
-            console.error("Error moving to voting phase:", error);
-          }
-        }, 500);
-      }
-      
-      setMyAnswer("");
-      toast({
-        title: "Answer Submitted Successfully! ✓",
-        description: "Waiting for other players to finish...",
-      });
-    } catch (error) {
-      console.error("Error submitting answer:", error);
-      toast({
-        title: "Submission Failed",
-        description: "Please try submitting your answer again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmittingAnswer(false);
+    await updateGameState({ player_answers: updatedAnswers });
+    
+    // Check if all players have answered
+    if (Object.keys(updatedAnswers).length === players.length) {
+      // Move directly to voting phase
+      await updateGameState({ phase: "voting" });
     }
+    
+    setMyAnswer("");
+    toast({
+      title: "Answer Submitted!",
+      description: "Waiting for other players...",
+    });
   };
 
 
@@ -347,38 +319,23 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       return;
     }
 
-    if (isSubmittingVote) return;
-
-    setIsSubmittingVote(true);
+    const updatedVotes = { 
+      ...gameState.votes, 
+      [currentPlayer.player_id]: selectedVote 
+    };
     
-    try {
-      const updatedVotes = { 
-        ...gameState.votes, 
-        [currentPlayer.player_id]: selectedVote 
-      };
-      
-      await updateGameState({ votes: updatedVotes });
-      
-      // Check if all players have voted
-      if (Object.keys(updatedVotes).length === players.length) {
-        await revealResults(updatedVotes);
-      }
-      
-      setSelectedVote("");
-      toast({
-        title: "Vote Submitted Successfully! ✓",
-        description: "Waiting for other players to vote...",
-      });
-    } catch (error) {
-      console.error("Error submitting vote:", error);
-      toast({
-        title: "Vote Submission Failed",
-        description: "Please try voting again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmittingVote(false);
+    await updateGameState({ votes: updatedVotes });
+    
+    // Check if all players have voted
+    if (Object.keys(updatedVotes).length === players.length) {
+      await revealResults(updatedVotes);
     }
+    
+    setSelectedVote("");
+    toast({
+      title: "Vote Submitted!",
+      description: "Waiting for other players...",
+    });
   };
 
   const revealResults = async (finalVotes: { [playerId: string]: string }) => {
@@ -425,27 +382,21 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
     setMyAnswer("");
     setSelectedVote("");
     
-    // Load new question and get it for syncing
     await loadRandomQuestion();
     
-    // Wait a bit to ensure question is loaded, then get the current question
-    setTimeout(async () => {
-      // Select new imposter
-      const randomImposter = players[Math.floor(Math.random() * players.length)];
-      
-      await updateGameState({
-        phase: "answering",
-        imposter_player_id: randomImposter.player_id,
-        question: currentQuestion, // Sync the question to all players
-        question_id: currentQuestion?.id,
-        round_number: (gameState.round_number || 1) + 1,
-        player_answers: {},
-        votes: {},
-        vote_counts: {},
-        suspected_imposter: null,
-        was_imposter_caught: null
-      });
-    }, 100);
+    // Select new imposter
+    const randomImposter = players[Math.floor(Math.random() * players.length)];
+    
+    await updateGameState({
+      phase: "answering",
+      imposter_player_id: randomImposter.player_id,
+      round_number: (gameState.round_number || 1) + 1,
+      player_answers: {},
+      votes: {},
+      vote_counts: {},
+      suspected_imposter: null,
+      was_imposter_caught: null
+    });
   };
 
   const leaveGame = async () => {
@@ -481,7 +432,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
 
   const renderPlayerIcon = (player: Player, isActive = false) => {
     const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
-    const catImageSrc = playerCharacter ? (playerCharacter.icon_url || '/placeholder.svg') : null;
+    const catImageSrc = playerCharacter ? getCatImageUrl(playerCharacter.icon_url) : null;
     
     return (
       <div className={`relative w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full border-2 sm:border-4 transition-all ${
@@ -615,8 +566,8 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
           <div className="text-center space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold text-primary">Round {roundNumber}</h1>
             <div className="flex items-center justify-center gap-2">
-              <Badge variant="default" className="text-xs sm:text-sm">
-                🕵️ Find the odd one out
+              <Badge variant={isImposter ? "destructive" : "default"} className="text-xs sm:text-sm">
+                {isImposter ? "🎭 You are the IMPOSTER!" : "🕵️ Find the imposter"}
               </Badge>
             </div>
             <Progress value={(answeredCount / players.length) * 100} className="w-full" />
@@ -626,7 +577,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
           </div>
 
           {/* Your Prompt */}
-          <Card>
+          <Card className={isImposter ? "border-destructive" : ""}>
             <CardHeader>
               <CardTitle className="text-center">Your Prompt</CardTitle>
             </CardHeader>
@@ -634,6 +585,11 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
               <p className="text-base sm:text-lg font-medium p-3 sm:p-4 bg-muted rounded-lg">
                 {myPrompt}
               </p>
+              {isImposter && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Remember: Blend in with the other players!
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -655,12 +611,8 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
                     rows={3}
                   />
                 </div>
-                <Button 
-                  onClick={submitAnswer} 
-                  className="w-full" 
-                  disabled={!myAnswer.trim() || isSubmittingAnswer}
-                >
-                  {isSubmittingAnswer ? "Submitting..." : "Submit Answer"}
+                <Button onClick={submitAnswer} className="w-full" disabled={!myAnswer.trim()}>
+                  Submit Answer
                 </Button>
               </CardContent>
             </Card>
@@ -796,9 +748,9 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
                   onClick={submitVote} 
                   className="w-full mt-4 sm:mt-6" 
                   size="lg"
-                  disabled={!selectedVote || isSubmittingVote}
+                  disabled={!selectedVote}
                 >
-                  {isSubmittingVote ? "Submitting Vote..." : `Vote for ${selectedVote ? players.find(p => p.player_id === selectedVote)?.player_name : "..."}`}
+                  Vote for {selectedVote ? players.find(p => p.player_id === selectedVote)?.player_name : "..."}
                 </Button>
               </CardContent>
             </Card>
