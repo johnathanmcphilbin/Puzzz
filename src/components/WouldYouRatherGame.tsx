@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTimer } from "@/hooks/useTimer";
 import { ChevronRight, Users, RotateCcw, Trophy, Clock, ArrowLeft, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getCatImageUrl } from "@/assets/catImages";
+
 
 interface Room {
   id: string;
@@ -709,7 +709,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                                    {playerCharacter ? (
                                      <div className="w-5 h-5 rounded-full overflow-hidden bg-white">
                                          <img
-                                           src={getCatImageUrl(playerCharacter.icon_url)}
+                                            src={playerCharacter.icon_url || '/placeholder.svg'}
                                            alt={playerCharacter.name}
                                            className="w-full h-full object-contain p-0.5"
                                            loading="eager"
@@ -763,7 +763,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
                                    {playerCharacter ? (
                                      <div className="w-5 h-5 rounded-full overflow-hidden bg-white">
                                          <img
-                                           src={getCatImageUrl(playerCharacter.icon_url)}
+                                           src={playerCharacter.icon_url || '/placeholder.svg'}
                                            alt={playerCharacter.name}
                                            className="w-full h-full object-contain p-0.5"
                                            loading="eager"

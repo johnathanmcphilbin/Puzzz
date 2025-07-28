@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, Users, RotateCcw, Crown, Trophy, AlertTriangle, FileText } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCatImageUrl } from "@/assets/catImages";
+
 
 interface Room {
   id: string;
@@ -392,7 +392,7 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
                                            ) : playerCharacter ? (
                                               <div className="w-8 h-8 rounded-full overflow-hidden bg-white">
                                                  <img
-                                                   src={getCatImageUrl(playerCharacter.icon_url)}
+                                                   src={playerCharacter.icon_url || '/placeholder.svg'}
                                                    alt={playerCharacter.name}
                                                    className="w-full h-full object-contain p-0.5"
                                                    loading="eager"

@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { getCatImageUrl } from "@/assets/catImages";
+
 
 interface CatCharacter {
   id: string;
@@ -35,7 +35,7 @@ const CharacterCard = React.memo(({
   isSelected: boolean; 
   onClick: () => void;
 }) => {
-  const imageUrl = getCatImageUrl(character.icon_url);
+  const imageUrl = character.icon_url || '/placeholder.svg';
 
   return (
     <div

@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Copy, Play, Users, Crown, LogOut, QrCode, UserX, Cat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
-import { CatAvatarSelection } from "./CatAvatarSelection";
+import { CharacterSelection } from "./CharacterSelection";
 
 import GameCustomizer from "./GameCustomizer";
 
@@ -534,7 +534,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
       </div>
 
       {/* Cat Avatar Selection Modal */}
-      <CatAvatarSelection
+      <CharacterSelection
         isOpen={showCharacterSelection}
         onClose={() => setShowCharacterSelection(false)}
         playerId={currentPlayer.player_id}
