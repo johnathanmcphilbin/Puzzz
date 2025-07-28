@@ -1,28 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
 export interface Room {
-  id: string;
-  room_code: string;
+  roomCode: string;
   name: string;
-  host_id: string;
-  current_game: string;
-  game_state: any;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  hostId: string;
+  currentGame: string;
+  gameState: any;
+  players: Player[];
+  createdAt: number;
 }
 
 export interface Player {
-  id: string;
-  room_id: string;
-  player_id: string;
-  player_name: string;
-  is_host: boolean;
-  joined_at: string;
-  selected_character_id?: string;
+  playerId: string;
+  playerName: string;
+  isHost: boolean;
+  joinedAt: number;
+  selectedCharacterId?: string;
 }
 
 export const useRoom = (roomCode: string) => {
@@ -42,39 +37,22 @@ export const useRoom = (roomCode: string) => {
       setLoading(true);
       setError(null);
       
-      // Get room data
-      const { data: roomData, error: roomError } = await supabase
-        .from('rooms')
-        .select('*')
-        .eq('room_code', roomCode)
-        .eq('is_active', true)
-        .single();
-
-      if (roomError || !roomData) {
-        setError('Room not found or inactive');
+      const response = await fetch(`/functions/v1/rooms-service?roomCode=${roomCode}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data.error || 'Room not found');
         return;
       }
+
+      const roomData = await response.json();
 
       setRoom(roomData);
-
-      // Get players
-      const { data: playersData, error: playersError } = await supabase
-        .from('players')
-        .select('*')
-        .eq('room_id', roomData.id)
-        .order('joined_at', { ascending: true });
-
-      if (playersError) {
-        setError('Failed to load players');
-        return;
-      }
-
-      setPlayers(playersData || []);
+      setPlayers(roomData.players || []);
 
       // Find current player
       const playerId = localStorage.getItem('puzzz_player_id');
       if (playerId) {
-        const currentPlayerData = playersData?.find(p => p.player_id === playerId);
+        const currentPlayerData = roomData.players?.find((p: Player) => p.playerId === playerId);
         if (currentPlayerData) {
           setCurrentPlayer(currentPlayerData);
         } else {
@@ -95,12 +73,16 @@ export const useRoom = (roomCode: string) => {
     if (!room) return;
 
     try {
-      const { error } = await supabase
-        .from('rooms')
-        .update(updates)
-        .eq('id', room.id);
+      const response = await fetch('/functions/v1/rooms-service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update', roomCode: room.roomCode, updates }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Update failed');
+      }
 
       setRoom(prevRoom => prevRoom ? { ...prevRoom, ...updates } : null);
     } catch (err) {
@@ -114,16 +96,14 @@ export const useRoom = (roomCode: string) => {
   }, [room, toast]);
 
   const kickPlayer = useCallback(async (playerIdToKick: string) => {
-    if (!room || !currentPlayer?.is_host) return;
+    if (!room || !currentPlayer?.isHost) return;
 
     try {
-      const { error } = await supabase
-        .from('players')
-        .delete()
-        .eq('room_id', room.id)
-        .eq('player_id', playerIdToKick);
-
-      if (error) throw error;
+      await fetch('/functions/v1/rooms-service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'kick', roomCode: room.roomCode, targetPlayerId: playerIdToKick, hostId: currentPlayer?.playerId }),
+      });
 
       toast({
         title: 'Player Removed',
@@ -139,98 +119,16 @@ export const useRoom = (roomCode: string) => {
     }
   }, [room, currentPlayer, toast]);
 
-  // Setup real-time subscription after room is loaded
+  // Polling for updates every 5 seconds (simple replacement for realtime)
   useEffect(() => {
-    if (!roomCode || !room?.id) return;
+    if (!roomCode) return;
 
-    console.log('Setting up real-time subscriptions for room:', roomCode, 'room ID:', room.id);
+    const interval = setInterval(() => {
+      loadRoom();
+    }, 5000);
 
-    const channel = supabase
-      .channel(`room_${roomCode}_${room.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'rooms',
-          filter: `id=eq.${room.id}`,
-        },
-        (payload) => {
-          console.log('Room update detected:', payload);
-          setRoom(prev => {
-            if (!prev) return payload.new as Room;
-            const newRoom = payload.new as Room;
-            console.log('Applying room update');
-            return newRoom;
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'players',
-          filter: `room_id=eq.${room.id}`,
-        },
-        (payload) => {
-          console.log('Player change detected:', payload.eventType, payload);
-          
-          if (payload.eventType === 'DELETE') {
-            const deletedPlayer = payload.old;
-            const currentPlayerId = localStorage.getItem('puzzz_player_id');
-            
-            if (deletedPlayer && currentPlayerId && deletedPlayer.player_id === currentPlayerId) {
-              localStorage.removeItem('puzzz_player_id');
-              localStorage.removeItem('puzzz_player_name');
-              
-              toast({
-                title: 'Removed from Room',
-                description: 'You have been removed from the room by the host.',
-                variant: 'destructive',
-              });
-              
-              console.log('Player was kicked, navigating to home');
-              navigate('/');
-              return;
-            }
-            
-            console.log('Removing player from list:', deletedPlayer);
-            setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
-          } else if (payload.eventType === 'INSERT') {
-            console.log('Adding new player:', payload.new);
-            setPlayers(prev => {
-              if (prev.some(p => p.id === payload.new.id)) {
-                console.log('Player already exists, not adding duplicate');
-                return prev;
-              }
-              console.log('Adding new player to list');
-              return [...prev, payload.new as Player].sort((a, b) => 
-                new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
-              );
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedPlayer = payload.new as Player;
-            console.log('Updating player:', updatedPlayer);
-            setPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
-            
-            const currentPlayerId = localStorage.getItem('puzzz_player_id');
-            if (currentPlayerId && updatedPlayer.player_id === currentPlayerId) {
-              console.log('Updating current player');
-              setCurrentPlayer(updatedPlayer);
-            }
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-      });
-
-    return () => {
-      console.log('Cleaning up real-time subscriptions');
-      supabase.removeChannel(channel);
-    };
-  }, [roomCode, room?.id]);
+    return () => clearInterval(interval);
+  }, [roomCode, loadRoom]);
 
   // Initial load - only run once when component mounts
   useEffect(() => {

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,48 +28,34 @@ export const useRoomActions = () => {
 
     setLoading(true);
     try {
-      const roomCode = generateRoomCode();
-      const hostId = crypto.randomUUID();
+      console.log('Creating room with Redis');
 
-      console.log('Creating room with code:', roomCode);
-      console.log('Host ID:', hostId);
+      // Call the new rooms-service edge function
+      const response = await fetch('/functions/v1/rooms-service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', playerName: playerName.trim(), selectedGame }),
+      });
 
-      // Use the atomic function to create room and player
-      const { data: result, error } = await supabase
-        .rpc('create_room_with_host', {
-          p_room_code: roomCode,
-          p_room_name: `${playerName.trim()}'s Room`,
-          p_host_id: hostId,
-          p_player_name: playerName.trim(),
-          p_current_game: selectedGame,
-        })
-        .single();
-
-      if (error) {
-        console.error('Room creation error:', error);
-        throw error;
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to create room');
       }
 
-      if (!result?.success) {
-        console.error('Room creation failed:', result?.error_message);
-        throw new Error(result?.error_message || 'Failed to create room');
-      }
+      const { room } = await response.json();
 
-      console.log('Room created successfully:', result);
-
-      // Store player info in localStorage
-      localStorage.setItem('puzzz_player_id', hostId);
+      // Store player info
+      localStorage.setItem('puzzz_player_id', room.hostId);
       localStorage.setItem('puzzz_player_name', playerName.trim());
 
       toast({
         title: 'Room Created!',
-        description: `Room ${roomCode} has been created successfully`,
+        description: `Room ${room.roomCode} has been created successfully`,
         className: 'bg-success text-success-foreground',
       });
 
-      // Navigate to room
-      navigate(`/room/${roomCode}`);
-      return roomCode;
+      navigate(`/room/${room.roomCode}`);
+      return room.roomCode;
 
     } catch (error: any) {
       console.error('Error creating room:', error);
@@ -108,38 +93,27 @@ export const useRoomActions = () => {
 
     setLoading(true);
     try {
-      const playerId = crypto.randomUUID();
-
       console.log('Joining room:', cleanedRoomCode);
-      console.log('Player ID:', playerId);
 
-      // Use the atomic function to join room
-      const { data: result, error } = await supabase
-        .rpc('join_room_as_player', {
-          p_room_code: cleanedRoomCode,
-          p_player_id: playerId,
-          p_player_name: playerName.trim(),
-        })
-        .single();
+      const response = await fetch('/functions/v1/rooms-service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'join', roomCode: cleanedRoomCode, playerName: playerName.trim() }),
+      });
 
-      if (error) {
-        console.error('Join room error:', error);
-        throw error;
-      }
+      const json = await response.json();
 
-      if (!result?.success) {
-        console.error('Join room failed:', result?.error_message);
+      if (!response.ok) {
         toast({
           title: 'Failed to Join',
-          description: result?.error_message || 'Failed to join room',
+          description: json.error || 'Failed to join room',
           variant: 'destructive',
         });
         return false;
       }
 
-      console.log('Successfully joined room:', result);
+      const { playerId } = json;
 
-      // Store player info in localStorage
       localStorage.setItem('puzzz_player_id', playerId);
       localStorage.setItem('puzzz_player_name', playerName.trim());
 
@@ -149,7 +123,6 @@ export const useRoomActions = () => {
         className: 'bg-success text-success-foreground',
       });
 
-      // Navigate to room
       navigate(`/room/${cleanedRoomCode}`);
       return true;
 
