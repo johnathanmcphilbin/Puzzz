@@ -3,7 +3,7 @@
 
 /**
  * Simple, reliable cat image URL resolver for direct public access
- * Takes a database path like "/cats/Angry cat.png" and returns properly encoded public URL
+ * Takes a database path like "/lovable-uploads/angry-cat.png" and returns properly encoded public URL
  */
 export const getCatImageUrl = (iconUrl: string | null | undefined): string => {
   // Handle null, undefined, empty string
@@ -12,19 +12,13 @@ export const getCatImageUrl = (iconUrl: string | null | undefined): string => {
   }
 
   try {
-    // Remove leading slash if present and ensure we're looking at cats folder
-    const cleanPath = iconUrl.startsWith('/') ? iconUrl.substring(1) : iconUrl;
+    // If the URL already starts with a slash, use it as-is (it's already a valid public path)
+    if (iconUrl.startsWith('/')) {
+      return iconUrl;
+    }
     
-    // If it doesn't start with 'cats/', add it
-    const fullPath = cleanPath.startsWith('cats/') ? cleanPath : `cats/${cleanPath}`;
-    
-    // Split path and encode each component separately to handle spaces and special characters
-    const pathParts = fullPath.split('/').filter(part => part.length > 0);
-    const encodedParts = pathParts.map(part => encodeURIComponent(part));
-    const encodedPath = encodedParts.join('/');
-    
-    // Return direct public URL
-    return `/${encodedPath}`;
+    // Otherwise, treat it as a filename and add leading slash
+    return `/${iconUrl}`;
   } catch (error) {
     console.warn('Error processing cat image URL:', iconUrl, error);
     return '/placeholder.svg';
