@@ -20,5 +20,8 @@ dist-ssr
 *.suo
 *.ntvs*
 *.njsproj
-*.sln
-*.sw?
+    *.sln
+    *.sw?
+
+# Miscellaneous
+ProjectRequirements.txt
