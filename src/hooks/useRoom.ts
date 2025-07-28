@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 import { useNavigate } from 'react-router-dom';
 
 export interface Room {
@@ -37,7 +38,7 @@ export const useRoom = (roomCode: string) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/functions/v1/rooms-service?roomCode=${roomCode}`);
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service?roomCode=${roomCode}`, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         setError(data.error || 'Room not found');
@@ -46,13 +47,32 @@ export const useRoom = (roomCode: string) => {
 
       const roomData = await response.json();
 
-      setRoom(roomData);
-      setPlayers(roomData.players || []);
+      // compatibility: add legacy field names expected by components
+      const playersWithLegacy = (roomData.players || []).map((p: any) => ({
+        ...p,
+        player_id: p.playerId,
+        player_name: p.playerName,
+        is_host: p.isHost,
+        selected_character_id: p.selectedCharacterId,
+        joined_at: p.joinedAt,
+        id: p.playerId // alias for keying in maps
+      }));
+
+      setRoom({
+        ...roomData,
+        room_code: roomData.roomCode,
+        host_id: roomData.hostId,
+        current_game: roomData.currentGame,
+        game_state: roomData.gameState,
+        is_active: true,
+        id: roomData.roomCode // placeholder
+      } as any);
+      setPlayers(playersWithLegacy);
 
       // Find current player
       const playerId = localStorage.getItem('puzzz_player_id');
       if (playerId) {
-        const currentPlayerData = roomData.players?.find((p: Player) => p.playerId === playerId);
+        const currentPlayerData = playersWithLegacy.find((p: any) => p.player_id === playerId);
         if (currentPlayerData) {
           setCurrentPlayer(currentPlayerData);
         } else {
@@ -73,9 +93,9 @@ export const useRoom = (roomCode: string) => {
     if (!room) return;
 
     try {
-      const response = await fetch('/functions/v1/rooms-service', {
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ action: 'update', roomCode: room.roomCode, updates }),
       });
 
@@ -99,9 +119,9 @@ export const useRoom = (roomCode: string) => {
     if (!room || !currentPlayer?.isHost) return;
 
     try {
-      await fetch('/functions/v1/rooms-service', {
+      await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ action: 'kick', roomCode: room.roomCode, targetPlayerId: playerIdToKick, hostId: currentPlayer?.playerId }),
       });
 
@@ -119,16 +139,20 @@ export const useRoom = (roomCode: string) => {
     }
   }, [room, currentPlayer, toast]);
 
-  // Polling for updates every 5 seconds (simple replacement for realtime)
+  // If you still want periodic refresh, uncomment the block below and
+  // set a suitable interval (e.g. 30 000 ms). By default we rely on
+  // user-initiated actions to fetch fresh data, preventing constant re-renders.
+  /*
   useEffect(() => {
     if (!roomCode) return;
 
     const interval = setInterval(() => {
       loadRoom();
-    }, 5000);
+    }, 30000); // 30-second refresh
 
     return () => clearInterval(interval);
   }, [roomCode, loadRoom]);
+  */
 
   // Initial load - only run once when component mounts
   useEffect(() => {

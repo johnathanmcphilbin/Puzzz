@@ -243,7 +243,17 @@ serve(async (req) => {
         });
       }
 
-      return new Response(raw, {
+      let body = raw;
+      try {
+        // If raw is something like "[object Object]" or an object was stored
+        // incorrectly, attempt to fix it by JSON-stringifying the parsed value.
+        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+        body = JSON.stringify(parsed);
+      } catch {
+        // raw wasn’t valid JSON – still return it so caller can see the error
+      }
+
+      return new Response(body, {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 import { useNavigate } from 'react-router-dom';
 
 export const useRoomActions = () => {
@@ -31,9 +32,9 @@ export const useRoomActions = () => {
       console.log('Creating room with Redis');
 
       // Call the new rooms-service edge function
-      const response = await fetch('/functions/v1/rooms-service', {
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ action: 'create', playerName: playerName.trim(), selectedGame }),
       });
 
@@ -95,9 +96,9 @@ export const useRoomActions = () => {
     try {
       console.log('Joining room:', cleanedRoomCode);
 
-      const response = await fetch('/functions/v1/rooms-service', {
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ action: 'join', roomCode: cleanedRoomCode, playerName: playerName.trim() }),
       });
 
