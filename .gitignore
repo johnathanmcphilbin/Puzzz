@@ -24,4 +24,4 @@ dist-ssr
     *.sw?
 
 # Miscellaneous
-ProjectRequirements.txt
+project_requirements.md
