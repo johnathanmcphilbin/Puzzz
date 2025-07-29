@@ -158,15 +158,19 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
               <div className="flex items-center justify-between">
                 <Label htmlFor="craziness">Craziness Level</Label>
                 <Badge variant={
-                  (crazynessLevel[0] ?? 50) <= 20 ? "secondary" :
-                  (crazynessLevel[0] ?? 50) <= 40 ? "outline" :
+                  (crazynessLevel[0] ?? 50) <= 15 ? "secondary" :
+                  (crazynessLevel[0] ?? 50) <= 30 ? "outline" :
+                  (crazynessLevel[0] ?? 50) <= 45 ? "default" :
                   (crazynessLevel[0] ?? 50) <= 60 ? "default" :
-                  (crazynessLevel[0] ?? 50) <= 80 ? "destructive" : "destructive"
+                  (crazynessLevel[0] ?? 50) <= 75 ? "destructive" :
+                  (crazynessLevel[0] ?? 50) <= 90 ? "destructive" : "destructive"
                 }>
-                  {crazynessLevel[0] ?? 50}% {(crazynessLevel[0] ?? 50) <= 20 ? "😇" :
-                   (crazynessLevel[0] ?? 50) <= 40 ? "😊" :
+                  {crazynessLevel[0] ?? 50}% {(crazynessLevel[0] ?? 50) <= 15 ? "😇" :
+                   (crazynessLevel[0] ?? 50) <= 30 ? "😊" :
+                   (crazynessLevel[0] ?? 50) <= 45 ? "😄" :
                    (crazynessLevel[0] ?? 50) <= 60 ? "😈" :
-                   (crazynessLevel[0] ?? 50) <= 80 ? "🔥" : "💀"}
+                   (crazynessLevel[0] ?? 50) <= 75 ? "🔥" :
+                   (crazynessLevel[0] ?? 50) <= 90 ? "💀" : "🌋"}
                 </Badge>
               </div>
               <Slider
@@ -179,10 +183,12 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
                 className="w-full"
               />
               <div className="text-xs text-muted-foreground text-center">
-                {(crazynessLevel[0] ?? 50) <= 20 ? "Safe & family-friendly" :
-                 (crazynessLevel[0] ?? 50) <= 40 ? "Mild fun with light humor" :
-                 (crazynessLevel[0] ?? 50) <= 60 ? "Moderately entertaining & bold" :
-                 (crazynessLevel[0] ?? 50) <= 80 ? "Dramatic & boundary-pushing" : "Extreme & outrageous"}
+                {(crazynessLevel[0] ?? 50) <= 15 ? "Extremely safe & family-friendly" :
+                 (crazynessLevel[0] ?? 50) <= 30 ? "Mild & safe with gentle humor" :
+                 (crazynessLevel[0] ?? 50) <= 45 ? "Moderately playful with mild awkwardness" :
+                 (crazynessLevel[0] ?? 50) <= 60 ? "Spicy & entertaining with social drama" :
+                 (crazynessLevel[0] ?? 50) <= 75 ? "Bold & dramatic with adult themes" :
+                 (crazynessLevel[0] ?? 50) <= 90 ? "Extremely wild & outrageous" : "Absolutely unhinged & chaotic"}
               </div>
             </div>
 

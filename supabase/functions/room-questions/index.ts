@@ -12,6 +12,137 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Function to get craziness-specific prompt modifications
+const getCrazynessPromptModifications = (crazynessLevel: number) => {
+  if (crazynessLevel <= 15) {
+    return {
+      description: "EXTREMELY SAFE & FAMILY-FRIENDLY",
+      constraints: [
+        "All content must be appropriate for children",
+        "No controversial topics whatsoever", 
+        "Focus on wholesome, innocent scenarios",
+        "Avoid any potentially uncomfortable situations",
+        "Keep everything light and cheerful"
+      ],
+      examples: [
+        'Would You Rather: "eat ice cream for breakfast" vs "have pancakes for dinner"',
+        'Paranoia: "Who is most likely to help someone find their lost pet?"',
+        'Odd One Out: Normal: "Name a farm animal" vs Imposter: "Name a zoo animal"'
+      ],
+      forbidden: ["relationships", "money stress", "embarrassing situations", "risky activities"],
+      temperature: 0.7
+    };
+  } else if (crazynessLevel <= 30) {
+    return {
+      description: "MILD & SAFE",
+      constraints: [
+        "Keep content family-friendly but can include mild humor",
+        "Gentle hypothetical scenarios only",
+        "Avoid anything potentially offensive",
+        "Focus on fun, everyday situations"
+      ],
+      examples: [
+        'Would You Rather: "always have to sing instead of talk" vs "always have to hop instead of walk"',
+        'Paranoia: "Who is most likely to accidentally wear mismatched shoes?"',
+        'Odd One Out: Normal: "Name a breakfast food" vs Imposter: "Name a dessert"'
+      ],
+      forbidden: ["adult themes", "controversial topics", "embarrassing personal situations"],
+      temperature: 0.8
+    };
+  } else if (crazynessLevel <= 45) {
+    return {
+      description: "MODERATELY PLAYFUL",
+      constraints: [
+        "Include some mildly awkward or funny scenarios",
+        "Can mention everyday embarrassments",
+        "Add some absurd but harmless situations",
+        "Keep it entertaining but not offensive"
+      ],
+      examples: [
+        'Would You Rather: "accidentally send a text meant for your crush to your boss" vs "show up to a formal event in pajamas"',
+        'Paranoia: "Who is most likely to get caught talking to themselves in public?"',
+        'Odd One Out: Normal: "Name something you do when nervous" vs Imposter: "Name something you do when excited"'
+      ],
+      forbidden: ["sexual content", "serious trauma", "illegal activities"],
+      temperature: 0.85
+    };
+  } else if (crazynessLevel <= 60) {
+    return {
+      description: "SPICY & ENTERTAINING",
+      constraints: [
+        "Include moderately embarrassing scenarios",
+        "Can mention social awkwardness and dating mishaps",
+        "Add dramatic hypothetical situations",
+        "Include some relationship and social dynamics",
+        "Make scenarios more emotionally intense"
+      ],
+      examples: [
+        'Would You Rather: "have your browser history publicly displayed for a week" vs "have to wear your most embarrassing outfit to work for a month"',
+        'Paranoia: "Who is most likely to drunk-text their ex at 3 AM?"',
+        'Odd One Out: Normal: "Name a red flag in dating" vs Imposter: "Name a green flag in dating"'
+      ],
+      forbidden: ["explicit sexual content", "serious harm", "illegal activities"],
+      temperature: 0.9
+    };
+  } else if (crazynessLevel <= 75) {
+    return {
+      description: "BOLD & DRAMATIC",
+      constraints: [
+        "Include dramatically embarrassing scenarios",
+        "Can mention adult themes and relationship drama",
+        "Add morally complex situations",
+        "Include social taboos and awkward personal situations",
+        "Make scenarios psychologically intense"
+      ],
+      examples: [
+        'Would You Rather: "find out your partner has been reading your diary for years" vs "accidentally reveal a friend\'s biggest secret at their wedding"',
+        'Paranoia: "Who is most likely to have a secret OnlyFans account?"',
+        'Odd One Out: Normal: "Name something you\'d never admit to your parents" vs Imposter: "Name something you\'d never admit to your friends"'
+      ],
+      forbidden: ["graphic violence", "serious trauma", "explicitly illegal content"],
+      temperature: 0.95
+    };
+  } else if (crazynessLevel <= 90) {
+    return {
+      description: "EXTREMELY WILD & OUTRAGEOUS",
+      constraints: [
+        "Include outrageous and shocking scenarios",
+        "Can mention taboo subjects and controversial topics",
+        "Add morally questionable hypothetical situations",
+        "Include extreme social situations and personal boundaries",
+        "Make scenarios wildly dramatic and intense",
+        "Push social norms and comfort zones"
+      ],
+      examples: [
+        'Would You Rather: "accidentally send nudes to your family group chat" vs "walk in on your parents having a threesome"',
+        'Paranoia: "Who is most likely to fake their own death to escape their problems?"',
+        'Odd One Out: Normal: "Name something illegal you\'ve considered" vs Imposter: "Name something legal but morally questionable you\'ve done"'
+      ],
+      forbidden: ["graphic violence against people", "serious illegal activities", "promotion of harmful behaviors"],
+      temperature: 1.0
+    };
+  } else {
+    return {
+      description: "ABSOLUTELY UNHINGED & CHAOTIC",
+      constraints: [
+        "Include completely outrageous and shocking scenarios",
+        "Push ALL boundaries while staying legal",
+        "Include the most dramatic, wild, and intense situations possible",
+        "Make everything as chaotic and unhinged as possible",
+        "Include taboo subjects, controversial opinions, extreme hypotheticals",
+        "Go absolutely wild with creativity and shock value"
+      ],
+      examples: [
+        'Would You Rather: "be trapped in an elevator with your worst enemy and a truth serum" vs "have to spend a night in jail with someone who has a crush on you"',
+        'Paranoia: "Who is most likely to start a cult if they got bored enough?"',
+        'Odd One Out: Normal: "Name the most unhinged thing you\'d do for money" vs Imposter: "Name the most unhinged thing you\'d do for love"'
+      ],
+      forbidden: ["only graphic violence and explicit illegal content - everything else is fair game"],
+      temperature: 1.1
+    };
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -51,24 +182,29 @@ serve(async (req) => {
       throw new Error(`Room not found for code: ${roomCode}`);
     }
 
-    const crazynessDescription = crazynessLevel <= 20 ? "very mild and safe" :
-                                crazynessLevel <= 40 ? "mild with some fun edge" :
-                                crazynessLevel <= 60 ? "moderately spicy and entertaining" :
-                                crazynessLevel <= 80 ? "quite dramatic and bold" :
-                                "extremely wild, dramatic, and outrageous";
+    // Get craziness-specific modifications
+    const crazynessConfig = getCrazynessPromptModifications(crazynessLevel || 50);
 
 const systemPrompt = `Generate questions for party games based HEAVILY on the customization theme: "${customization}". 
     
+    CRAZINESS LEVEL: ${crazynessLevel}% - ${crazynessConfig.description}
+    
+    CONTENT CONSTRAINTS FOR THIS LEVEL:
+    ${crazynessConfig.constraints.map(c => `• ${c}`).join('\n')}
+    
+    EXAMPLES OF APPROPRIATE CONTENT FOR THIS LEVEL:
+    ${crazynessConfig.examples.map(e => `• ${e}`).join('\n')}
+    
+    FORBIDDEN CONTENT:
+    ${crazynessConfig.forbidden.map(f => `• ${f}`).join('\n')}
+    
     CRITICAL: ALL questions must be directly related to and inspired by the theme/interests mentioned. If they mention "Star Wars", include Star Wars elements throughout. If they mention "nerdy", include nerdy/geeky scenarios. The theme should be evident in EVERY question.
     
-    CRAZINESS LEVEL: ${crazynessLevel}% (${crazynessDescription})
-    
-    Adjust the intensity and dramatization of questions based on the craziness level:
-    - 0-20%: Keep questions very mild, safe, and family-friendly
-    - 21-40%: Add some fun elements but stay mostly tame
-    - 41-60%: Make questions more entertaining with moderate spice
-    - 61-80%: Create dramatic, bold questions that push boundaries
-    - 81-100%: Go wild with outrageous, extreme, and highly dramatic scenarios
+    INTENSITY REQUIREMENTS:
+    - Every single question must precisely match the ${crazynessLevel}% craziness level
+    - The difference between low and high craziness levels should be DRAMATIC
+    - Follow the specific constraints and forbidden content for this level
+    - Use the examples as guidance for appropriate intensity
     
     Generate 25 Would You Rather questions, 20 Paranoia questions, and 15 Odd One Out questions.
     
@@ -108,9 +244,10 @@ const systemPrompt = `Generate questions for party games based HEAVILY on the cu
       ]
     }
     
+    Make sure ALL questions are HEAVILY themed around the customization AND precisely match the ${crazynessLevel}% craziness level with its specific constraints.
 `;
     
-    const userPrompt = `Generate 25 Would You Rather questions, 20 Paranoia questions, and 15 Odd One Out questions that are HEAVILY themed around: ${customization}. Every single question must incorporate elements from this theme. Craziness level: ${crazynessLevel}%. Do NOT include "Would you rather" in the options - just provide the choice content.`;
+    const userPrompt = `Generate 25 Would You Rather questions, 20 Paranoia questions, and 15 Odd One Out questions that are HEAVILY themed around: ${customization}. Craziness level: ${crazynessLevel}% (${crazynessConfig.description}). Every single question must incorporate elements from this theme AND match the exact intensity level specified. Do NOT include "Would you rather" in the options.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -124,7 +261,7 @@ const systemPrompt = `Generate questions for party games based HEAVILY on the cu
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.9,
+        temperature: crazynessConfig.temperature,
         max_tokens: 2000,
       }),
     });
@@ -137,6 +274,8 @@ const systemPrompt = `Generate questions for party games based HEAVILY on the cu
     const generatedText = data.choices[0].message.content;
     
     console.log('OpenAI response:', generatedText);
+    console.log('Used temperature:', crazynessConfig.temperature);
+    console.log('Craziness config:', crazynessConfig.description);
 
     // Clean and parse the generated questions
     let questions;
@@ -169,7 +308,8 @@ const systemPrompt = `Generate questions for party games based HEAVILY on the cu
               paranoia: questions.paranoia || [],
               odd_one_out: questions.odd_one_out || []
             },
-            questionsGenerated: true
+            questionsGenerated: true,
+            crazynessLevel: crazynessLevel
           }
         }
       }),
@@ -180,7 +320,7 @@ const systemPrompt = `Generate questions for party games based HEAVILY on the cu
       throw new Error(`Failed to store questions in Redis: ${errorData.error || 'Unknown error'}`);
     }
 
-    console.log(`Successfully stored ${questions.would_you_rather?.length || 0} Would You Rather, ${questions.paranoia?.length || 0} Paranoia, and ${questions.odd_one_out?.length || 0} Odd One Out questions for room ${roomCode}`);
+    console.log(`Successfully stored ${questions.would_you_rather?.length || 0} Would You Rather, ${questions.paranoia?.length || 0} Paranoia, and ${questions.odd_one_out?.length || 0} Odd One Out questions for room ${roomCode} with ${crazynessLevel}% craziness`);
 
     return new Response(JSON.stringify({ 
       success: true,
@@ -189,7 +329,9 @@ const systemPrompt = `Generate questions for party games based HEAVILY on the cu
         would_you_rather: questions.would_you_rather?.length || 0,
         paranoia: questions.paranoia?.length || 0,
         odd_one_out: questions.odd_one_out?.length || 0
-      }
+      },
+      crazynessLevel: crazynessLevel,
+      crazynessDescription: crazynessConfig.description
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

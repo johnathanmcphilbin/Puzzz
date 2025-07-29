@@ -280,15 +280,19 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                   Craziness Level: {crazynessLevel[0] ?? 50}%
                 </Label>
                 <Badge variant={
-                  (crazynessLevel[0] ?? 50) <= 20 ? "secondary" :
-                  (crazynessLevel[0] ?? 50) <= 40 ? "outline" :
+                  (crazynessLevel[0] ?? 50) <= 15 ? "secondary" :
+                  (crazynessLevel[0] ?? 50) <= 30 ? "outline" :
+                  (crazynessLevel[0] ?? 50) <= 45 ? "default" :
                   (crazynessLevel[0] ?? 50) <= 60 ? "default" :
-                  (crazynessLevel[0] ?? 50) <= 80 ? "destructive" : "destructive"
+                  (crazynessLevel[0] ?? 50) <= 75 ? "destructive" :
+                  (crazynessLevel[0] ?? 50) <= 90 ? "destructive" : "destructive"
                 }>
-                  {(crazynessLevel[0] ?? 50) <= 20 ? "😇 Tame" :
-                   (crazynessLevel[0] ?? 50) <= 40 ? "😊 Fun" :
-                   (crazynessLevel[0] ?? 50) <= 60 ? "😈 Spicy" :
-                   (crazynessLevel[0] ?? 50) <= 80 ? "🔥 Wild" : "💀 INSANE"}
+                  {(crazynessLevel[0] ?? 50) <= 15 ? "😇 SAFE" :
+                   (crazynessLevel[0] ?? 50) <= 30 ? "😊 MILD" :
+                   (crazynessLevel[0] ?? 50) <= 45 ? "😄 PLAYFUL" :
+                   (crazynessLevel[0] ?? 50) <= 60 ? "😈 SPICY" :
+                   (crazynessLevel[0] ?? 50) <= 75 ? "🔥 BOLD" :
+                   (crazynessLevel[0] ?? 50) <= 90 ? "💀 WILD" : "🌋 UNHINGED"}
                 </Badge>
               </div>
               <Slider
@@ -301,10 +305,12 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                 disabled={isLoading || hasGeneratedQuestions}
               />
               <div className="text-xs text-muted-foreground text-center">
-                {(crazynessLevel[0] ?? 50) <= 20 ? "Safe & family-friendly questions" :
-                 (crazynessLevel[0] ?? 50) <= 40 ? "Mild fun with light humor" :
-                 (crazynessLevel[0] ?? 50) <= 60 ? "Moderately entertaining & bold" :
-                 (crazynessLevel[0] ?? 50) <= 80 ? "Dramatic & boundary-pushing" : "Extreme & outrageous scenarios"}
+                {(crazynessLevel[0] ?? 50) <= 15 ? "Extremely safe & family-friendly questions" :
+                 (crazynessLevel[0] ?? 50) <= 30 ? "Mild & safe with gentle humor" :
+                 (crazynessLevel[0] ?? 50) <= 45 ? "Moderately playful with mild awkwardness" :
+                 (crazynessLevel[0] ?? 50) <= 60 ? "Spicy & entertaining with social drama" :
+                 (crazynessLevel[0] ?? 50) <= 75 ? "Bold & dramatic with adult themes" :
+                 (crazynessLevel[0] ?? 50) <= 90 ? "Extremely wild & outrageous scenarios" : "Absolutely unhinged & chaotic content"}
               </div>
             </div>
             
