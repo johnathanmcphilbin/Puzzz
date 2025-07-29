@@ -1,2 +1,2 @@
-export const FUNCTIONS_BASE_URL = `${import.meta.env.VITE_SUPABASE_URL || ''}/functions/v1`; 
-export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''; 
+export const FUNCTIONS_BASE_URL = `https://heqqjpxlithgoswwyjoi.functions.supabase.co`; 
+export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlcXFqcHhsaXRoZ29zd3d5am9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0ODYzOTEsImV4cCI6MjA2ODA2MjM5MX0.93khyYHQ_XrTH5S-qyK5UA6mT94CEYz7quEhn9kx1X0';

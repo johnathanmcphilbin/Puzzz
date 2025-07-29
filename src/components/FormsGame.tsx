@@ -349,7 +349,7 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
       Object.entries(playerResponses).forEach(([questionId, selectedPlayerId]) => {
         const questionResult = results[questionId];
         const playerId = selectedPlayerId as string;
-        if (questionResult) {
+        if (questionResult && playerId) {
           if (playerId in questionResult) {
             (questionResult as Record<string, number>)[playerId]++;
           }
