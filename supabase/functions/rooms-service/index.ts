@@ -179,7 +179,22 @@ serve(async (req) => {
 
         console.log('Room created:', newRoomCode);
         return new Response(
-          JSON.stringify({ roomCode: newRoomCode, playerId }),
+          JSON.stringify({ 
+            room: {
+              roomCode: newRoomCode,
+              hostId: playerId,
+              name: `${playerName}'s Room`,
+              currentGame: selectedGame,
+              gameState: { phase: 'lobby' },
+              players: [{
+                playerId,
+                playerName,
+                isHost: true,
+                joinedAt: Date.now()
+              }],
+              createdAt: Date.now()
+            }
+          }),
           { 
             status: 200, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -399,24 +414,34 @@ serve(async (req) => {
           }
         );
       }
-    }
 
+      // If we get here, the action was not recognized
       return new Response(
-        JSON.stringify({ error: 'Invalid request' }),
+        JSON.stringify({ error: 'Invalid action' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
-
-    } catch (error) {
-      console.error('Edge function error:', error);
-      return new Response(
-        JSON.stringify({ error: 'Internal server error' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
     }
-  });
+
+    // If we get here, the method was not GET or POST
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { 
+        status: 405, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+
+  } catch (error) {
+    console.error('Edge function error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+});
