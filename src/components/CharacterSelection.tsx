@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { getCatImageUrl } from "@/assets/catImages";
+import { getCatImageUrl, STATIC_CATS } from "@/assets/catImages";
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface CatCharacter {
   id: string;
@@ -63,7 +63,11 @@ const CharacterCard = React.memo(({
               }`}
               loading="lazy"
               onLoad={() => setImageLoaded(true)}
-              onError={() => setImageError(true)}
+              onError={(e) => {
+                console.error('Failed to load cat image:', imageUrl, 'for character:', character.name);
+                setImageError(true);
+                e.currentTarget.style.display = 'none';
+              }}
             />
           ) : (
             <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
@@ -94,7 +98,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
   const { toast } = useToast();
 
   const loadCharacters = useCallback(async () => {
-    // Use cached data if available
+    // Return cached characters if available
     if (cachedCharacters) {
       setCharacters(cachedCharacters);
       return;
@@ -102,14 +106,8 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
     setInitialLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('cat_characters')
-        .select('id, name, icon_url')
-        .not('icon_url', 'is', null);
-
-      if (error) throw error;
-      
-      const charactersData = data || [];
+      // Use static list of cats from public folder
+      const charactersData = STATIC_CATS;
       setCharacters(charactersData);
       cachedCharacters = charactersData; // Cache for next time
     } catch (error) {
@@ -135,24 +133,20 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('players')
-        .update({ selected_character_id: selectedCharacter })
-        .eq('player_id', playerId)
-        .eq('room_id', roomId);
-
-      if (error) throw error;
-
-      // Call the callback immediately
+      // Store character selection in the player's localStorage for immediate feedback
+      // Note: Since we're using Redis for room data, character selection needs to be handled
+      // differently. For now, we'll just call the callback to update the UI.
+      
+      // Call the callback immediately to update the parent component
       onCharacterSelected(selectedCharacter);
       
       toast({
         title: "Character Selected!",
-        description: "Your character has been chosen",
+        description: "Your cat character has been chosen",
+        className: "bg-success text-success-foreground",
       });
       
       onClose();
-      
     } catch (error) {
       console.error('Error selecting character:', error);
       toast({

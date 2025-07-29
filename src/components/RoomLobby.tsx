@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Play, Users, Crown, LogOut, QrCode, UserX, Cat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 import { CharacterSelection } from "./CharacterSelection";
-import { getCatImageUrl } from "@/assets/catImages";
+import { getCatImageUrl, STATIC_CATS } from "@/assets/catImages";
 import GameCustomizer from "./GameCustomizer";
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
@@ -81,17 +80,13 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     if (characterIds.length === 0) return;
 
     try {
-      const { data, error } = await supabase
-        .from('cat_characters')
-        .select('*')
-        .in('id', characterIds);
-
-      if (error) throw error;
-
-      const characterMap = data?.reduce((acc, char) => {
-        acc[char.id] = char;
+      // Use static cat list instead of Supabase database
+      const characterMap = STATIC_CATS.reduce((acc, char) => {
+        if (characterIds.includes(char.id)) {
+          acc[char.id] = char;
+        }
         return acc;
-      }, {} as any) || {};
+      }, {} as any);
 
       setCharacterData(characterMap);
     } catch (error) {
@@ -100,14 +95,48 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   };
 
   const handleCharacterSelected = async (characterId: string) => {
-    // Immediately update character data after selection
-    await loadCharacterData();
-    
-    toast({
-      title: "Character Selected!",
-      description: "Your cat character is now displayed",
-      className: "bg-success text-success-foreground",
-    });
+    try {
+      // Update player's character in Redis room data
+      const updatedPlayers = players.map(player => 
+        player.player_id === currentPlayer.player_id 
+          ? { ...player, selectedCharacterId: characterId, selected_character_id: characterId }
+          : player
+      );
+
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'apikey': SUPABASE_ANON_KEY, 
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
+        },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { players: updatedPlayers } 
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update character selection');
+      }
+
+      // Reload character data to show the new selection
+      await loadCharacterData();
+      
+      toast({
+        title: "Character Selected!",
+        description: "Your cat character is now displayed",
+        className: "bg-success text-success-foreground",
+      });
+    } catch (error) {
+      console.error('Error updating character selection:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save character selection",
+        variant: "destructive",
+      });
+    }
   };
 
   const copyRoomCode = () => {
@@ -544,30 +573,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                   className="gap-2"
                 >
                   🔄 Refresh
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    const playerId = localStorage.getItem('puzzz_player_id');
-                    const playerName = localStorage.getItem('puzzz_player_name');
-                    console.log('🔍 Debug Info:', {
-                      localStorage: { playerId, playerName },
-                      currentPlayer: currentPlayer,
-                      roomHost: room.host_id,
-                      isCurrentPlayerHost: currentPlayer.is_host,
-                      playerIdMatch: playerId === room.host_id
-                    });
-                    if (confirm('Clear localStorage and rejoin room? (Use this if host detection is broken)')) {
-                      localStorage.removeItem('puzzz_player_id');
-                      localStorage.removeItem('puzzz_player_name');
-                      window.location.href = '/';
-                    }
-                  }}
-                  className="gap-2"
-                >
-                  🔍 Debug
                 </Button>
                 
                 <Button 

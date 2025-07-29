@@ -6,12 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTimer } from "@/hooks/useTimer";
 import { Users, Crown, Trophy, MessageSquare, Play, StopCircle, Clock, ArrowLeft, LogOut, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getCatImageUrl } from "@/assets/catImages";
+import { getCatImageUrl, STATIC_CATS } from "@/assets/catImages";
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from "@/utils/functions";
 
 interface Room {
@@ -73,17 +72,13 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       if (characterIds.length === 0) return;
 
       try {
-        const { data, error } = await supabase
-          .from('cat_characters')
-          .select('*')
-          .in('id', characterIds);
-
-        if (error) throw error;
-
-        const characterMap = data?.reduce((acc, char) => {
-          acc[char.id] = char;
+        // Use static cat list instead of Supabase database
+        const characterMap = STATIC_CATS.reduce((acc, char) => {
+          if (characterIds.includes(char.id)) {
+            acc[char.id] = char;
+          }
           return acc;
-        }, {} as any) || {};
+        }, {} as any);
 
         setCharacterData(characterMap);
       } catch (error) {
@@ -270,12 +265,9 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       // Update answers first
       await updateGameState({ player_answers: updatedAnswers });
       
-      console.log(`Player ${currentPlayer.player_name} submitted answer. Total answers: ${Object.keys(updatedAnswers).length} / ${players.length}`);
-      
       // Check if all players have answered - be more careful about the timing
       const totalAnswers = Object.keys(updatedAnswers).length;
       if (totalAnswers >= players.length) {
-        console.log("All players have answered, moving to voting phase");
         // Small delay to ensure all answer updates are processed
         setTimeout(async () => {
           try {

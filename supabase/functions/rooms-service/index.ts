@@ -4,12 +4,15 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Redis } from "https://deno.land/x/upstash_redis@v1.22.0/mod.ts";
 
+console.log("🚨 rooms-service deployed and running 🚨");
+
 // Environment variables for Upstash Redis
 const redis = new Redis({
   url: Deno.env.get("UPSTASH_REDIS_REST_URL")!,
   token: Deno.env.get("UPSTASH_REDIS_REST_TOKEN")!,
 });
-
+console.log("REDIS URL", Deno.env.get("UPSTASH_REDIS_REST_URL"));
+console.log("REDIS TOKEN", Deno.env.get("UPSTASH_REDIS_REST_TOKEN"));
 // Safely parse JSON (returns null on failure)
 function safeParse(raw: string | null): any | null {
   if (!raw) return null;

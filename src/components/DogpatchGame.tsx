@@ -334,7 +334,6 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
       return;
     }
     
-    console.log('Moving to next question, resetting selectedAnswer for all players');
     setSelectedAnswer(null);
     
     await onUpdateRoom({

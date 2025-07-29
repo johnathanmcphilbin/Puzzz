@@ -76,33 +76,15 @@ export const useRoom = (roomCode: string) => {
       const playerId = localStorage.getItem('puzzz_player_id');
       if (playerId) {
         const foundPlayer = playersWithLegacy.find((p: any) => p.player_id === playerId);
-        console.log('Player matching details:', { 
-          searchingFor: playerId, 
-          foundPlayer, 
-          allPlayerIds: playersWithLegacy.map((p: any) => ({ id: p.player_id, name: p.player_name, isHost: p.is_host })),
-          roomHostId: roomData.hostId 
-        });
         
         if (foundPlayer) {
           setCurrentPlayer(foundPlayer);
-          console.log('✅ Current player set:', { 
-            playerName: foundPlayer.player_name, 
-            isHost: foundPlayer.is_host,
-            playerId: foundPlayer.player_id 
-          });
         } else {
-          console.warn('❌ Current player not found in room players list');
-          console.warn('This usually means:', {
-            reason1: 'Player was kicked or left the room',
-            reason2: 'Room data is out of sync',
-            suggestion: 'Clear localStorage and rejoin the room'
-          });
           // Player not found in room - they might have been kicked or room data is corrupted
           setError('You are no longer a member of this room. Please rejoin.');
           return;
         }
       } else {
-        console.warn('No player ID found in localStorage');
         setError('Please join the room properly');
         return;
       }

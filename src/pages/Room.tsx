@@ -12,11 +12,8 @@ export const Room = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
   
-  console.log('Room component rendered with roomCode:', roomCode);
-  
   // Redirect if no room code
   if (!roomCode) {
-    console.log('No room code, redirecting to home');
     navigate("/");
     return null;
   }
@@ -58,8 +55,6 @@ export const Room = () => {
   const gamePhase = room.game_state?.phase || "lobby";
   const currentGame = room.current_game || "would_you_rather";
   
-  console.log('Room render - gamePhase:', gamePhase, 'currentGame:', currentGame, 'game_state:', room.game_state);
-
   return (
     <div className="min-h-screen gradient-bg">
       {gamePhase === "lobby" ? (
