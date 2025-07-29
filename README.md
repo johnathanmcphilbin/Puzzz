@@ -61,6 +61,17 @@ VITE_SUPABASE_ANON_KEY="<public-anon-key>"
 
 Add any additional variables your Supabase functions or integrations need.
 
+### Supabase Edge Functions Environment
+
+For the AI questions feature to work, you need to set the OpenAI API key in your Supabase project:
+
+```bash
+# Set the OpenAI API key for your Supabase edge functions
+npx supabase secrets set OPENAI_API_KEY=your_openai_api_key_here
+```
+
+Or set it in the Supabase dashboard under Settings → Edge Functions → Environment variables.
+
 ---
 
 ## Tech Stack

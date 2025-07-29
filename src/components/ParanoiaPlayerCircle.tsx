@@ -37,7 +37,7 @@ export function ParanoiaPlayerCircle({
   // Load character data
   useEffect(() => {
     const loadCharacterData = async () => {
-      const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
+      const characterIds = players.map(p => p.selected_character_id).filter((id): id is string => Boolean(id));
       if (characterIds.length === 0) return;
 
       try {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Loader2, Wand2, Users, Zap } from 'lucide-react';
+import { Sparkles, Loader2, Wand2, Users, Zap, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface GameCustomizerProps {
   roomCode: string;
@@ -24,27 +25,9 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
 
   useEffect(() => {
     const checkExistingQuestions = async () => {
-      // Check for existing customization
-      const { data: customizationData } = await supabase
-        .from('ai_chat_customizations')
-        .select('customization_text')
-        .eq('room_id', roomCode)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
-      if (customizationData?.customization_text) {
-        setCustomization(customizationData.customization_text);
-      }
-
-      // Check if room-specific questions already exist
-      const { data: roomQuestions } = await supabase
-        .from('room_questions')
-        .select('id')
-        .eq('room_id', roomId)
-        .limit(1);
-
-      setHasGeneratedQuestions(roomQuestions && roomQuestions.length > 0);
+      // Since ai_chat_customizations and room_questions tables are deleted,
+      // we'll start fresh and let users generate new questions
+      setHasGeneratedQuestions(false);
     };
 
     checkExistingQuestions();
@@ -56,18 +39,31 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
     setIsLoading(true);
 
     try {
-      // Save customization to database
-      await supabase.from('ai_chat_customizations').insert({
-        room_id: roomCode,
-        customization_text: customization.trim()
+      // Save customization to Redis room state
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: roomCode, 
+          updates: { 
+            gameState: { 
+              aiCustomization: customization.trim() 
+            } 
+          } 
+        }),
       });
+
+      if (!response.ok) {
+        console.warn('Failed to save AI customization to room state');
+      }
 
       // Generate questions
       const { data, error } = await supabase.functions.invoke('room-questions', {
         body: {
           roomCode,
           customization: customization.trim(),
-          crazynessLevel: crazynessLevel[0]
+          crazynessLevel: crazynessLevel[0] ?? 50
         }
       });
 
@@ -162,15 +158,15 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
               <div className="flex items-center justify-between">
                 <Label htmlFor="craziness">Craziness Level</Label>
                 <Badge variant={
-                  crazynessLevel[0] <= 20 ? "secondary" :
-                  crazynessLevel[0] <= 40 ? "outline" :
-                  crazynessLevel[0] <= 60 ? "default" :
-                  crazynessLevel[0] <= 80 ? "destructive" : "destructive"
+                  (crazynessLevel[0] ?? 50) <= 20 ? "secondary" :
+                  (crazynessLevel[0] ?? 50) <= 40 ? "outline" :
+                  (crazynessLevel[0] ?? 50) <= 60 ? "default" :
+                  (crazynessLevel[0] ?? 50) <= 80 ? "destructive" : "destructive"
                 }>
-                  {crazynessLevel[0]}% {crazynessLevel[0] <= 20 ? "😇" :
-                   crazynessLevel[0] <= 40 ? "😊" :
-                   crazynessLevel[0] <= 60 ? "😈" :
-                   crazynessLevel[0] <= 80 ? "🔥" : "💀"}
+                  {crazynessLevel[0] ?? 50}% {(crazynessLevel[0] ?? 50) <= 20 ? "😇" :
+                   (crazynessLevel[0] ?? 50) <= 40 ? "😊" :
+                   (crazynessLevel[0] ?? 50) <= 60 ? "😈" :
+                   (crazynessLevel[0] ?? 50) <= 80 ? "🔥" : "💀"}
                 </Badge>
               </div>
               <Slider
@@ -183,10 +179,10 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
                 className="w-full"
               />
               <div className="text-xs text-muted-foreground text-center">
-                {crazynessLevel[0] <= 20 ? "Safe & family-friendly" :
-                 crazynessLevel[0] <= 40 ? "Mild fun with light humor" :
-                 crazynessLevel[0] <= 60 ? "Moderately entertaining & bold" :
-                 crazynessLevel[0] <= 80 ? "Dramatic & boundary-pushing" : "Extreme & outrageous"}
+                {(crazynessLevel[0] ?? 50) <= 20 ? "Safe & family-friendly" :
+                 (crazynessLevel[0] ?? 50) <= 40 ? "Mild fun with light humor" :
+                 (crazynessLevel[0] ?? 50) <= 60 ? "Moderately entertaining & bold" :
+                 (crazynessLevel[0] ?? 50) <= 80 ? "Dramatic & boundary-pushing" : "Extreme & outrageous"}
               </div>
             </div>
 

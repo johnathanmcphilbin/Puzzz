@@ -1,10 +1,11 @@
+// @ts-nocheck
+// This is a Deno Edge Function - TypeScript errors for Deno imports are expected in Node.js environment
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.51.0";
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const functionsUrl = Deno.env.get('SUPABASE_URL')?.replace('https://', 'https://') + '/functions/v1';
+const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,8 +18,15 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Environment check:', { 
+      hasOpenAIKey: !!openAIApiKey, 
+      functionsUrl, 
+      hasSupabaseKey: !!supabaseAnonKey 
+    });
+    
     if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+      console.error('OpenAI API key not found in environment variables');
+      throw new Error('OpenAI API key not configured. Please contact the administrator.');
     }
 
     const { roomCode, customization, crazynessLevel } = await req.json();
@@ -29,26 +37,19 @@ serve(async (req) => {
 
     console.log('Generating room questions for:', { roomCode, customization, crazynessLevel });
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Verify room exists in Redis first
+    const roomCheckResponse = await fetch(`${functionsUrl}/rooms-service?roomCode=${roomCode}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey!,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+      },
+    });
 
-    // Get the actual room UUID from the room code
-    const { data: roomData, error: roomError } = await supabase
-      .from('rooms')
-      .select('id')
-      .eq('room_code', roomCode)
-      .single();
-
-    if (roomError || !roomData) {
+    if (!roomCheckResponse.ok) {
       throw new Error(`Room not found for code: ${roomCode}`);
     }
-
-    const roomId = roomData.id;
-
-    // Clear existing questions for this room
-    await supabase
-      .from('room_questions')
-      .delete()
-      .eq('room_id', roomId);
 
     const crazynessDescription = crazynessLevel <= 20 ? "very mild and safe" :
                                 crazynessLevel <= 40 ? "mild with some fun edge" :
@@ -56,7 +57,7 @@ serve(async (req) => {
                                 crazynessLevel <= 80 ? "quite dramatic and bold" :
                                 "extremely wild, dramatic, and outrageous";
 
-    const systemPrompt = `Generate questions for party games based HEAVILY on the customization theme: "${customization}". 
+const systemPrompt = `Generate questions for party games based HEAVILY on the customization theme: "${customization}". 
     
     CRITICAL: ALL questions must be directly related to and inspired by the theme/interests mentioned. If they mention "Star Wars", include Star Wars elements throughout. If they mention "nerdy", include nerdy/geeky scenarios. The theme should be evident in EVERY question.
     
@@ -107,7 +108,7 @@ serve(async (req) => {
       ]
     }
     
-    Make sure ALL questions are HEAVILY themed around the customization AND match the specified craziness level. Return ONLY the JSON object, nothing else.`;
+`;
     
     const userPrompt = `Generate 25 Would You Rather questions, 20 Paranoia questions, and 15 Odd One Out questions that are HEAVILY themed around: ${customization}. Every single question must incorporate elements from this theme. Craziness level: ${crazynessLevel}%. Do NOT include "Would you rather" in the options - just provide the choice content.`;
 
@@ -149,58 +150,34 @@ serve(async (req) => {
       throw new Error('AI response was not valid JSON. Please try again.');
     }
 
-    // Store Would You Rather questions
-    if (questions.would_you_rather && Array.isArray(questions.would_you_rather)) {
-      const wourQuestions = questions.would_you_rather.map((q: any) => ({
-        room_id: roomId,
-        game_type: 'would_you_rather',
-        question_data: q
-      }));
+    // Store the generated questions in Redis via rooms-service
+    const updateResponse = await fetch(`${functionsUrl}/rooms-service`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey!,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({
+        action: 'update',
+        roomCode: roomCode,
+        updates: {
+          gameState: {
+            aiCustomization: customization,
+            customQuestions: {
+              would_you_rather: questions.would_you_rather || [],
+              paranoia: questions.paranoia || [],
+              odd_one_out: questions.odd_one_out || []
+            },
+            questionsGenerated: true
+          }
+        }
+      }),
+    });
 
-      const { error: wourError } = await supabase
-        .from('room_questions')
-        .insert(wourQuestions);
-
-      if (wourError) {
-        console.error('Error storing would you rather questions:', wourError);
-        throw wourError;
-      }
-    }
-
-    // Store Paranoia questions
-    if (questions.paranoia && Array.isArray(questions.paranoia)) {
-      const paranoiaQuestions = questions.paranoia.map((q: any) => ({
-        room_id: roomId,
-        game_type: 'paranoia',
-        question_data: q
-      }));
-
-      const { error: paranoiaError } = await supabase
-        .from('room_questions')
-        .insert(paranoiaQuestions);
-
-      if (paranoiaError) {
-        console.error('Error storing paranoia questions:', paranoiaError);
-        throw paranoiaError;
-      }
-    }
-
-    // Store Odd One Out questions
-    if (questions.odd_one_out && Array.isArray(questions.odd_one_out)) {
-      const oddOneOutQuestions = questions.odd_one_out.map((q: any) => ({
-        room_id: roomId,
-        game_type: 'odd_one_out',
-        question_data: q
-      }));
-
-      const { error: oddOneOutError } = await supabase
-        .from('room_questions')
-        .insert(oddOneOutQuestions);
-
-      if (oddOneOutError) {
-        console.error('Error storing odd one out questions:', oddOneOutError);
-        throw oddOneOutError;
-      }
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.json().catch(() => ({}));
+      throw new Error(`Failed to store questions in Redis: ${errorData.error || 'Unknown error'}`);
     }
 
     console.log(`Successfully stored ${questions.would_you_rather?.length || 0} Would You Rather, ${questions.paranoia?.length || 0} Paranoia, and ${questions.odd_one_out?.length || 0} Odd One Out questions for room ${roomCode}`);

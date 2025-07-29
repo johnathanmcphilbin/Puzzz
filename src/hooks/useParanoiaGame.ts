@@ -70,32 +70,21 @@ export const useParanoiaGame = (room: Room, players: Player[], currentPlayer: Pl
 
   const loadQuestions = async () => {
     try {
-      // First try AI generated questions
-      const { data: roomQuestions } = await supabase
-        .from("room_questions")
-        .select("question_data")
-        .eq("room_id", room.room_code)
-        .eq("game_type", "paranoia");
-
-      if (roomQuestions && roomQuestions.length > 0) {
-        const aiQuestions = roomQuestions.map((rq: any, index: number) => ({
-          id: `ai-${index}`,
-          question: rq.question_data.question,
-          category: rq.question_data.category || "general",
-          spiciness_level: rq.question_data.spiciness_level || 1
-        }));
-        setQuestions(aiQuestions);
-        return;
-      }
-
-      // Fallback to default questions
+      // Load questions from the paranoia_questions table
       const { data: questionsData } = await supabase
         .from("paranoia_questions")
         .select("*")
-        .eq("category", "general")
         .limit(20);
       
-      setQuestions(questionsData || []);
+      // Convert to proper format with fallback for null values
+      const formattedQuestions: ParanoiaQuestion[] = (questionsData || []).map(q => ({
+        id: q.id,
+        question: q.question,
+        category: q.category || "general",
+        spiciness_level: q.spiciness_level || 1
+      }));
+      
+      setQuestions(formattedQuestions);
     } catch (error) {
       console.error("Error loading questions:", error);
     }
@@ -166,14 +155,39 @@ export const useParanoiaGame = (room: Room, players: Player[], currentPlayer: Pl
     });
   }, [players]);
 
-  const selectQuestion = useCallback(async (questionText: string) => {
-    if (isLoading) return;
+  const selectQuestion = useCallback(async () => {
+    if (questions.length === 0) return;
+
+    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+    if (!randomQuestion) {
+      console.error("No question found");
+      return;
+    }
+    
+    const questionText = randomQuestion.question;
+
+    const currentAskerPlayerId = gameState.playerOrder[gameState.currentTurnIndex];
+    if (!currentAskerPlayerId) {
+      console.error("No current asker player found");
+      return;
+    }
+
+    // Select next player (target)
+    const availablePlayers = players.filter(p => p.player_id !== currentAskerPlayerId);
+    if (availablePlayers.length === 0) {
+      console.error("No available target players");
+      return;
+    }
+    
+    const targetPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+    if (!targetPlayer) {
+      console.error("No target player found");
+      return;
+    }
+    
+    const nextPlayerId = targetPlayer.player_id;
 
     try {
-      const nextPlayerIndex = (gameState.currentTurnIndex + 1) % gameState.playerOrder.length;
-      const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
-      const currentAskerPlayerId = gameState.playerOrder[gameState.currentTurnIndex];
-
       await updateGameState({
         phase: 'answering',
         currentQuestion: questionText,
@@ -182,13 +196,8 @@ export const useParanoiaGame = (room: Room, players: Player[], currentPlayer: Pl
       });
     } catch (error) {
       console.error("Error selecting question:", error);
-      toast({
-        title: "Error",
-        description: "Failed to select question. Please try again.",
-        variant: "destructive",
-      });
     }
-  }, [gameState, isLoading]);
+  }, [questions, gameState, players, updateGameState]);
 
   const submitAnswer = useCallback(async (answer: string) => {
     if (!answer.trim()) {
@@ -260,7 +269,7 @@ export const useParanoiaGame = (room: Room, players: Player[], currentPlayer: Pl
       let nextIndex = 0;
       for (let i = 0; i < gameState.playerOrder.length; i++) {
         const candidatePlayerId = gameState.playerOrder[i];
-        if (!gameState.usedAskers.includes(candidatePlayerId)) {
+        if (candidatePlayerId && !gameState.usedAskers.includes(candidatePlayerId)) {
           nextIndex = i;
           break;
         }

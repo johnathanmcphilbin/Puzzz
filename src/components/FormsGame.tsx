@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, Users, RotateCcw, Crown, Trophy, AlertTriangle, FileText } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCatImageUrl } from "@/assets/catImages";
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface Room {
   id: string;
@@ -78,7 +79,7 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
   }, [room.game_state, currentPlayer.player_id, players.length]);
 
   const loadCharacterData = async () => {
-    const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
+    const characterIds = players.map(p => p.selected_character_id).filter((id): id is string => Boolean(id));
     if (characterIds.length === 0) return;
 
     try {
@@ -107,13 +108,20 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
         showResults: true
       };
 
-      const { error } = await supabase
-        .from("rooms")
-        .update({ game_state: resultsGameState })
-        .eq("id", room.id);
+      // Update room state via Redis-based rooms-service
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { gameState: resultsGameState } 
+        }),
+      });
 
-      if (error) {
-        console.error("Error showing results:", error);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to show results');
       }
     } catch (error) {
       console.error("Error showing results automatically:", error);
@@ -167,14 +175,29 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
         phase: "playing"
       };
 
-      const { error } = await supabase
-        .from("rooms")
-        .update({ game_state: newGameState })
-        .eq("id", room.id);
+      // Update room state via Redis-based rooms-service
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { gameState: newGameState } 
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update game state');
+      }
 
-      setQuestions(selectedQuestions);
+      const formattedQuestions: FormsQuestion[] = selectedQuestions.map(q => ({
+      id: q.id,
+      question: q.question,
+      category: q.category || "general",
+      is_controversial: q.is_controversial || false
+    }));
+    setQuestions(formattedQuestions);
     } catch (error) {
       console.error("Error loading questions:", error);
       toast({
@@ -214,11 +237,7 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
         selected_player_id: selectedPlayerId
       }));
 
-      const { error: insertError } = await supabase
-        .from("forms_responses")
-        .insert(responseInserts);
-
-      if (insertError) throw insertError;
+      // Forms responses are now stored in Redis game state
 
       // Update room game state with responses
       const updatedResponses = {
@@ -231,10 +250,20 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
         responses: updatedResponses
       };
 
-      const { error } = await supabase
-        .from("rooms")
-        .update({ game_state: updatedGameState })
-        .eq("id", room.id);
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { gameState: updatedGameState } 
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update game state');
+      }
 
       if (error) throw error;
 
@@ -252,10 +281,15 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
           showResults: true
         };
 
-        const { error: resultsError } = await supabase
-          .from("rooms")
-          .update({ game_state: resultsGameState })
-          .eq("id", room.id);
+        const resultsResponse = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { gameState: resultsGameState } 
+        }),
+      });
 
         if (resultsError) {
           console.error("Error showing results:", resultsError);
@@ -274,12 +308,15 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
   };
 
   const backToLobby = async () => {
-    const { error } = await supabase
-      .from("rooms")
-      .update({
-        game_state: { phase: "lobby" }
-      })
-      .eq("id", room.id);
+    const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { gameState: { phase: "lobby" } } 
+        }),
+      });
 
     if (error) {
       toast({
@@ -301,14 +338,14 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
     questions.forEach(question => {
       results[question.id] = {};
       players.forEach(player => {
-        results[question.id][player.player_id] = 0;
+        if (results[question.id]) results[question.id][player.player_id] = 0;
       });
     });
 
     Object.values(allResponses).forEach((playerResponses: any) => {
       Object.entries(playerResponses).forEach(([questionId, selectedPlayerId]) => {
         if (results[questionId] && results[questionId][selectedPlayerId as string] !== undefined) {
-          results[questionId][selectedPlayerId as string]++;
+          if (results[questionId]) results[questionId][selectedPlayerId as string]++;
         }
       });
     });
@@ -357,7 +394,7 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
               const totalVotes = Object.values(questionResults).reduce((sum: number, votes: number) => sum + votes, 0);
               const sortedPlayers = players.sort((a, b) => (questionResults[b.player_id] || 0) - (questionResults[a.player_id] || 0));
               const winner = sortedPlayers[0];
-              const winnerVotes = questionResults[winner?.player_id] || 0;
+              const winnerVotes = winner ? (questionResults[winner.player_id] || 0) : 0;
               
               return (
                 <Card key={question.id} className="animate-fade-in">

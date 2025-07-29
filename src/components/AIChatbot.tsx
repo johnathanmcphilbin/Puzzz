@@ -8,6 +8,8 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import "regenerator-runtime/runtime";
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface Message {
   id: string;
@@ -46,43 +48,10 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     // Load existing customization and check if questions already generated for this room
     const loadRoomState = async () => {
       if (roomCode) {
-        // Check for existing customization
-      const { data: customizationData } = await supabase
-        .from('ai_chat_customizations')
-        .select('customization_text')
-        .eq('room_id', roomCode)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
-      if (customizationData?.customization_text) {
-        setCustomization(customizationData.customization_text);
-      }
-
-      // Get room UUID first
-      const { data: roomData } = await supabase
-        .from('rooms')
-        .select('id')
-        .eq('room_code', roomCode)
-        .single();
-
-      if (roomData) {
-        // Check if room-specific questions already exist
-        const { data: roomQuestions } = await supabase
-          .from('room_questions')
-          .select('id')
-          .eq('room_id', roomData.id)
-          .limit(1);
-
-        const hasExistingQuestions = roomQuestions && roomQuestions.length > 0;
-        setHasGeneratedQuestions(hasExistingQuestions);
-        
-        if (hasExistingQuestions && customizationData?.customization_text) {
-          addMessage(`Already customized for: "${customizationData.customization_text}"`);
-        } else if (!hasExistingQuestions) {
-          addMessage("Describe your group and I'll generate custom questions instantly!");
-        }
-      }
+        // Since ai_chat_customizations and room_questions tables are deleted,
+        // we'll start fresh and let users generate new questions
+        setHasGeneratedQuestions(false);
+        addMessage("Describe your group and I'll generate custom questions instantly!");
       }
     };
     
@@ -137,12 +106,25 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
       const sanitizedCustomization = userMessage;
       setCustomization(sanitizedCustomization);
       
-      // Save customization to database
+      // Save customization to Redis room state
       if (roomCode) {
-        await supabase.from('ai_chat_customizations').insert({
-          room_id: roomCode,
-          customization_text: sanitizedCustomization
+        const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+          body: JSON.stringify({ 
+            action: 'update', 
+            roomCode: roomCode, 
+            updates: { 
+              gameState: { 
+                aiCustomization: sanitizedCustomization 
+              } 
+            } 
+          }),
         });
+
+        if (!response.ok) {
+          console.warn('Failed to save AI customization to room state');
+        }
       }
 
       // Immediately generate questions
@@ -189,7 +171,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         body: {
           roomCode,
           customization: effectiveCustomization,
-          crazynessLevel: crazynessLevel[0]
+          crazynessLevel: crazynessLevel[0] ?? 50
         }
       });
 
@@ -295,18 +277,18 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
             <div className="px-4 py-2 border-t">
               <div className="flex items-center justify-between mb-2">
                 <Label htmlFor="craziness" className="text-sm font-medium">
-                  Craziness Level: {crazynessLevel[0]}%
+                  Craziness Level: {crazynessLevel[0] ?? 50}%
                 </Label>
                 <Badge variant={
-                  crazynessLevel[0] <= 20 ? "secondary" :
-                  crazynessLevel[0] <= 40 ? "outline" :
-                  crazynessLevel[0] <= 60 ? "default" :
-                  crazynessLevel[0] <= 80 ? "destructive" : "destructive"
+                  (crazynessLevel[0] ?? 50) <= 20 ? "secondary" :
+                  (crazynessLevel[0] ?? 50) <= 40 ? "outline" :
+                  (crazynessLevel[0] ?? 50) <= 60 ? "default" :
+                  (crazynessLevel[0] ?? 50) <= 80 ? "destructive" : "destructive"
                 }>
-                  {crazynessLevel[0] <= 20 ? "😇 Tame" :
-                   crazynessLevel[0] <= 40 ? "😊 Fun" :
-                   crazynessLevel[0] <= 60 ? "😈 Spicy" :
-                   crazynessLevel[0] <= 80 ? "🔥 Wild" : "💀 INSANE"}
+                  {(crazynessLevel[0] ?? 50) <= 20 ? "😇 Tame" :
+                   (crazynessLevel[0] ?? 50) <= 40 ? "😊 Fun" :
+                   (crazynessLevel[0] ?? 50) <= 60 ? "😈 Spicy" :
+                   (crazynessLevel[0] ?? 50) <= 80 ? "🔥 Wild" : "💀 INSANE"}
                 </Badge>
               </div>
               <Slider
@@ -319,10 +301,10 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                 disabled={isLoading || hasGeneratedQuestions}
               />
               <div className="text-xs text-muted-foreground text-center">
-                {crazynessLevel[0] <= 20 ? "Safe & family-friendly questions" :
-                 crazynessLevel[0] <= 40 ? "Mild fun with light humor" :
-                 crazynessLevel[0] <= 60 ? "Moderately entertaining & bold" :
-                 crazynessLevel[0] <= 80 ? "Dramatic & boundary-pushing" : "Extreme & outrageous scenarios"}
+                {(crazynessLevel[0] ?? 50) <= 20 ? "Safe & family-friendly questions" :
+                 (crazynessLevel[0] ?? 50) <= 40 ? "Mild fun with light humor" :
+                 (crazynessLevel[0] ?? 50) <= 60 ? "Moderately entertaining & bold" :
+                 (crazynessLevel[0] ?? 50) <= 80 ? "Dramatic & boundary-pushing" : "Extreme & outrageous scenarios"}
               </div>
             </div>
             

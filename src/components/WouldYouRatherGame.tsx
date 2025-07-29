@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,6 +11,7 @@ import { useTimer } from "@/hooks/useTimer";
 import { ChevronRight, Users, RotateCcw, Trophy, Clock, ArrowLeft, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getCatImageUrl } from "@/assets/catImages";
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface Room {
   id: string;
@@ -111,16 +112,8 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
 
   const loadVotes = async () => {
     try {
-      const { data: votesData } = await supabase
-        .from("game_votes")
-        .select("player_id, vote")
-        .eq("room_id", room.id)
-        .eq("question_id", gameState.currentQuestion?.id || "");
-
-      const votesMap: Record<string, string> = {};
-      votesData?.forEach(vote => {
-        votesMap[vote.player_id] = vote.vote;
-      });
+      // Votes are now stored within the room's gameState in Redis
+      const votesMap = gameState.votes || {};
       setVotes(votesMap);
     } catch (error) {
       console.error("Error loading votes:", error);
@@ -128,7 +121,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const loadCharacterData = async () => {
-    const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
+    const characterIds = players.map(p => p.selected_character_id).filter((id): id is string => Boolean(id));
     if (characterIds.length === 0) return;
 
     try {
@@ -165,165 +158,79 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const generateAIQuestions = async () => {
-    try {
-      const { data: customizationData } = await supabase
-        .from("ai_chat_customizations")
-        .select("customization_text")
-        .eq("room_id", room.id)
-        .single();
-
-      const customization = customizationData?.customization_text || "a fun group of friends";
-
-      const response = await supabase.functions.invoke('ai-chat', {
-        body: {
-          action: 'generate_would_you_rather',
-          customization,
-          players: players
-        }
-      });
-
-      if (response.error) throw response.error;
-
-      const aiResponse = JSON.parse(response.data.response);
-      const generatedQuestions = aiResponse.questions.map((q: any, index: number) => ({
-        id: crypto.randomUUID(),
-        option_a: q.option_a,
-        option_b: q.option_b,
-        category: "AI Generated",
-        created_at: new Date().toISOString()
-      }));
-
-      setAiQuestions(generatedQuestions);
-      return generatedQuestions;
-    } catch (error) {
-      console.error("Error generating AI questions:", error);
-      return [];
-    }
+    // AI question generation is no longer available - use default questions
+    return [];
   };
 
   const loadQuestions = async (): Promise<Question[]> => {
     let questions: Question[] = [];
 
-    // First try to get room-specific questions
-    const { data: roomQuestions, error: roomQuestionsError } = await supabase
-      .from("room_questions")
-      .select("question_data")
-      .eq("room_id", room.room_code)
-      .eq("game_type", "would_you_rather");
+    // Get questions from the available would_you_rather_questions table
+    const { data: questionsData, error: questionsError } = await supabase
+      .from("would_you_rather_questions")
+      .select("*");
 
-    if (!roomQuestionsError && roomQuestions && roomQuestions.length > 0) {
-      questions = roomQuestions.map((rq: any) => ({
-        id: crypto.randomUUID(),
-        option_a: rq.question_data.option_a,
-        option_b: rq.question_data.option_b,
-        category: "Room Custom",
-        created_at: new Date().toISOString()
-      }));
-    }
-
-    // If no room questions, fall back to AI generation
-    if (questions.length === 0) {
-      const aiQuestions = await generateAIQuestions();
-      if (aiQuestions.length > 0) {
-        questions = aiQuestions;
-      }
-    }
-
-    // If still no questions, get from database
-    if (questions.length === 0) {
-      const { data: questionsData, error: questionsError } = await supabase
-        .from("would_you_rather_questions")
-        .select("*");
-
-      if (questionsError) throw questionsError;
-      questions = questionsData || [];
-    }
+    if (questionsError) throw questionsError;
+    
+    // Convert to proper format with fallback for null categories
+    questions = (questionsData || []).map(q => ({
+      ...q,
+      category: q.category || "general",
+      created_at: q.created_at || new Date().toISOString()
+    }));
 
     return questions;
   };
 
+  const [isLoadingNext, setIsLoadingNext] = useState(false);
+
   const loadNextQuestion = async () => {
-    if (!currentPlayer.is_host) return;
-
-    setIsLoading(true);
+    if (!currentPlayer.is_host || isLoadingNext) return;
+    
+    setIsLoadingNext(true);
     try {
-      let questions: Question[] = [];
-
-      // First check if we have questions in the queue
-      if (questionQueue.length > 0) {
-        questions = [...questionQueue];
-      } else {
-        // Load fresh questions if queue is empty
-        questions = await loadQuestions();
-        setQuestionQueue(questions);
-      }
+      // Clear votes for new question
+      const newVotes = {};
+      setVotes(newVotes);
       
-      if (questions.length === 0) {
-        // Add default questions as fallback
-        const defaultQuestions = [
-          {
-            id: crypto.randomUUID(),
-            option_a: "Have the ability to fly",
-            option_b: "Have the ability to read minds",
-            category: "default",
-            created_at: new Date().toISOString()
-          },
-          {
-            id: crypto.randomUUID(), 
-            option_a: "Always be 10 minutes late",
-            option_b: "Always be 20 minutes early",
-            category: "default",
-            created_at: new Date().toISOString()
-          },
-          {
-            id: crypto.randomUUID(),
-            option_a: "Live in a world without music",
-            option_b: "Live in a world without movies",
-            category: "default",
-            created_at: new Date().toISOString()
-          }
-        ];
-        questions.push(...defaultQuestions);
+      // Get a random question from available questions
+      const availableQuestions = questionQueue.length > 0 ? questionQueue : await loadQuestions();
+      const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+      
+      if (!randomQuestion) {
+        toast({
+          title: "No Questions Available",
+          description: "Could not load a new question",
+          variant: "destructive",
+        });
+        return;
       }
 
-      // Pick a random question and remove it from queue
-      const randomIndex = Math.floor(Math.random() * questions.length);
-      const randomQuestion = questions[randomIndex];
-      const remainingQuestions = questions.filter((_, index) => index !== randomIndex);
-      
-      // Update question queue
-      setQuestionQueue(remainingQuestions);
-
-      // Update room with new question
       const newGameState = {
         ...gameState,
         currentQuestion: randomQuestion,
-        questionIndex: questionIndex + 1,
-        votes: {},
+        votes: newVotes,
         showResults: false
       };
 
-      const { error } = await supabase
-        .from("rooms")
-        .update({ game_state: newGameState })
-        .eq("id", room.id);
+      // Update room state via Redis-based rooms-service
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { gameState: newGameState } 
+        }),
+      });
 
-      if (error) throw error;
-
-      // Clear votes for this question
-      await supabase
-        .from("game_votes")
-        .delete()
-        .eq("room_id", room.id);
-
-      setCurrentQuestion(randomQuestion);
-      setVotes({});
-      setHasVoted(false);
-
-      // Preload more questions if queue is getting low
-      if (remainingQuestions.length < 3 && !isPreloadingNext) {
-        preloadMoreQuestions();
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update game state');
       }
+
+      if (randomQuestion) setCurrentQuestion(randomQuestion);
+      setHasVoted(false);
     } catch (error) {
       console.error("Error loading next question:", error);
       toast({
@@ -332,62 +239,69 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsLoadingNext(false);
     }
   };
 
   const vote = async (option: "A" | "B") => {
-    if (hasVoted || !currentQuestion) return;
+    if (!currentQuestion || hasVoted) return;
 
     try {
-      // Save vote to database
-      const { error } = await supabase
-        .from("game_votes")
-        .insert({
-          room_id: room.id,
-          player_id: currentPlayer.player_id,
-          question_id: currentQuestion.id,
-          vote: option
-        });
-
-      if (error) throw error;
-
-      // Update local state
+      // Update votes in the room's gameState in Redis
       const newVotes = { ...votes, [currentPlayer.player_id]: option };
       setVotes(newVotes);
       setHasVoted(true);
 
-      // Update room game state with vote
       const updatedGameState = {
         ...gameState,
-        votes: newVotes
+        votes: newVotes,
+        currentQuestion: currentQuestion
       };
 
-      await supabase
-        .from("rooms")
-        .update({ game_state: updatedGameState })
-        .eq("id", room.id);
+      // Update room state via Redis-based rooms-service
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { gameState: updatedGameState } 
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to save vote');
+      }
 
       toast({
         title: "Vote Recorded!",
-        description: `You chose Option ${option}`,
+        description: `You voted for option ${option}`,
         className: "bg-success text-success-foreground",
       });
 
-      // Auto-show results if everyone has voted
-      if (Object.keys(newVotes).length === players.length) {
+      // Auto-show results after a delay if host
+      if (currentPlayer.is_host) {
         setTimeout(async () => {
-          await supabase
-            .from("rooms")
-            .update({ 
-              game_state: { 
-                ...gameState, 
-                votes: newVotes, 
-                showResults: true 
-              } 
-            })
-            .eq("id", room.id);
-        }, 1000);
+          const finalVotes = { ...newVotes };
+          const resultsGameState = { 
+            ...gameState, 
+            votes: finalVotes, 
+            showResults: true 
+          };
+
+          // Update room state to show results
+          const resultsResponse = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+            body: JSON.stringify({ 
+              action: 'update', 
+              roomCode: room.room_code, 
+              updates: { gameState: resultsGameState } 
+            }),
+          });
+
+        }, 3000);
       }
     } catch (error) {
       console.error("Error voting:", error);
@@ -407,97 +321,86 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       showResults: true
     };
 
-    const { error } = await supabase
-      .from("rooms")
-      .update({ game_state: updatedGameState })
-      .eq("id", room.id);
+    // Update room state via Redis-based rooms-service
+    const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+      body: JSON.stringify({ 
+        action: 'update', 
+        roomCode: room.room_code, 
+        updates: { gameState: updatedGameState } 
+      }),
+    });
 
-    if (!error) {
-      // Update the room state immediately
-      const updatedRoom = {
-        ...room,
-        game_state: updatedGameState
-      };
-      onUpdateRoom(updatedRoom);
+    if (!response.ok) {
+      console.error("Failed to show results");
     }
   };
 
   const backToLobby = async () => {
-    const newGameState = { phase: "lobby", currentQuestion: null, votes: {} };
-    
-    const { error } = await supabase
-      .from("rooms")
-      .update({
-        game_state: newGameState
-      })
-      .eq("id", room.id);
+    const newGameState = {
+      phase: "lobby"
+    };
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to return to lobby",
-        variant: "destructive",
-      });
-    } else {
-      // Update the room state immediately
-      const updatedRoom = {
-        ...room,
-        game_state: newGameState
-      };
-      onUpdateRoom(updatedRoom);
+    // Update room state via Redis-based rooms-service
+    const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+      body: JSON.stringify({ 
+        action: 'update', 
+        roomCode: room.room_code, 
+        updates: { gameState: newGameState } 
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to return to lobby");
     }
   };
 
   const transferHostAndLeave = async () => {
+    if (!currentPlayer.is_host || players.length <= 1) {
+      await playerLeave();
+      return;
+    }
+
     try {
-      // Find next player to be host (first non-current player)
-      const nextHost = players.find(p => p.player_id !== currentPlayer.player_id);
-      
+      const otherPlayers = players.filter(p => p.player_id !== currentPlayer.player_id);
+      const nextHost = otherPlayers[0];
+
       if (nextHost) {
-        // Update all players - make next player host, remove current player
-        await supabase
-          .from("players")
-          .update({ is_host: true })
-          .eq("room_id", room.id)
-          .eq("player_id", nextHost.player_id);
+        // Update players list and host through Redis
+        const updatedPlayers = players.map(p => ({
+          ...p,
+          isHost: p.player_id === nextHost.player_id
+        })).filter(p => p.player_id !== currentPlayer.player_id);
 
-        // Update room host
-        await supabase
-          .from("rooms")
-          .update({ host_id: nextHost.player_id })
-          .eq("id", room.id);
+        const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+          body: JSON.stringify({ 
+            action: 'update', 
+            roomCode: room.room_code, 
+            updates: { 
+              hostId: nextHost.player_id,
+              players: updatedPlayers
+            } 
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to transfer host");
+        }
       }
 
-      // Remove current player
-      await supabase
-        .from("players")
-        .delete()
-        .eq("room_id", room.id)
-        .eq("player_id", currentPlayer.player_id);
-
-      // If only one player left or no next host, deactivate room
-      if (players.length <= 1 || !nextHost) {
-        await supabase
-          .from("rooms")
-          .update({ is_active: false })
-          .eq("id", room.id);
-      }
-
-      // Clear local storage
-      localStorage.removeItem("puzzz_player_id");
-      localStorage.removeItem("puzzz_player_name");
-
-      toast({
-        title: "Left Game",
-        description: nextHost ? `${nextHost.player_name} is now the host` : "Game ended",
-      });
-
-      navigate("/");
+      localStorage.removeItem('puzzz_player_id');
+      localStorage.removeItem('puzzz_player_name');
+      navigate('/');
     } catch (error) {
-      console.error("Error leaving game:", error);
+      console.error("Error transferring host:", error);
       toast({
         title: "Error",
-        description: "Failed to leave game",
+        description: "Failed to leave room",
         variant: "destructive",
       });
     }
@@ -505,28 +408,31 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
 
   const playerLeave = async () => {
     try {
-      // Remove current player
-      await supabase
-        .from("players")
-        .delete()
-        .eq("room_id", room.id)
-        .eq("player_id", currentPlayer.player_id);
+      // Remove player from the room
+      const updatedPlayers = players.filter(p => p.player_id !== currentPlayer.player_id);
 
-      // Clear local storage
-      localStorage.removeItem("puzzz_player_id");
-      localStorage.removeItem("puzzz_player_name");
-
-      toast({
-        title: "Left Game",
-        description: "You have left the game",
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { players: updatedPlayers } 
+        }),
       });
 
-      navigate("/");
+      if (!response.ok) {
+        throw new Error("Failed to leave room");
+      }
+
+      localStorage.removeItem('puzzz_player_id');
+      localStorage.removeItem('puzzz_player_name');
+      navigate('/');
     } catch (error) {
-      console.error("Error leaving game:", error);
+      console.error("Error leaving room:", error);
       toast({
-        title: "Error",
-        description: "Failed to leave game",
+        title: "Error", 
+        description: "Failed to leave room",
         variant: "destructive",
       });
     }

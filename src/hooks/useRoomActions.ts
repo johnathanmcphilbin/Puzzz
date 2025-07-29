@@ -42,10 +42,22 @@ export const useRoomActions = () => {
       }
 
       const { room } = await response.json();
+      
+      console.log('🏠 Room creation result:', {
+        roomCode: room.roomCode,
+        hostId: room.hostId,
+        createdHostId: room.hostId,
+        playerName: playerName.trim()
+      });
 
       // Store player info
       localStorage.setItem('puzzz_player_id', room.hostId);
       localStorage.setItem('puzzz_player_name', playerName.trim());
+      
+      console.log('💾 Stored in localStorage:', {
+        playerId: room.hostId,
+        playerName: playerName.trim()
+      });
 
       toast({
         title: 'Room Created!',

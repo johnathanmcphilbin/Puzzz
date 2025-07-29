@@ -6,10 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { getCatImageUrl } from '@/assets/catImages';
 
 interface Question {
-  id: number;
-  image: string;
-  correctAnswer: string;
-  options: string[];
+  id: string;
+  option_a: string;
+  option_b: string;
+  category: string;
+  created_at?: string;
 }
 
 interface Player {

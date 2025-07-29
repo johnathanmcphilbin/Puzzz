@@ -1,3 +1,5 @@
+// @ts-nocheck
+// This is a Deno Edge Function - TypeScript errors for Deno imports are expected in Node.js environment
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 

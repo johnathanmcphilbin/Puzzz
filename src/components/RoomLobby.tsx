@@ -77,7 +77,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
   }, [players]);
 
   const loadCharacterData = async () => {
-    const characterIds = players.map(p => p.selected_character_id).filter(Boolean);
+    const characterIds = players.map(p => p.selected_character_id).filter((id): id is string => Boolean(id));
     if (characterIds.length === 0) return;
 
     try {
@@ -123,10 +123,26 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     if (!currentPlayer.is_host || playerToKick.is_host) return;
     
     try {
-      await supabase
-        .from("players")
-        .delete()
-        .eq("player_id", playerToKick.player_id);
+      // Use Redis rooms-service to kick player instead of direct Supabase calls
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'apikey': SUPABASE_ANON_KEY, 
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
+        },
+        body: JSON.stringify({ 
+          action: 'kick', 
+          roomCode: room.room_code, 
+          targetPlayerId: playerToKick.player_id, 
+          hostId: currentPlayer.player_id 
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to kick player');
+      }
 
       toast({
         title: "Player Kicked",
@@ -217,30 +233,21 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
   const leaveRoom = async () => {
     try {
-      // Remove player from room
-      await supabase
-        .from("players")
-        .delete()
-        .eq("player_id", currentPlayer.player_id);
+      // Remove player from room via Redis
+      const updatedPlayers = players.filter(p => p.player_id !== currentPlayer.player_id);
 
-      // Check if this was the last player
-      const { data: remainingPlayers } = await supabase
-        .from("players")
-        .select("id")
-        .eq("room_id", room.id);
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { players: updatedPlayers } 
+        }),
+      });
 
-      // If no players remain, delete the room completely
-      if (!remainingPlayers || remainingPlayers.length === 0) {
-        await supabase
-          .from("rooms")
-          .delete()
-          .eq("id", room.id);
-      } else if (currentPlayer.is_host) {
-        // If host is leaving but players remain, mark room as inactive
-        await supabase
-          .from("rooms")
-          .update({ is_active: false })
-          .eq("id", room.id);
+      if (!response.ok) {
+        throw new Error("Failed to leave room");
       }
 
       // Clear local storage
@@ -529,6 +536,39 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                     Waiting for host to start the game...
                   </div>
                 )}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.reload()}
+                  className="gap-2"
+                >
+                  🔄 Refresh
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const playerId = localStorage.getItem('puzzz_player_id');
+                    const playerName = localStorage.getItem('puzzz_player_name');
+                    console.log('🔍 Debug Info:', {
+                      localStorage: { playerId, playerName },
+                      currentPlayer: currentPlayer,
+                      roomHost: room.host_id,
+                      isCurrentPlayerHost: currentPlayer.is_host,
+                      playerIdMatch: playerId === room.host_id
+                    });
+                    if (confirm('Clear localStorage and rejoin room? (Use this if host detection is broken)')) {
+                      localStorage.removeItem('puzzz_player_id');
+                      localStorage.removeItem('puzzz_player_name');
+                      window.location.href = '/';
+                    }
+                  }}
+                  className="gap-2"
+                >
+                  🔍 Debug
+                </Button>
                 
                 <Button 
                   variant="outline" 

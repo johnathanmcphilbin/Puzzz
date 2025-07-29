@@ -75,13 +75,36 @@ export const useRoom = (roomCode: string) => {
       // Find current player
       const playerId = localStorage.getItem('puzzz_player_id');
       if (playerId) {
-        const currentPlayerData = playersWithLegacy.find((p: any) => p.player_id === playerId);
-        if (currentPlayerData) {
-          setCurrentPlayer(currentPlayerData);
+        const foundPlayer = playersWithLegacy.find((p: any) => p.player_id === playerId);
+        console.log('Player matching details:', { 
+          searchingFor: playerId, 
+          foundPlayer, 
+          allPlayerIds: playersWithLegacy.map((p: any) => ({ id: p.player_id, name: p.player_name, isHost: p.is_host })),
+          roomHostId: roomData.hostId 
+        });
+        
+        if (foundPlayer) {
+          setCurrentPlayer(foundPlayer);
+          console.log('✅ Current player set:', { 
+            playerName: foundPlayer.player_name, 
+            isHost: foundPlayer.is_host,
+            playerId: foundPlayer.player_id 
+          });
         } else {
-          setError('You are not a member of this room');
+          console.warn('❌ Current player not found in room players list');
+          console.warn('This usually means:', {
+            reason1: 'Player was kicked or left the room',
+            reason2: 'Room data is out of sync',
+            suggestion: 'Clear localStorage and rejoin the room'
+          });
+          // Player not found in room - they might have been kicked or room data is corrupted
+          setError('You are no longer a member of this room. Please rejoin.');
           return;
         }
+      } else {
+        console.warn('No player ID found in localStorage');
+        setError('Please join the room properly');
+        return;
       }
 
     } catch (err) {
@@ -139,16 +162,15 @@ export const useRoom = (roomCode: string) => {
     }
   }, [room, currentPlayer, toast]);
 
-  // If you still want periodic refresh, uncomment the block below and
-  // set a suitable interval (e.g. 30 000 ms). By default we rely on
-  // user-initiated actions to fetch fresh data, preventing constant re-renders.
+  // Commented out automatic refresh to prevent constant re-renders
+  // Only refresh when explicitly triggered (like when players join/leave)
   /*
   useEffect(() => {
     if (!roomCode) return;
 
     const interval = setInterval(() => {
       loadRoom();
-    }, 30000); // 30-second refresh
+    }, 10000); // 10-second refresh as a compromise between real-time and performance
 
     return () => clearInterval(interval);
   }, [roomCode, loadRoom]);
@@ -167,7 +189,7 @@ export const useRoom = (roomCode: string) => {
     }
 
     loadRoom();
-  }, [roomCode, loadRoom]);
+  }, [roomCode]); // Removed loadRoom from dependencies to prevent re-render loop
 
   return {
     room,

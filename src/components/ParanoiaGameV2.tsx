@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { ParanoiaPlayerCircle } from "./ParanoiaPlayerCircle";
 import { useParanoiaGame } from "@/hooks/useParanoiaGame";
 import { useParanoiaTimer } from "@/hooks/useParanoiaTimer";
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface Room {
   id: string;
@@ -167,10 +168,20 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
   const backToLobby = async () => {
     const newGameState = { phase: "lobby", currentQuestion: null, votes: {} };
     
-    const { error } = await supabase
-      .from("rooms")
-      .update({ game_state: newGameState })
-      .eq("id", room.id);
+    const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { gameState: newGameState } 
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update game state');
+      }
 
     if (error) {
       toast({
@@ -190,11 +201,7 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
         const nextHost = players.find(p => p.player_id !== currentPlayer.player_id);
         
         if (nextHost) {
-          await supabase
-            .from("players")
-            .update({ is_host: true })
-            .eq("room_id", room.id)
-            .eq("player_id", nextHost.player_id);
+          // Player updates are now handled through Redis room data
 
           await supabase
             .from("rooms")
@@ -209,11 +216,7 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
       }
 
       // Remove current player
-      await supabase
-        .from("players")
-        .delete()
-        .eq("room_id", room.id)
-        .eq("player_id", currentPlayer.player_id);
+      // Player removal is now handled through Redis room data
 
       // If only one player left, deactivate room
       if (players.length <= 1) {
