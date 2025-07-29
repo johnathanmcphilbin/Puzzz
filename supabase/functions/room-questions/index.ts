@@ -165,7 +165,7 @@ serve(async (req) => {
       throw new Error('Supabase configuration error. Please contact the administrator.');
     }
 
-    const { roomCode, customization, crazynessLevel } = await req.json();
+    const { roomCode, customization, crazynessLevel, gameType } = await req.json();
     
     if (!roomCode) {
       throw new Error('Room code is required');
@@ -175,7 +175,11 @@ serve(async (req) => {
       throw new Error('Customization text is required');
     }
 
-    console.log('Generating room questions for:', { roomCode, customization, crazynessLevel });
+    if (!gameType) {
+      throw new Error('Game type is required');
+    }
+
+    console.log('Generating room questions for:', { roomCode, customization, crazynessLevel, gameType });
 
     // Verify room exists in Redis first
     const roomCheckResponse = await fetch(`${functionsUrl}/rooms-service?roomCode=${roomCode}`, {
@@ -196,69 +200,108 @@ serve(async (req) => {
     // Get craziness-specific modifications
     const crazynessConfig = getCrazynessPromptModifications(crazynessLevel || 50);
 
-    const systemPrompt = `Generate questions for party games based HEAVILY on the customization theme: "${customization}". 
-    
-    CRAZINESS LEVEL: ${crazynessLevel}% - ${crazynessConfig.description}
-    
-    CONTENT CONSTRAINTS FOR THIS LEVEL:
-    ${crazynessConfig.constraints.map(c => `• ${c}`).join('\n')}
-    
-    EXAMPLES OF APPROPRIATE CONTENT FOR THIS LEVEL:
-    ${crazynessConfig.examples.map(e => `• ${e}`).join('\n')}
-    
-    FORBIDDEN CONTENT:
-    ${crazynessConfig.forbidden.map(f => `• ${f}`).join('\n')}
-    
-    CRITICAL: ALL questions must be directly related to and inspired by the theme/interests mentioned. If they mention "Star Wars", include Star Wars elements throughout. If they mention "nerdy", include nerdy/geeky scenarios. The theme should be evident in EVERY question.
-    
-    INTENSITY REQUIREMENTS:
-    - Every single question must precisely match the ${crazynessLevel}% craziness level
-    - The difference between low and high craziness levels should be DRAMATIC
-    - Follow the specific constraints and forbidden content for this level
-    - Use the examples as guidance for appropriate intensity
-    
-    Generate 25 Would You Rather questions, 20 Paranoia questions, and 15 Odd One Out questions.
-    
-    CRITICAL: DO NOT include "Would you rather" in the options themselves. Only provide the choice content.
-    
-    Format the options as simple choices without "Would you rather" prefix.
-    
-    Example format:
-    Good: {"option_a": "have superpowers", "option_b": "have unlimited money"}
-    Bad: {"option_a": "Would you rather have superpowers", "option_b": "Would you rather have unlimited money"}
-    
-    CRITICAL FOR PARANOIA QUESTIONS: ALL Paranoia questions must be formatted to ask about selecting other people in the room. The player will select another player's name as their answer. Use formats like:
-    - "Who is most likely to..."
-    - "Who would be the first to..."
-    - "Who in the group would..."
-    - "Which person here would..."
-    
-    The questions should be designed so that answering with someone's name makes sense.
-    
-    FOR ODD ONE OUT QUESTIONS: Create prompts where most players get one type of prompt and one "imposter" gets a different but related prompt. Format as:
-    - normal_prompt: What the majority of players see
-    - imposter_prompt: What the secret imposter sees (should be similar enough to not be obvious)
-    
-    Example Odd One Out:
-    {"normal_prompt": "Name a type of fruit", "imposter_prompt": "Name a type of vegetable", "category": "food"}
-    
-    You MUST return ONLY valid JSON with this exact structure (no markdown, no code blocks, no explanations):
-    {
-      "would_you_rather": [
-        {"option_a": "...", "option_b": "..."}
-      ],
-      "paranoia": [
-        {"question": "Who is most likely to..."}
-      ],
-      "odd_one_out": [
-        {"normal_prompt": "...", "imposter_prompt": "...", "category": "..."}
-      ]
+    // Generate different prompts based on game type
+    let systemPrompt = '';
+    let userPrompt = '';
+    let questionCount = 0;
+    let responseStructure = '';
+
+    if (gameType === 'would_you_rather') {
+      questionCount = 20;
+      responseStructure = `{
+        "questions": [
+          {"option_a": "...", "option_b": "..."}
+        ]
+      }`;
+      
+      systemPrompt = `Generate Would You Rather questions based HEAVILY on the customization theme: "${customization}".
+
+      CRAZINESS LEVEL: ${crazynessLevel}% - ${crazynessConfig.description}
+      
+      CONTENT CONSTRAINTS FOR THIS LEVEL:
+      ${crazynessConfig.constraints.map(c => `• ${c}`).join('\n')}
+      
+      EXAMPLES OF APPROPRIATE CONTENT FOR THIS LEVEL:
+      ${crazynessConfig.examples.filter(e => e.includes('Would You Rather')).map(e => `• ${e}`).join('\n')}
+      
+      FORBIDDEN CONTENT:
+      ${crazynessConfig.forbidden.map(f => `• ${f}`).join('\n')}
+      
+      CRITICAL: ALL questions must be directly related to and inspired by the theme/interests mentioned.
+      
+      Generate ${questionCount} Would You Rather questions.
+      
+      CRITICAL: DO NOT include "Would you rather" in the options themselves. Only provide the choice content.
+      
+      You MUST return ONLY valid JSON with this exact structure: ${responseStructure}`;
+      
+      userPrompt = `Generate ${questionCount} Would You Rather questions themed around: ${customization}. Craziness level: ${crazynessLevel}%.`;
+      
+    } else if (gameType === 'paranoia') {
+      questionCount = 15;
+      responseStructure = `{
+        "questions": [
+          {"question": "Who is most likely to..."}
+        ]
+      }`;
+      
+      systemPrompt = `Generate Paranoia questions based HEAVILY on the customization theme: "${customization}".
+
+      CRAZINESS LEVEL: ${crazynessLevel}% - ${crazynessConfig.description}
+      
+      CONTENT CONSTRAINTS FOR THIS LEVEL:
+      ${crazynessConfig.constraints.map(c => `• ${c}`).join('\n')}
+      
+      EXAMPLES OF APPROPRIATE CONTENT FOR THIS LEVEL:
+      ${crazynessConfig.examples.filter(e => e.includes('Paranoia')).map(e => `• ${e}`).join('\n')}
+      
+      FORBIDDEN CONTENT:
+      ${crazynessConfig.forbidden.map(f => `• ${f}`).join('\n')}
+      
+      CRITICAL: ALL Paranoia questions must be formatted to ask about selecting other people in the room. Use formats like:
+      - "Who is most likely to..."
+      - "Who would be the first to..."
+      - "Who in the group would..."
+      
+      Generate ${questionCount} Paranoia questions.
+      
+      You MUST return ONLY valid JSON with this exact structure: ${responseStructure}`;
+      
+      userPrompt = `Generate ${questionCount} Paranoia questions themed around: ${customization}. Craziness level: ${crazynessLevel}%.`;
+      
+    } else if (gameType === 'odd_one_out' || gameType === 'odd-one-out') {
+      questionCount = 12;
+      responseStructure = `{
+        "questions": [
+          {"normal_prompt": "...", "imposter_prompt": "...", "category": "..."}
+        ]
+      }`;
+      
+      systemPrompt = `Generate Odd One Out questions based HEAVILY on the customization theme: "${customization}".
+
+      CRAZINESS LEVEL: ${crazynessLevel}% - ${crazynessConfig.description}
+      
+      CONTENT CONSTRAINTS FOR THIS LEVEL:
+      ${crazynessConfig.constraints.map(c => `• ${c}`).join('\n')}
+      
+      EXAMPLES OF APPROPRIATE CONTENT FOR THIS LEVEL:
+      ${crazynessConfig.examples.filter(e => e.includes('Odd One Out')).map(e => `• ${e}`).join('\n')}
+      
+      FORBIDDEN CONTENT:
+      ${crazynessConfig.forbidden.map(f => `• ${f}`).join('\n')}
+      
+      FOR ODD ONE OUT QUESTIONS: Create prompts where most players get one type of prompt and one "imposter" gets a different but related prompt.
+      
+      Example: {"normal_prompt": "Name a type of fruit", "imposter_prompt": "Name a type of vegetable", "category": "food"}
+      
+      Generate ${questionCount} Odd One Out questions.
+      
+      You MUST return ONLY valid JSON with this exact structure: ${responseStructure}`;
+      
+      userPrompt = `Generate ${questionCount} Odd One Out questions themed around: ${customization}. Craziness level: ${crazynessLevel}%.`;
+    } else {
+      throw new Error(`Unsupported game type: ${gameType}`);
     }
-    
-    Make sure ALL questions are HEAVILY themed around the customization AND precisely match the ${crazynessLevel}% craziness level with its specific constraints.
-`;
-    
-    const userPrompt = `Generate 25 Would You Rather questions, 20 Paranoia questions, and 15 Odd One Out questions that are HEAVILY themed around: ${customization}. Craziness level: ${crazynessLevel}% (${crazynessConfig.description}). Every single question must incorporate elements from this theme AND match the exact intensity level specified. Do NOT include "Would you rather" in the options.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -300,6 +343,28 @@ serve(async (req) => {
       throw new Error('AI response was not valid JSON. Please try again.');
     }
 
+    // Prepare the questions object for storage based on game type
+    let customQuestions = {};
+    if (gameType === 'would_you_rather') {
+      customQuestions = {
+        would_you_rather: questions.questions || [],
+        paranoia: [],
+        odd_one_out: []
+      };
+    } else if (gameType === 'paranoia') {
+      customQuestions = {
+        would_you_rather: [],
+        paranoia: questions.questions || [],
+        odd_one_out: []
+      };
+    } else if (gameType === 'odd_one_out' || gameType === 'odd-one-out') {
+      customQuestions = {
+        would_you_rather: [],
+        paranoia: [],
+        odd_one_out: questions.questions || []
+      };
+    }
+
     // Store the generated questions in Redis via rooms-service
     const updateResponse = await fetch(`${functionsUrl}/rooms-service`, {
       method: 'POST',
@@ -314,13 +379,10 @@ serve(async (req) => {
         updates: {
           gameState: {
             aiCustomization: customization,
-            customQuestions: {
-              would_you_rather: questions.would_you_rather || [],
-              paranoia: questions.paranoia || [],
-              odd_one_out: questions.odd_one_out || []
-            },
+            customQuestions: customQuestions,
             questionsGenerated: true,
-            crazynessLevel: crazynessLevel
+            crazynessLevel: crazynessLevel,
+            generatedForGame: gameType
           }
         }
       }),
@@ -331,16 +393,17 @@ serve(async (req) => {
       throw new Error(`Failed to store questions in Redis: ${errorData.error || 'Unknown error'}`);
     }
 
-    console.log(`Successfully stored ${questions.would_you_rather?.length || 0} Would You Rather, ${questions.paranoia?.length || 0} Paranoia, and ${questions.odd_one_out?.length || 0} Odd One Out questions for room ${roomCode} with ${crazynessLevel}% craziness`);
+    const gameDisplayName = gameType === 'would_you_rather' ? 'Would You Rather' : 
+                           gameType === 'paranoia' ? 'Paranoia' : 
+                           gameType === 'odd_one_out' || gameType === 'odd-one-out' ? 'Odd One Out' : gameType;
+
+    console.log(`Successfully stored ${questions.questions?.length || 0} ${gameDisplayName} questions for room ${roomCode} with ${crazynessLevel}% craziness`);
 
     return new Response(JSON.stringify({ 
       success: true,
-      message: `Generated ${questions.would_you_rather?.length || 0} Would You Rather, ${questions.paranoia?.length || 0} Paranoia, and ${questions.odd_one_out?.length || 0} Odd One Out questions for your room!`,
-      counts: {
-        would_you_rather: questions.would_you_rather?.length || 0,
-        paranoia: questions.paranoia?.length || 0,
-        odd_one_out: questions.odd_one_out?.length || 0
-      },
+      message: `Generated ${questions.questions?.length || 0} custom ${gameDisplayName} questions for your room!`,
+      count: questions.questions?.length || 0,
+      gameType: gameType,
       crazynessLevel: crazynessLevel,
       crazynessDescription: crazynessConfig.description
     }), {

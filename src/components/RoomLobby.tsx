@@ -323,6 +323,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
               roomCode={room.room_code}
               roomId={room.id}
               isHost={currentPlayer.is_host}
+              selectedGame={selectedGame}
             />
           </div>
         </div>

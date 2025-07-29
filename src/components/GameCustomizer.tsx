@@ -14,9 +14,10 @@ interface GameCustomizerProps {
   roomCode: string;
   roomId: string;
   isHost: boolean;
+  selectedGame: string;
 }
 
-const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHost }) => {
+const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHost, selectedGame }) => {
   const [customization, setCustomization] = useState('');
   const [crazynessLevel, setCrazynessLevel] = useState([50]);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,12 +59,13 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
         console.warn('Failed to save AI customization to room state');
       }
 
-      // Generate questions
+      // Generate questions for selected game only
       const { data, error } = await supabase.functions.invoke('room-questions', {
         body: {
           roomCode,
           customization: customization.trim(),
-          crazynessLevel: crazynessLevel[0] ?? 50
+          crazynessLevel: crazynessLevel[0] ?? 50,
+          gameType: selectedGame
         }
       });
 
@@ -73,9 +75,13 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
 
       setHasGeneratedQuestions(true);
       
+      const gameDisplayName = selectedGame === "would_you_rather" ? "Would You Rather" : 
+                             selectedGame === "paranoia" ? "Paranoia" : 
+                             selectedGame === "odd_one_out" ? "Odd One Out" : selectedGame;
+      
       toast({
         title: "Questions Generated! 🎉",
-        description: `Created ${data.counts?.would_you_rather || 0} Would You Rather, ${data.counts?.paranoia || 0} Paranoia, and ${data.counts?.odd_one_out || 0} Odd One Out questions!`,
+        description: `Created ${data.count || 0} custom ${gameDisplayName} questions!`,
         className: "bg-success text-success-foreground",
       });
         
@@ -134,7 +140,9 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
               </p>
             </div>
             <p className="text-sm text-muted-foreground">
-              Custom questions will be used in all your games
+              Custom questions will be used in {selectedGame === "would_you_rather" ? "Would You Rather" : 
+                                              selectedGame === "paranoia" ? "Paranoia" : 
+                                              selectedGame === "odd_one_out" ? "Odd One Out" : selectedGame}
             </p>
           </div>
         ) : (
