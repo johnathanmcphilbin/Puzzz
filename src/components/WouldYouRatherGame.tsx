@@ -162,6 +162,9 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const loadQuestions = async (): Promise<Question[]> => {
+    // Debug: Log the entire gameState to see what's available
+    console.log('[WouldYouRatherGame] Full gameState for debugging:', JSON.stringify(gameState, null, 2));
+    
     // Check if AI-generated questions exist in the expected location first
     if (gameState.aiQuestions && gameState.aiQuestions.length > 0) {
       console.log('[WouldYouRatherGame] Using AI-generated Would You Rather questions (gameState.aiQuestions):', gameState.aiQuestions.length);
