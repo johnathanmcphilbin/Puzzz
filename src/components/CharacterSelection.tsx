@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { getCatImageUrl, STATIC_CATS } from "@/assets/catImages";
+import { getCatImageUrl } from "@/assets/catImages";
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CatCharacter {
   id: string;
@@ -106,8 +107,23 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
     setInitialLoading(true);
     try {
-      // Use static list of cats from public folder
-      const charactersData = STATIC_CATS;
+      // Load characters from database
+      const { data, error } = await supabase
+        .from('cat_characters')
+        .select('id, name, icon_url')
+        .order('name');
+      
+      if (error) {
+        console.error('Error loading characters:', error);
+        throw error;
+      }
+
+      const charactersData = data?.map(char => ({
+        id: char.id,
+        name: char.name,
+        icon_url: char.icon_url
+      })) || [];
+      
       setCharacters(charactersData);
       cachedCharacters = charactersData; // Cache for next time
     } catch (error) {

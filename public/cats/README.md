@@ -6,11 +6,11 @@ This folder contains all the cat character images for the game.
 - All cat images should be placed directly in this `public/cats/` folder
 - Images are served as static assets and work consistently in both development and production
 - Supports both JPG and PNG formats
-- User uploads are handled separately in `/lovable-uploads/`
 - **Important:** Use dashes instead of spaces in filenames (e.g., `my-cat.png` not `my cat.png`)
+- Cat character data is stored in the database for dynamic management
 
 ## 📁 **Current cats:**
-All cat images are already present and ready to use:
+All cat images are present and loaded from the database:
 - angry-cat.png
 - auracat.png  
 - ballet-cat.jpg
@@ -35,13 +35,30 @@ All cat images are already present and ready to use:
 - tuff-cat.jpg
 
 ## ➕ **Adding new cats:**
+
+### Method 1: File + Code (Simple)
 1. Name your file using dashes instead of spaces (e.g., `cool-cat.png`)
 2. Drop your image file (PNG or JPG) directly into this folder
-3. Update `src/assets/catImages.ts` to add your cat to the `STATIC_CATS` array
-4. The image will be automatically accessible at `/cats/your-filename.ext`
+3. Use the `addCatCharacter()` function in your code:
+
+```javascript
+import { addCatCharacter } from '@/utils/catManagement';
+
+await addCatCharacter({
+  name: "Cool Cat",
+  icon_url: "cool-cat.png"  // Just the filename
+});
+```
+
+### Method 2: Database Migration (Bulk)
+1. Add your image files to this folder
+2. Create a new migration file with INSERT statements
+3. Run the migration to add multiple cats at once
 
 ## 🚀 **For developers:**
 - Images in this folder work on both localhost and deployed websites
 - No spaces in filenames = no URL encoding issues
+- Cat data is stored in `cat_characters` database table
 - The `getCatImageUrl()` function handles all path resolution
 - User uploads go to `/lovable-uploads/` and are handled automatically
+- Use `src/utils/catManagement.ts` for programmatic cat management
