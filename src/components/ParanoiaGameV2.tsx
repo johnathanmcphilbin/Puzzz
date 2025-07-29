@@ -81,7 +81,9 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
       } else if (questions.length > 0) {
         // Use a random question from available questions
         const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-        selectQuestion(randomQuestion.question);
+        if (randomQuestion) {
+          selectQuestion(randomQuestion.question);
+        }
       } else {
         // Fallback to a default question if no questions are available
         selectQuestion("Who is most likely to become famous?");

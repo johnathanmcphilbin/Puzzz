@@ -339,14 +339,18 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
     questions.forEach(question => {
       results[question.id] = {};
       players.forEach(player => {
-        if (results[question.id]) results[question.id][player.player_id] = 0;
+        if (results[question.id]) {
+          results[question.id][player.player_id] = 0;
+        }
       });
     });
 
     Object.values(allResponses).forEach((playerResponses: any) => {
       Object.entries(playerResponses).forEach(([questionId, selectedPlayerId]) => {
         if (results[questionId] && results[questionId][selectedPlayerId as string] !== undefined) {
-          if (results[questionId]) results[questionId][selectedPlayerId as string]++;
+          if (results[questionId]) {
+            results[questionId][selectedPlayerId as string]++;
+          }
         }
       });
     });
