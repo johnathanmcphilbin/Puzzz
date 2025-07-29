@@ -171,7 +171,11 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         body: {
           roomCode,
           customization: effectiveCustomization,
-          crazynessLevel: crazynessLevel[0] ?? 50
+          crazynessLevel: crazynessLevel[0] ?? 50,
+          // Pass the current game so the edge function knows what to generate
+          gameType: (currentGame === 'would_you_rather' || currentGame === 'paranoia' || currentGame === 'odd_one_out')
+            ? currentGame
+            : 'would_you_rather'
         }
       });
 
