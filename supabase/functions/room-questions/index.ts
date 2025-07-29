@@ -343,54 +343,87 @@ serve(async (req) => {
       throw new Error('AI response was not valid JSON. Please try again.');
     }
 
-    // Prepare the questions object for storage based on game type
-    let customQuestions = {};
+    // Store AI questions in room state with proper IDs
     if (gameType === 'would_you_rather') {
-      customQuestions = {
-        would_you_rather: questions.questions || [],
-        paranoia: [],
-        odd_one_out: []
-      };
-    } else if (gameType === 'paranoia') {
-      customQuestions = {
-        would_you_rather: [],
-        paranoia: questions.questions || [],
-        odd_one_out: []
-      };
-    } else if (gameType === 'odd_one_out' || gameType === 'odd-one-out') {
-      customQuestions = {
-        would_you_rather: [],
-        paranoia: [],
-        odd_one_out: questions.questions || []
-      };
-    }
+      const aiQuestions = questions.questions.map((q: any) => ({
+        id: `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        option_a: q.option_a,
+        option_b: q.option_b,
+        created_at: new Date().toISOString()
+      }));
 
-    // Store the generated questions in Redis via rooms-service
-    const updateResponse = await fetch(`${functionsUrl}/rooms-service`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-      },
-      body: JSON.stringify({
-        action: 'update',
-        roomCode: roomCode,
-        updates: {
-          gameState: {
-            aiCustomization: customization,
-            customQuestions: customQuestions,
-            questionsGenerated: true,
-            crazynessLevel: crazynessLevel,
-            generatedForGame: gameType
+      // Update room state with AI questions
+      const updateResponse = await fetch(`${functionsUrl}/rooms-service`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
+        body: JSON.stringify({
+          action: 'update',
+          roomCode: roomCode,
+          updates: {
+            gameState: {
+              aiQuestions: aiQuestions,
+              aiCustomization: customization,
+              questionsGenerated: true,
+              crazynessLevel: crazynessLevel,
+              generatedForGame: gameType
+            }
           }
-        }
-      }),
-    });
+        })
+      });
 
-    if (!updateResponse.ok) {
-      const errorData = await updateResponse.json().catch(() => ({}));
-      throw new Error(`Failed to store questions in Redis: ${errorData.error || 'Unknown error'}`);
+      if (!updateResponse.ok) {
+        throw new Error('Failed to store AI questions in room state');
+      }
+
+      console.log(`Successfully stored ${questions.questions?.length || 0} Would You Rather AI questions for room ${roomCode} with ${crazynessLevel}% craziness`);
+    } else {
+      // For other game types, keep existing logic
+      const customQuestions = {};
+      if (gameType === 'paranoia') {
+        customQuestions = {
+          would_you_rather: [],
+          paranoia: questions.questions || [],
+          odd_one_out: []
+        };
+      } else if (gameType === 'odd_one_out' || gameType === 'odd-one-out') {
+        customQuestions = {
+          would_you_rather: [],
+          paranoia: [],
+          odd_one_out: questions.questions || []
+        };
+      }
+
+      // Store the generated questions in Redis via rooms-service
+      const updateResponse = await fetch(`${functionsUrl}/rooms-service`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          action: 'update',
+          roomCode: roomCode,
+          updates: {
+            gameState: {
+              aiCustomization: customization,
+              customQuestions: customQuestions,
+              questionsGenerated: true,
+              crazynessLevel: crazynessLevel,
+              generatedForGame: gameType
+            }
+          }
+        }),
+      });
+
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json().catch(() => ({}));
+        throw new Error(`Failed to store questions in Redis: ${errorData.error || 'Unknown error'}`);
+      }
     }
 
     const gameDisplayName = gameType === 'would_you_rather' ? 'Would You Rather' : 

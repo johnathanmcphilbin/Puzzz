@@ -35,7 +35,6 @@ interface Question {
   id: string;
   option_a: string;
   option_b: string;
-  category: string;
   created_at?: string;
 }
 
@@ -163,23 +162,22 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const loadQuestions = async (): Promise<Question[]> => {
-    let questions: Question[] = [];
+    // Check if AI-generated questions exist in room state
+    if (gameState.aiQuestions && gameState.aiQuestions.length > 0) {
+      return gameState.aiQuestions;
+    }
 
-    // Get questions from the available would_you_rather_questions table
+    // Fall back to database questions if no AI questions
     const { data: questionsData, error: questionsError } = await supabase
       .from("would_you_rather_questions")
       .select("*");
 
     if (questionsError) throw questionsError;
     
-    // Convert to proper format with fallback for null categories
-    questions = (questionsData || []).map(q => ({
+    return (questionsData || []).map(q => ({
       ...q,
-      category: q.category || "general",
       created_at: q.created_at || new Date().toISOString()
     }));
-
-    return questions;
   };
 
   const [isLoadingNext, setIsLoadingNext] = useState(false);
@@ -193,11 +191,10 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       const newVotes = {};
       setVotes(newVotes);
       
-      // Get a random question from available questions
-      const availableQuestions = questionQueue.length > 0 ? questionQueue : await loadQuestions();
-      const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+      // Get available questions - prioritize AI questions if they exist
+      const availableQuestions = await loadQuestions();
       
-      if (!randomQuestion) {
+      if (!availableQuestions || availableQuestions.length === 0) {
         toast({
           title: "No Questions Available",
           description: "Could not load a new question",
@@ -205,6 +202,8 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         });
         return;
       }
+
+      const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
 
       const newGameState = {
         ...gameState,
@@ -573,11 +572,6 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
            <h2 className="text-2xl font-bold text-foreground mb-4">
              Would you rather...
            </h2>
-           {currentQuestion.category && currentQuestion.category !== "AI Generated" && (
-             <Badge variant="outline" className="mb-4">
-               {currentQuestion.category}
-             </Badge>
-           )}
          </div>
 
             <div className="grid md:grid-cols-2 gap-6">
