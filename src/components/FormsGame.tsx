@@ -348,8 +348,11 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
     Object.values(allResponses).forEach((playerResponses: any) => {
       Object.entries(playerResponses).forEach(([questionId, selectedPlayerId]) => {
         const questionResult = results[questionId];
-        if (questionResult && questionResult[selectedPlayerId as string] !== undefined) {
-          questionResult[selectedPlayerId as string]++;
+        const playerId = selectedPlayerId as string;
+        if (questionResult) {
+          if (playerId in questionResult) {
+            (questionResult as Record<string, number>)[playerId]++;
+          }
         }
       });
     });

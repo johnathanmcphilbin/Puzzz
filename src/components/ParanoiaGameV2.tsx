@@ -76,17 +76,17 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
       
       // Auto-submit custom question if there's text, otherwise use a random question
       if (customQuestion.trim()) {
-        selectQuestion(customQuestion.trim());
+        selectQuestion();
         setCustomQuestion("");
       } else if (questions.length > 0) {
         // Use a random question from available questions
         const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
         if (randomQuestion) {
-          selectQuestion(randomQuestion.question);
+          selectQuestion();
         }
       } else {
         // Fallback to a default question if no questions are available
-        selectQuestion("Who is most likely to become famous?");
+        selectQuestion();
       }
     }
   });
@@ -104,7 +104,9 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
       const availablePlayers = players.filter(p => p.player_id !== currentPlayer.player_id);
       if (availablePlayers.length > 0) {
         const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
-        submitAnswer(randomPlayer.player_name);
+        if (randomPlayer) {
+          submitAnswer(randomPlayer.player_name);
+        }
       }
     }
   });
@@ -158,7 +160,7 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
       return;
     }
 
-    await selectQuestion(customQuestion.trim());
+    await selectQuestion();
     setCustomQuestion("");
   };
 
@@ -168,31 +170,31 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
   };
 
   const backToLobby = async () => {
-    const newGameState = { phase: "lobby", currentQuestion: null, votes: {} };
-    
-    const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ 
-          action: 'update', 
-          roomCode: room.room_code, 
-          updates: { gameState: newGameState } 
-        }),
-      });
+    try {
+      const newGameState = { phase: "lobby", currentQuestion: null, votes: {} };
+      
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+          body: JSON.stringify({ 
+            action: 'update', 
+            roomCode: room.room_code, 
+            updates: { gameState: newGameState } 
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to update game state');
-      }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to update game state');
+        }
 
-    if (error) {
+        onUpdateRoom({ ...room, game_state: newGameState });
+    } catch (err) {
       toast({
         title: "Error",
         description: "Failed to return to lobby",
         variant: "destructive",
       });
-    } else {
-      onUpdateRoom({ ...room, game_state: newGameState });
     }
   };
 
@@ -362,7 +364,7 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
                         <Button
                           key={`${q.id}-${index}`}
                           variant="outline"
-                          onClick={() => selectQuestion(q.question)}
+                          onClick={() => selectQuestion()}
                           disabled={isLoading}
                           className="text-left justify-start h-auto whitespace-normal p-3"
                         >
