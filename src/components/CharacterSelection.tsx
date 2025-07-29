@@ -19,8 +19,11 @@ interface CharacterSelectionProps {
   isOpen: boolean;
   onClose: () => void;
   playerId: string;
-  roomId: string;
-  onCharacterSelected: (characterId: string) => void;
+  roomCode: string;
+  players: any[];
+  currentPlayer: any;
+  onUpdateRoom: (updatedRoom: any) => void;
+  room: any;
 }
 
 // Cache characters data globally to avoid reloading
@@ -88,8 +91,11 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
   isOpen,
   onClose,
   playerId,
-  roomId,
-  onCharacterSelected
+  roomCode,
+  players,
+  currentPlayer,
+  onUpdateRoom,
+  room
 }) => {
   const [characters, setCharacters] = useState<CatCharacter[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
@@ -149,16 +155,42 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
     setLoading(true);
     try {
-      // Store character selection in the player's localStorage for immediate feedback
-      // Note: Since we're using Redis for room data, character selection needs to be handled
-      // differently. For now, we'll just call the callback to update the UI.
-      
-      // Call the callback immediately to update the parent component
-      onCharacterSelected(selectedCharacter);
+      // Update player's character in room data (similar to RoomLobby logic)
+      const updatedPlayers = players.map(player => 
+        player.player_id === currentPlayer.player_id 
+          ? { ...player, selectedCharacterId: selectedCharacter, selected_character_id: selectedCharacter }
+          : player
+      );
+
+      // Immediately update local state for instant UI feedback
+      const updatedRoom = {
+        ...room,
+        players: updatedPlayers
+      };
+      onUpdateRoom(updatedRoom);
+
+      // Save to Redis in the background
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'apikey': SUPABASE_ANON_KEY, 
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
+        },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: roomCode, 
+          updates: { players: updatedPlayers } 
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update character selection');
+      }
       
       toast({
         title: "Character Selected!",
-        description: "Your cat character has been chosen",
+        description: "Your cat character is now displayed",
         className: "bg-success text-success-foreground",
       });
       
@@ -275,7 +307,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
             onClick={handleSelectCharacter}
             disabled={!selectedCharacter || loading}
           >
-            {loading ? "Confirming..." : "Confirm"}
+            {loading ? "Saving..." : "Confirm"}
           </Button>
         </div>
       </DialogContent>

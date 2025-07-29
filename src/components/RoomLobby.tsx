@@ -7,9 +7,10 @@ import { Copy, Play, Users, Crown, LogOut, QrCode, UserX, Cat } from "lucide-rea
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 import { CharacterSelection } from "./CharacterSelection";
-import { getCatImageUrl, STATIC_CATS } from "@/assets/catImages";
+import { getCatImageUrl } from "@/assets/catImages";
 import GameCustomizer from "./GameCustomizer";
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Room {
   id: string;
@@ -83,76 +84,25 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
     }
 
     try {
-      // Use static cat list instead of Supabase database
-      const characterMap = STATIC_CATS.reduce((acc, char) => {
-        if (characterIds.includes(char.id)) {
-          acc[char.id] = char;
-        }
+      // Load characters from database
+      const { data, error } = await supabase
+        .from('cat_characters')
+        .select('id, name, icon_url')
+        .in('id', characterIds);
+      
+      if (error) {
+        console.error('Error loading character data:', error);
+        return;
+      }
+
+      const characterMap = data?.reduce((acc, char) => {
+        acc[char.id] = char;
         return acc;
-      }, {} as any);
+      }, {} as any) || {};
 
       setCharacterData(characterMap);
     } catch (error) {
       console.error('Error loading character data:', error);
-    }
-  };
-
-  const handleCharacterSelected = async (characterId: string) => {
-    try {
-      // Update player's character in Redis room data
-      const updatedPlayers = players.map(player => 
-        player.player_id === currentPlayer.player_id 
-          ? { ...player, selectedCharacterId: characterId, selected_character_id: characterId }
-          : player
-      );
-
-      // Immediately update local state for instant UI feedback
-      const updatedRoom = {
-        ...room,
-        players: updatedPlayers
-      };
-      onUpdateRoom(updatedRoom);
-
-      // Update character data immediately
-      const selectedCharacter = STATIC_CATS.find(cat => cat.id === characterId);
-      if (selectedCharacter) {
-        setCharacterData(prev => ({
-          ...prev,
-          [characterId]: selectedCharacter
-        }));
-      }
-
-      // Save to Redis in the background
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'apikey': SUPABASE_ANON_KEY, 
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
-        },
-        body: JSON.stringify({ 
-          action: 'update', 
-          roomCode: room.room_code, 
-          updates: { players: updatedPlayers } 
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update character selection');
-      }
-      
-      toast({
-        title: "Character Selected!",
-        description: "Your cat character is now displayed",
-        className: "bg-success text-success-foreground",
-      });
-    } catch (error) {
-      console.error('Error updating character selection:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save character selection",
-        variant: "destructive",
-      });
     }
   };
 
@@ -603,8 +553,11 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         isOpen={showCharacterSelection}
         onClose={() => setShowCharacterSelection(false)}
         playerId={currentPlayer.player_id}
-        roomId={room.id}
-        onCharacterSelected={handleCharacterSelected}
+        roomCode={room.room_code}
+        players={players}
+        currentPlayer={currentPlayer}
+        onUpdateRoom={onUpdateRoom}
+        room={room}
       />
     </div>
   );
