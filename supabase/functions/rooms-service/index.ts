@@ -1,360 +1,383 @@
-// @ts-nocheck
-// This is a Deno Edge Function - TypeScript errors for Deno imports are expected in Node.js environment
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Redis } from "https://deno.land/x/upstash_redis@v1.22.0/mod.ts";
-
-// Environment variables for Upstash Redis
-const redis = new Redis({
-  url: Deno.env.get("UPSTASH_REDIS_REST_URL")!,
-  token: Deno.env.get("UPSTASH_REDIS_REST_TOKEN")!,
-});
-
-// Safely parse JSON (returns null on failure)
-function safeParse(raw: string | null): any | null {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-interface CreateRoomBody {
-  action: "create";
-  playerName: string;
-  selectedGame: string;
-}
-
-interface JoinRoomBody {
-  action: "join";
-  roomCode: string;
-  playerName: string;
-}
-
-interface GetRoomQuery {
-  roomCode: string;
-}
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-// Helper to generate a 6-char room code
-function generateRoomCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result = "";
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+interface Room {
+  roomCode: string;
+  name: string;
+  hostId: string;
+  currentGame: string;
+  gameState: any;
+  players: Player[];
+  createdAt: number;
+}
+
+interface Player {
+  playerId: string;
+  playerName: string;
+  isHost: boolean;
+  joinedAt: number;
+  selectedCharacterId?: string;
 }
 
 serve(async (req) => {
-  // Handle CORS
-  if (req.method === "OPTIONS") {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    if (req.method === "POST") {
-      const body = await req.json();
+    const REDIS_URL = Deno.env.get('UPSTASH_REDIS_REST_URL');
+    const REDIS_TOKEN = Deno.env.get('UPSTASH_REDIS_REST_TOKEN');
 
-      // CREATE ROOM
-      if (body.action === "create") {
-        const { playerName, selectedGame } = body as CreateRoomBody;
-        if (!playerName || !selectedGame) {
-          return new Response(
-            JSON.stringify({ error: "Missing parameters" }),
-            { status: 400, headers: corsHeaders },
-          );
+    if (!REDIS_URL || !REDIS_TOKEN) {
+      console.error('Missing Redis configuration');
+      return new Response(
+        JSON.stringify({ error: 'Redis configuration missing' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
+      );
+    }
 
-        // Ensure unique room code
-        let roomCode = generateRoomCode();
-        let attempts = 0;
-        while (await redis.exists([`room:${roomCode}`]) && attempts < 10) {
-          roomCode = generateRoomCode();
-          attempts++;
-        }
+    const url = new URL(req.url);
+    const roomCode = url.searchParams.get('roomCode');
 
-        if (attempts >= 10) {
-          return new Response(
-            JSON.stringify({ error: "Failed to generate unique room code" }),
-            { status: 500, headers: corsHeaders },
-          );
-        }
+    // GET request - fetch room data
+    if (req.method === 'GET' && roomCode) {
+      console.log('Fetching room data for:', roomCode);
+      
+      const response = await fetch(`${REDIS_URL}/get/room:${roomCode}`, {
+        headers: { 'Authorization': `Bearer ${REDIS_TOKEN}` }
+      });
 
-        const hostId = crypto.randomUUID();
-        const createdAt = Date.now();
-
-        const roomData = {
-          roomCode,
-          name: `${playerName}'s Room`,
-          hostId,
-          currentGame: selectedGame,
-          players: [
-            {
-              playerId: hostId,
-              playerName,
-              isHost: true,
-              joinedAt: createdAt,
-            },
-          ],
-          createdAt,
-          gameState: { phase: "lobby", votes: {}, currentQuestion: null },
-        };
-
-        try {
-          const setRes = await redis.set(
-            `room:${roomCode}`,
-            JSON.stringify(roomData),
-            { ex: 28800 },
-          );
-
-          if (setRes !== "OK") {
-            throw new Error(`Redis SET failed: ${setRes}`);
-          }
-
-          // Verify the data was stored correctly
-          const verification = await redis.get<string>(`room:${roomCode}`);
-          
-          if (!verification) {
-            throw new Error("Room data verification failed - not found");
-          }
-
-          // Handle case where Redis might return parsed JSON instead of string
-          let verificationString: string;
-          if (typeof verification === 'string') {
-            verificationString = verification;
-          } else {
-            verificationString = JSON.stringify(verification);
-          }
-
-          const parsedVerification = safeParse(verificationString);
-          if (!parsedVerification) {
-            throw new Error("Room data verification failed - invalid JSON");
-          }
-
-        } catch (e) {
-          // Clean up any partial data
-          try {
-            await redis.del(`room:${roomCode}`);
-          } catch (cleanupError) {
-            // Silent cleanup failure
-          }
-          throw e;
-        }
-
+      if (!response.ok) {
+        console.error('Redis GET failed:', response.status);
         return new Response(
-          JSON.stringify({ success: true, room: roomData }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          JSON.stringify({ error: 'Room not found' }),
+          { 
+            status: 404, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
         );
       }
 
-      // JOIN ROOM
-      if (body.action === "join") {
-        const { roomCode, playerName } = body as JoinRoomBody;
-        if (!roomCode || !playerName) {
-          return new Response(
-            JSON.stringify({ error: "Missing parameters" }),
-            { status: 400, headers: corsHeaders },
-          );
-        }
+      const data = await response.json();
+      
+      if (!data.result) {
+        return new Response(
+          JSON.stringify({ error: 'Room not found' }),
+          { 
+            status: 404, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
 
-        const raw = await redis.get<string>(`room:${roomCode}`);
-        if (!raw) {
-          return new Response(
-            JSON.stringify({ error: "Room not found" }),
-            { status: 404, headers: corsHeaders },
-          );
+      const roomData = JSON.parse(data.result);
+      console.log('Room data retrieved:', roomData);
+      
+      return new Response(
+        JSON.stringify(roomData),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
+      );
+    }
 
-        const roomData = safeParse(typeof raw === 'string' ? raw : JSON.stringify(raw));
-        if (!roomData) {
-          await redis.del(`room:${roomCode}`);
-          return new Response(
-            JSON.stringify({ error: "Room data corrupted, please create a new room" }),
-            { status: 410, headers: corsHeaders },
-          );
-        }
+    // POST request - handle room operations
+    if (req.method === 'POST') {
+      const body = await req.json();
+      const { action, roomCode, playerName, selectedGame, updates, targetPlayerId, hostId } = body;
 
-        // Check name taken
-        if (roomData.players.some((p: any) => p.playerName === playerName)) {
-          return new Response(
-            JSON.stringify({ error: "Player name already taken" }),
-            { status: 409, headers: corsHeaders },
-          );
-        }
+      console.log('POST action:', action, 'roomCode:', roomCode);
 
+      if (action === 'create') {
+        // Generate room code
+        const newRoomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         const playerId = crypto.randomUUID();
-        const joinedAt = Date.now();
+
+        const roomData: Room = {
+          roomCode: newRoomCode,
+          name: `${playerName}'s Room`,
+          hostId: playerId,
+          currentGame: selectedGame,
+          gameState: { phase: 'lobby' },
+          players: [{
+            playerId,
+            playerName,
+            isHost: true,
+            joinedAt: Date.now()
+          }],
+          createdAt: Date.now()
+        };
+
+        // Store in Redis with 8 hour expiration
+        const setResponse = await fetch(`${REDIS_URL}/setex/room:${newRoomCode}/28800`, {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${REDIS_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(roomData)
+        });
+
+        if (!setResponse.ok) {
+          console.error('Redis SET failed:', setResponse.status);
+          return new Response(
+            JSON.stringify({ error: 'Failed to create room' }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+
+        console.log('Room created:', newRoomCode);
+        return new Response(
+          JSON.stringify({ roomCode: newRoomCode, playerId }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      if (action === 'join') {
+        // Get existing room
+        const getResponse = await fetch(`${REDIS_URL}/get/room:${roomCode}`, {
+          headers: { 'Authorization': `Bearer ${REDIS_TOKEN}` }
+        });
+
+        if (!getResponse.ok) {
+          return new Response(
+            JSON.stringify({ error: 'Room not found' }),
+            { 
+              status: 404, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+
+        const getData = await getResponse.json();
+        if (!getData.result) {
+          return new Response(
+            JSON.stringify({ error: 'Room not found' }),
+            { 
+              status: 404, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+
+        const roomData: Room = JSON.parse(getData.result);
+        const playerId = crypto.randomUUID();
+
+        // Check if player name already exists
+        const existingPlayer = roomData.players.find(p => p.playerName === playerName);
+        if (existingPlayer) {
+          return new Response(
+            JSON.stringify({ error: 'A player with this name already exists in the room' }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+
+        // Add new player
         roomData.players.push({
           playerId,
           playerName,
           isHost: false,
-          joinedAt,
+          joinedAt: Date.now()
         });
 
-        await redis.set(`room:${roomCode}`, JSON.stringify(roomData), { ex: 28800 });
+        // Update room in Redis
+        const setResponse = await fetch(`${REDIS_URL}/setex/room:${roomCode}/28800`, {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${REDIS_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(roomData)
+        });
+
+        if (!setResponse.ok) {
+          return new Response(
+            JSON.stringify({ error: 'Failed to join room' }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
 
         return new Response(
-          JSON.stringify({ success: true, room: roomData, playerId }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          JSON.stringify({ roomCode, playerId }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
         );
       }
 
-      // KICK PLAYER (host only)
-      if (body.action === "kick") {
-        const { roomCode, targetPlayerId, hostId } = body;
-        if (!roomCode || !targetPlayerId || !hostId) {
+      if (action === 'update') {
+        // Get existing room
+        const getResponse = await fetch(`${REDIS_URL}/get/room:${roomCode}`, {
+          headers: { 'Authorization': `Bearer ${REDIS_TOKEN}` }
+        });
+
+        if (!getResponse.ok) {
           return new Response(
-            JSON.stringify({ error: "Missing parameters" }),
-            { status: 400, headers: corsHeaders },
+            JSON.stringify({ error: 'Room not found' }),
+            { 
+              status: 404, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
           );
         }
 
-        const raw = await redis.get<string>(`room:${roomCode}`);
-        if (!raw) {
+        const getData = await getResponse.json();
+        if (!getData.result) {
           return new Response(
-            JSON.stringify({ error: "Room not found" }),
-            { status: 404, headers: corsHeaders },
+            JSON.stringify({ error: 'Room not found' }),
+            { 
+              status: 404, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
           );
         }
 
-        const roomData = safeParse(typeof raw === 'string' ? raw : JSON.stringify(raw));
-        if (!roomData) {
-          await redis.del(`room:${roomCode}`);
-          return new Response(
-            JSON.stringify({ error: "Room data corrupted, please create a new room" }),
-            { status: 410, headers: corsHeaders },
-          );
-        }
-
-        if (roomData.hostId !== hostId) {
-          return new Response(
-            JSON.stringify({ error: "Only host can kick players" }),
-            { status: 403, headers: corsHeaders },
-          );
-        }
-
-        const initialCount = roomData.players.length;
-        roomData.players = roomData.players.filter((p: any) => p.playerId !== targetPlayerId);
-
-        if (roomData.players.length === initialCount) {
-          return new Response(
-            JSON.stringify({ error: "Player not found" }),
-            { status: 404, headers: corsHeaders },
-          );
-        }
-
-        await redis.set(`room:${roomCode}`, JSON.stringify(roomData), { ex: 28800 });
-
-        return new Response(
-          JSON.stringify({ success: true, room: roomData }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-
-      // UPDATE ROOM (generic)
-      if (body.action === "update") {
-        const { roomCode, updates } = body;
-        if (!roomCode || !updates) {
-          return new Response(
-            JSON.stringify({ error: "Missing parameters" }),
-            { status: 400, headers: corsHeaders },
-          );
-        }
-
-        const raw = await redis.get<string>(`room:${roomCode}`);
-        if (!raw) {
-          return new Response(
-            JSON.stringify({ error: "Room not found" }),
-            { status: 404, headers: corsHeaders },
-          );
-        }
-
-        const roomData = safeParse(typeof raw === 'string' ? raw : JSON.stringify(raw));
-        if (!roomData) {
-          await redis.del(`room:${roomCode}`);
-          return new Response(
-            JSON.stringify({ error: "Room data corrupted, please create a new room" }),
-            { status: 410, headers: corsHeaders },
-          );
-        }
+        const roomData: Room = JSON.parse(getData.result);
+        
+        // Apply updates
         Object.assign(roomData, updates);
 
-        await redis.set(`room:${roomCode}`, JSON.stringify(roomData), { ex: 28800 });
+        // Update room in Redis
+        const setResponse = await fetch(`${REDIS_URL}/setex/room:${roomCode}/28800`, {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${REDIS_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(roomData)
+        });
+
+        if (!setResponse.ok) {
+          return new Response(
+            JSON.stringify({ error: 'Failed to update room' }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
 
         return new Response(
-          JSON.stringify({ success: true, room: roomData }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          JSON.stringify({ success: true }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
         );
       }
 
-      return new Response(JSON.stringify({ error: "Unknown action" }), {
-        status: 400,
-        headers: corsHeaders,
-      });
-    }
+      if (action === 'kick') {
+        // Get existing room
+        const getResponse = await fetch(`${REDIS_URL}/get/room:${roomCode}`, {
+          headers: { 'Authorization': `Bearer ${REDIS_TOKEN}` }
+        });
 
-    // GET ROOM via query param
-    if (req.method === "GET") {
-      const url = new URL(req.url);
-      const roomCode = url.searchParams.get("roomCode");
-      if (!roomCode) {
-        return new Response(
-          JSON.stringify({ error: "roomCode required" }),
-          { status: 400, headers: corsHeaders },
-        );
-      }
+        if (!getResponse.ok) {
+          return new Response(
+            JSON.stringify({ error: 'Room not found' }),
+            { 
+              status: 404, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
 
-      try {
-        const raw = await redis.get<string>(`room:${roomCode}`);
+        const getData = await getResponse.json();
+        if (!getData.result) {
+          return new Response(
+            JSON.stringify({ error: 'Room not found' }),
+            { 
+              status: 404, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+
+        const roomData: Room = JSON.parse(getData.result);
         
-        if (!raw) {
-          return new Response(JSON.stringify({ error: "Room not found" }), {
-            status: 404,
-            headers: corsHeaders,
-          });
+        // Verify host permission
+        const requestingPlayer = roomData.players.find(p => p.playerId === hostId);
+        if (!requestingPlayer?.isHost) {
+          return new Response(
+            JSON.stringify({ error: 'Only the host can kick players' }),
+            { 
+              status: 403, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
         }
 
-        // Handle case where Redis might return parsed JSON instead of string
-        let rawString: string;
-        if (typeof raw === 'string') {
-          rawString = raw;
-        } else {
-          rawString = JSON.stringify(raw);
-        }
+        // Remove target player
+        roomData.players = roomData.players.filter(p => p.playerId !== targetPlayerId);
 
-        const parsed = safeParse(rawString);
-        if (!parsed) {
-          await redis.del(`room:${roomCode}`);
-          return new Response(JSON.stringify({ error: "Room data corrupted, please create a new room" }), { 
-            status: 410, 
-            headers: corsHeaders 
-          });
-        }
-
-        const body = JSON.stringify(parsed);
-
-        return new Response(body, {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        // Update room in Redis
+        const setResponse = await fetch(`${REDIS_URL}/setex/room:${roomCode}/28800`, {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${REDIS_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(roomData)
         });
-      } catch (error) {
-        return new Response(JSON.stringify({ error: "Internal server error during room retrieval" }), {
-          status: 500,
-          headers: corsHeaders,
-        });
+
+        if (!setResponse.ok) {
+          return new Response(
+            JSON.stringify({ error: 'Failed to kick player' }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ success: true }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
     }
 
-    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: corsHeaders },
-    );
-  }
-}); 
+      return new Response(
+        JSON.stringify({ error: 'Invalid request' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+
+    } catch (error) {
+      console.error('Edge function error:', error);
+      return new Response(
+        JSON.stringify({ error: 'Internal server error' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+  });

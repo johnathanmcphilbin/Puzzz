@@ -55,10 +55,10 @@ export const Room = () => {
     );
   }
 
-  const gamePhase = room.game_state?.phase || "lobby";
-  const currentGame = room.current_game || "would_you_rather";
+  const gamePhase = room.gameState?.phase || "lobby";
+  const currentGame = room.currentGame || "would_you_rather";
   
-  console.log('Room render - gamePhase:', gamePhase, 'currentGame:', currentGame, 'game_state:', room.game_state);
+  console.log('Room render - gamePhase:', gamePhase, 'currentGame:', currentGame, 'gameState:', room.gameState);
 
   return (
     <div className="min-h-screen gradient-bg">
