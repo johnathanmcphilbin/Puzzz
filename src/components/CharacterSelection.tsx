@@ -165,66 +165,93 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-2xl font-bold text-center">Choose Your Cat Character</DialogTitle>
         </DialogHeader>
         
-        {initialLoading ? (
-          <div className="p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="border-2 rounded-lg p-4 border-gray-200">
-                  <div className="text-center">
-                    <Skeleton className="w-20 h-20 mx-auto rounded-full mb-3" />
-                    <Skeleton className="h-4 w-16 mx-auto" />
+        <ScrollArea className="flex-1 min-h-0">
+          {initialLoading ? (
+            <div className="p-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div key={index} className="border-2 rounded-lg p-3 border-gray-200">
+                    <div className="text-center">
+                      <Skeleton className="w-16 h-16 mx-auto rounded-full mb-2" />
+                      <Skeleton className="h-3 w-12 mx-auto" />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            {/* Character grid */}
-            {displayedCharacters.length > 0 && (
-              <div className="p-4">
-                <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {displayedCharacters.map((character) => (
-                      <CharacterCard
-                        key={character.id}
-                        character={character}
-                        isSelected={selectedCharacter === character.id}
-                        onClick={() => setSelectedCharacter(character.id)}
-                      />
-                    ))}
+          ) : (
+            <>
+              {/* Character grid */}
+              {displayedCharacters.length > 0 && (
+                <div className="p-4">
+                  <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {displayedCharacters.map((character) => (
+                        <div
+                          key={character.id}
+                          className={`border-2 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                            selectedCharacter === character.id
+                              ? 'border-primary bg-primary/5'
+                              : 'border-gray-200 hover:border-primary/50'
+                          }`}
+                          onClick={() => setSelectedCharacter(character.id)}
+                        >
+                          <div className="text-center">
+                            <div className="relative w-16 h-16 mx-auto mb-2">
+                              <img
+                                src={getCatImageUrl(character.icon_url)}
+                                alt={character.name}
+                                className="w-16 h-16 rounded-full object-contain bg-white p-1"
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (nextElement) {
+                                    nextElement.style.display = 'flex';
+                                  }
+                                }}
+                              />
+                              <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center hidden">
+                                🐱
+                              </div>
+                            </div>
+                            <h3 className="font-semibold text-sm">{character.name}</h3>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Load More button */}
-            {!showingMore && remainingCharacters.length > 0 && (
-              <div className="text-center px-4 pb-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowingMore(true)}
-                  className="w-full"
-                >
-                  Load More Cats ({remainingCharacters.length} more)
-                </Button>
-              </div>
-            )}
+              {/* Load More button */}
+              {!showingMore && remainingCharacters.length > 0 && (
+                <div className="text-center px-4 pb-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowingMore(true)}
+                    className="w-full"
+                  >
+                    Load More Cats ({remainingCharacters.length} more)
+                  </Button>
+                </div>
+              )}
 
-            {characters.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No characters available yet. Check back soon!
-              </div>
-            )}
-          </>
-        )}
+              {characters.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No characters available yet. Check back soon!
+                </div>
+              )}
+            </>
+          )}
+        </ScrollArea>
 
-        <div className="flex justify-center gap-4 mt-6 p-4">
+        <div className="flex justify-center gap-4 mt-6 p-4 flex-shrink-0 border-t">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
