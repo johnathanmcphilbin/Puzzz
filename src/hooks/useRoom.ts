@@ -144,20 +144,6 @@ export const useRoom = (roomCode: string) => {
     }
   }, [room, currentPlayer, toast]);
 
-  // Commented out automatic refresh to prevent constant re-renders
-  // Only refresh when explicitly triggered (like when players join/leave)
-  /*
-  useEffect(() => {
-    if (!roomCode) return;
-
-    const interval = setInterval(() => {
-      loadRoom();
-    }, 10000); // 10-second refresh as a compromise between real-time and performance
-
-    return () => clearInterval(interval);
-  }, [roomCode, loadRoom]);
-  */
-
   // Initial load - only run once when component mounts
   useEffect(() => {
     if (!roomCode) return;
@@ -172,6 +158,66 @@ export const useRoom = (roomCode: string) => {
 
     loadRoom();
   }, [roomCode]); // Removed loadRoom from dependencies to prevent re-render loop
+
+  // Intelligent polling - only refresh when needed and avoid unnecessary updates
+  useEffect(() => {
+    if (!roomCode || !room) return;
+
+    const interval = setInterval(async () => {
+      try {
+        // Only fetch room data, don't update state if nothing changed
+        const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service?roomCode=${roomCode}`, { 
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } 
+        });
+
+        if (!response.ok) return;
+
+        const newRoomData = await response.json();
+        
+        // Check if there are actual changes before updating state
+        const hasPlayerChanges = JSON.stringify(newRoomData.players) !== JSON.stringify(room.players);
+        const hasGameStateChanges = JSON.stringify(newRoomData.gameState) !== JSON.stringify(room.gameState);
+        const hasOtherChanges = newRoomData.currentGame !== room.currentGame || newRoomData.name !== room.name;
+        
+        if (hasPlayerChanges || hasGameStateChanges || hasOtherChanges) {
+          // compatibility: add legacy field names expected by components
+          const playersWithLegacy = (newRoomData.players || []).map((p: any) => ({
+            ...p,
+            player_id: p.playerId,
+            player_name: p.playerName,
+            is_host: p.isHost,
+            selected_character_id: p.selectedCharacterId,
+            joined_at: p.joinedAt,
+            id: p.playerId // alias for keying in maps
+          }));
+
+          setRoom({
+            ...newRoomData,
+            room_code: newRoomData.roomCode,
+            host_id: newRoomData.hostId,
+            current_game: newRoomData.currentGame,
+            game_state: newRoomData.gameState,
+            is_active: true,
+            id: newRoomData.roomCode // placeholder
+          } as any);
+          setPlayers(playersWithLegacy);
+
+          // Update current player if needed
+          const playerId = localStorage.getItem('puzzz_player_id');
+          if (playerId) {
+            const foundPlayer = playersWithLegacy.find((p: any) => p.player_id === playerId);
+            if (foundPlayer) {
+              setCurrentPlayer(foundPlayer);
+            }
+          }
+        }
+      } catch (error) {
+        // Silently handle errors to avoid console spam
+      }
+    }, 10000); // 10-second refresh, but only updates when there are actual changes
+
+    return () => clearInterval(interval);
+  }, [roomCode, room]); // Include room in dependencies to compare changes
 
   return {
     room,

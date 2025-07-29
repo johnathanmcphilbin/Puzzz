@@ -19,7 +19,7 @@ export const Room = () => {
     return null;
   }
 
-  const { room, players, currentPlayer, loading, error, updateRoom } = useRoom(roomCode);
+  const { room, players, currentPlayer, loading, error, updateRoom, reload } = useRoom(roomCode);
 
   if (loading) {
     return (
@@ -64,6 +64,7 @@ export const Room = () => {
           players={players as any} 
           currentPlayer={currentPlayer as any}
           onUpdateRoom={updateRoom}
+          onReload={reload}
         />
       ) : currentGame === "paranoia" ? (
         <ParanoiaGameV2 

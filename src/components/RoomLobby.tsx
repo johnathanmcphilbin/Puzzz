@@ -34,9 +34,10 @@ interface RoomLobbyProps {
   players: Player[];
   currentPlayer: Player;
   onUpdateRoom: (room: Room) => void;
+  onReload?: () => void;
 }
 
-export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLobbyProps) => {
+export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom, onReload }: RoomLobbyProps) => {
   const [isStarting, setIsStarting] = useState(false);
   const [selectedGame, setSelectedGame] = useState<string>(room.current_game || "would_you_rather");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
@@ -77,7 +78,10 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
   const loadCharacterData = async () => {
     const characterIds = players.map(p => p.selected_character_id).filter((id): id is string => Boolean(id));
-    if (characterIds.length === 0) return;
+    
+    if (characterIds.length === 0) {
+      return;
+    }
 
     try {
       // Use static cat list instead of Supabase database
@@ -103,6 +107,23 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
           : player
       );
 
+      // Immediately update local state for instant UI feedback
+      const updatedRoom = {
+        ...room,
+        players: updatedPlayers
+      };
+      onUpdateRoom(updatedRoom);
+
+      // Update character data immediately
+      const selectedCharacter = STATIC_CATS.find(cat => cat.id === characterId);
+      if (selectedCharacter) {
+        setCharacterData(prev => ({
+          ...prev,
+          [characterId]: selectedCharacter
+        }));
+      }
+
+      // Save to Redis in the background
       const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
         method: 'POST',
         headers: { 
@@ -120,9 +141,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
       if (!response.ok) {
         throw new Error('Failed to update character selection');
       }
-
-      // Reload character data to show the new selection
-      await loadCharacterData();
       
       toast({
         title: "Character Selected!",
@@ -569,10 +587,11 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => window.location.reload()}
+                  onClick={onReload}
                   className="gap-2"
+                  title="Refresh room data"
                 >
-                  🔄 Refresh
+                  🔄 Sync
                 </Button>
                 
                 <Button 
