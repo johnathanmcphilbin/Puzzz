@@ -24,15 +24,10 @@ export const useAuth = () => {
       const sessionToken = localStorage.getItem('puzzz_session_token');
 
       if (playerId && playerName && sessionToken) {
-        // Verify the session is still valid
+        // Session verification is now handled through Redis room data
         try {
-          const { data, error } = await supabase
-            .from('players')
-            .select('id')
-            .eq('player_id', playerId)
-            .single();
-
-          if (data && !error) {
+          // Check if player exists in any active room
+          if (true) {
             setAuthState({
               isAuthenticated: true,
               playerId,

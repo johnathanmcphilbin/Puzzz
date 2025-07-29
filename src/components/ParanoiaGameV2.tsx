@@ -206,12 +206,6 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
         
         if (nextHost) {
           // Player updates are now handled through Redis room data
-
-          await supabase
-            .from("rooms")
-            .update({ host_id: nextHost.player_id })
-            .eq("id", room.id);
-
           toast({
             title: "Left Game",
             description: `${nextHost.player_name} is now the host`,
@@ -222,13 +216,7 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
       // Remove current player
       // Player removal is now handled through Redis room data
 
-      // If only one player left, deactivate room
-      if (players.length <= 1) {
-        await supabase
-          .from("rooms")
-          .update({ is_active: false })
-          .eq("id", room.id);
-      }
+      // If only one player left, room cleanup is handled through Redis
 
       localStorage.removeItem("puzzz_player_id");
       localStorage.removeItem("puzzz_player_name");
