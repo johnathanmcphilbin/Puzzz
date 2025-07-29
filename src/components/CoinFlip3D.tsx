@@ -131,7 +131,7 @@ export function CoinFlip3D({ isFlipping, onFlipComplete }: Coin3DProps) {
         <pointLight position={[-2, 2, 2]} intensity={0.5} />
         
         {/* The coin */}
-        <CoinMesh isFlipping={isFlipping} onFlipComplete={onFlipComplete} />
+        <CoinMesh isFlipping={isFlipping} onFlipComplete={onFlipComplete || (() => {})} />
       </Canvas>
     </div>
   );

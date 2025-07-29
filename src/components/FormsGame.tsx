@@ -88,7 +88,9 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
         .select('*')
         .in('id', characterIds);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading character data:', error);
+      }
 
       const characterMap = data?.reduce((acc, char) => {
         acc[char.id] = char;
@@ -265,8 +267,6 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
         throw new Error(errorData.error || 'Failed to update game state');
       }
 
-      if (error) throw error;
-
       toast({
         title: "Responses Submitted!",
         description: "Your answers have been recorded",
@@ -291,8 +291,8 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
         }),
       });
 
-        if (resultsError) {
-          console.error("Error showing results:", resultsError);
+        if (!resultsResponse.ok) {
+          console.error("Error showing results:", await resultsResponse.text());
         }
       }
     } catch (error) {
@@ -318,10 +318,11 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
         }),
       });
 
-    if (error) {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       toast({
         title: "Error",
-        description: "Failed to return to lobby",
+        description: errorData.error || "Failed to return to lobby",
         variant: "destructive",
       });
     }
@@ -338,14 +339,20 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
     questions.forEach(question => {
       results[question.id] = {};
       players.forEach(player => {
-        if (results[question.id]) results[question.id][player.player_id] = 0;
+        if (results[question.id]) {
+          results[question.id]![player.player_id] = 0;
+        }
       });
     });
 
     Object.values(allResponses).forEach((playerResponses: any) => {
       Object.entries(playerResponses).forEach(([questionId, selectedPlayerId]) => {
-        if (results[questionId] && results[questionId][selectedPlayerId as string] !== undefined) {
-          if (results[questionId]) results[questionId][selectedPlayerId as string]++;
+        const questionResult = results[questionId];
+        const playerId = selectedPlayerId as string;
+        if (questionResult && playerId) {
+          if (playerId in questionResult) {
+            (questionResult as Record<string, number>)[playerId]++;
+          }
         }
       });
     });

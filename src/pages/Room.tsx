@@ -7,6 +7,7 @@ import { OddOneOutGame } from "@/components/OddOneOutGame";
 import { DogpatchGame } from "@/components/DogpatchGame";
 import AIChatbot from "@/components/AIChatbot";
 import { Loader2 } from "lucide-react";
+import type { Room as LegacyRoom, Player as LegacyPlayer } from "@/types/room";
 
 export const Room = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
@@ -52,44 +53,44 @@ export const Room = () => {
     );
   }
 
-  const gamePhase = room.game_state?.phase || "lobby";
-  const currentGame = room.current_game || "would_you_rather";
+  const gamePhase = room.gameState?.phase || "lobby";
+  const currentGame = room.currentGame || "would_you_rather";
   
   return (
     <div className="min-h-screen gradient-bg">
       {gamePhase === "lobby" ? (
         <RoomLobby 
-          room={room} 
-          players={players} 
-          currentPlayer={currentPlayer}
+          room={room as any} 
+          players={players as any} 
+          currentPlayer={currentPlayer as any}
           onUpdateRoom={updateRoom}
         />
       ) : currentGame === "paranoia" ? (
         <ParanoiaGameV2 
-          room={room} 
-          players={players} 
-          currentPlayer={currentPlayer}
+          room={room as any} 
+          players={players as any} 
+          currentPlayer={currentPlayer as any}
           onUpdateRoom={updateRoom}
         />
       ) : (currentGame === "odd_one_out" || currentGame === "odd-one-out") ? (
         <OddOneOutGame 
-          room={room} 
-          players={players} 
-          currentPlayer={currentPlayer}
+          room={room as any} 
+          players={players as any} 
+          currentPlayer={currentPlayer as any}
           onUpdateRoom={updateRoom}
         />
       ) : currentGame === "dogpatch" ? (
         <DogpatchGame 
-          room={room} 
-          players={players} 
-          currentPlayer={currentPlayer}
+          room={room as any} 
+          players={players as any} 
+          currentPlayer={currentPlayer as any}
           onUpdateRoom={updateRoom}
         />
       ) : (
         <WouldYouRatherGame 
-          room={room} 
-          players={players} 
-          currentPlayer={currentPlayer}
+          room={room as any} 
+          players={players as any} 
+          currentPlayer={currentPlayer as any}
           onUpdateRoom={updateRoom}
         />
       )}

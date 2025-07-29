@@ -7,10 +7,9 @@ import { getCatImageUrl } from '@/assets/catImages';
 
 interface Question {
   id: string;
-  option_a: string;
-  option_b: string;
-  category: string;
-  created_at?: string;
+  image: string;
+  options: string[];
+  correctAnswer: string;
 }
 
 interface Player {
@@ -26,7 +25,7 @@ interface Player {
 interface CatCharacter {
   id: string;
   name: string;
-  icon_url: string;
+  icon_url: string | null;
 }
 
 interface Room {
@@ -51,82 +50,82 @@ interface DogpatchGameProps {
 // Hardcoded questions with correct answers matching the PDF
 const questionsData: Omit<Question, 'options'>[] = [
   {
-    id: 1,
+    id: "1",
     image: '/1.png',
     correctAnswer: 'Deirbhile Gorman'
   },
   {
-    id: 2,
+    id: "2",
     image: '/2.png',
     correctAnswer: 'Joe Gorman'
   },
   {
-    id: 3,
+    id: "3",
     image: '/3.png',
     correctAnswer: 'Ruairi Forde'
   },
   {
-    id: 4,
+    id: "4",
     image: '/4.png',
     correctAnswer: 'Menno Axt'
   },
   {
-    id: 5,
+    id: "5",
     image: '/5.png',
     correctAnswer: 'Paige Haaroff'
   },
   {
-    id: 6,
+    id: "6",
     image: '/6.png',
     correctAnswer: 'Tim'
   },
   {
-    id: 7,
+    id: "7",
     image: '/7.png',
     correctAnswer: 'Aisling Conlon'
   },
   {
-    id: 8,
+    id: "8",
     image: '/8.png',
     correctAnswer: 'Malaika Judd'
   },
   {
-    id: 9,
+    id: "9",
     image: '/9.png',
     correctAnswer: 'Gleb Sapunenko'
   },
   {
-    id: 10,
+    id: "10",
     image: '/10.png',
     correctAnswer: 'Elizabeth Fingleton'
   },
   {
-    id: 11,
+    id: "11",
     image: '/11.png',
     correctAnswer: 'Raquel Nogueira da Silva'
   },
   {
-    id: 12,
+    id: "12",
     image: '/12.png',
     correctAnswer: 'Ben Beattie'
   },
   {
-    id: 13,
+    id: "13",
     image: '/13.png',
     correctAnswer: 'Mark Farrelly'
   },
   {
-    id: 14,
+    id: "14",
     image: '/14.png',
     correctAnswer: 'Maria Reyes'
   },
   {
-    id: 15,
+    id: "15",
     image: '/15.png',
     correctAnswer: 'Conor Burke'
   },
   {
-    id: 16,
+    id: "16",
     image: '/16.png',
     correctAnswer: 'Andrew McCann'
   }
@@ -149,7 +148,9 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    if (shuffled[j] !== undefined) {
+      [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+    }
   }
   return shuffled;
 };
@@ -188,7 +189,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>({});
   const [scores, setScores] = useState<Record<string, number>>({});
   const [characterData, setCharacterData] = useState<Record<string, CatCharacter>>({});
-  const [questionResults, setQuestionResults] = useState<Array<{questionId: number, playerAnswers: Record<string, string>, correctAnswer: string}>>([]);
+  const [questionResults, setQuestionResults] = useState<Array<{questionId: string, playerAnswers: Record<string, string>, correctAnswer: string}>>([]);
 
   // Sync game state from room
   useEffect(() => {
@@ -236,7 +237,9 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
 
         const charactersMap: Record<string, CatCharacter> = {};
         data?.forEach((char) => {
-          charactersMap[char.id] = char;
+          if (char.icon_url) { // Only add characters with valid icon URLs
+            charactersMap[char.id] = char as CatCharacter;
+          }
         });
         setCharacterData(charactersMap);
       } catch (error) {
@@ -288,38 +291,39 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     // Calculate scores
     const newScores = { ...scores };
     Object.entries(playerAnswers).forEach(([playerId, answer]) => {
-      if (answer === currentQuestion.correctAnswer) {
+      if (currentQuestion && answer === currentQuestion.correctAnswer) {
         newScores[playerId] = (newScores[playerId] || 0) + 1;
       }
     });
     
     // Store this question's results
-    const newQuestionResults = [...questionResults, {
-      questionId: currentQuestion.id,
-      playerAnswers: { ...playerAnswers },
-      correctAnswer: currentQuestion.correctAnswer
-    }];
-    
-    await onUpdateRoom({
-      game_state: {
-        ...room.game_state,
-        phase: 'results', // For Room component compatibility
-        gamePhase: 'results',
-        scores: newScores,
-        questionResults: newQuestionResults
-      }
-    });
-    
-    setTimeout(() => {
-      nextQuestion(newScores, newQuestionResults);
-    }, 3000);
+    if (currentQuestion) {
+      const newQuestionResults = [...questionResults, {
+        questionId: currentQuestion.id,
+        playerAnswers: { ...playerAnswers },
+        correctAnswer: currentQuestion.correctAnswer
+      }];
+      await onUpdateRoom({
+        game_state: {
+          ...room.game_state,
+          phase: 'results', // For Room component compatibility
+          gamePhase: 'results',
+          scores: newScores,
+          questionResults: newQuestionResults
+        }
+      });
+      
+      setTimeout(() => {
+        nextQuestion(newScores, newQuestionResults);
+      }, 3000);
+    }
   };
 
   const handleSkipQuestion = () => {
     showQuestionResults();
   };
 
-  const nextQuestion = async (preservedScores?: Record<string, number>, preservedResults?: Array<{questionId: number, playerAnswers: Record<string, string>, correctAnswer: string}>) => {
+  const nextQuestion = async (preservedScores?: Record<string, number>, preservedResults?: Array<{questionId: string, playerAnswers: Record<string, string>, correctAnswer: string}>) => {
     if (currentQuestionIndex + 1 >= questions.length) {
       await onUpdateRoom({
         game_state: {
@@ -546,44 +550,48 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
 
         <Card className="mb-6">
           <CardContent className="p-6 text-center">
-            <img 
-              src={currentQuestion.image} 
-              alt="Guess who this is" 
-              className="w-80 h-80 object-contain rounded-lg mx-auto mb-6 bg-white/10"
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {currentQuestion.options.map((option, index) => (
-                <Button
-                  key={index}
-                  variant={
-                    gamePhase === 'results' && option === currentQuestion.correctAnswer
-                      ? "default"
-                      : gamePhase === 'results' && selectedAnswer === option && option !== currentQuestion.correctAnswer
-                      ? "destructive"
-                      : selectedAnswer === option
-                      ? "default"
-                      : "outline"
-                  }
-                  size="lg"
-                  onClick={() => handleAnswerSelect(option)}
-                  disabled={selectedAnswer !== null || gamePhase === 'results'}
-                  className="p-4 text-left h-auto"
-                >
-                  {option}
-                </Button>
-              ))}
-            </div>
+            {currentQuestion && (
+              <>
+                <img 
+                  src={currentQuestion.image} 
+                  alt="Guess who this is" 
+                  className="w-80 h-80 object-contain rounded-lg mx-auto mb-6 bg-white/10"
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                  {currentQuestion.options.map((option: string, index: number) => (
+                    <Button
+                      key={index}
+                      variant={
+                        gamePhase === 'results' && option === currentQuestion.correctAnswer
+                          ? "default"
+                          : gamePhase === 'results' && selectedAnswer === option && option !== currentQuestion.correctAnswer
+                          ? "destructive"
+                          : selectedAnswer === option
+                          ? "default"
+                          : "outline"
+                      }
+                      size="lg"
+                      onClick={() => handleAnswerSelect(option)}
+                      disabled={selectedAnswer !== null || gamePhase === 'results'}
+                      className="p-4 text-left h-auto"
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
 
-            {showResults && (
-              <div className="mt-6 p-4 bg-muted rounded-lg">
-                <p className="text-lg font-semibold">
-                  Correct Answer: {currentQuestion.correctAnswer}
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Next question in 3 seconds...
-                </p>
-              </div>
+                {showResults && (
+                  <div className="mt-6 p-4 bg-muted rounded-lg">
+                    <p className="text-lg font-semibold">
+                      Correct Answer: {currentQuestion.correctAnswer}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Next question in 3 seconds...
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
