@@ -30,7 +30,9 @@ export const useRoomActions = () => {
     setLoading(true);
     try {
       // Call the rooms-service edge function
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+      const url = `${FUNCTIONS_BASE_URL}/rooms-service`;
+      console.log('Creating room with URL:', url);
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ action: 'create', playerName: playerName.trim(), selectedGame }),
@@ -91,7 +93,9 @@ export const useRoomActions = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+      const url = `${FUNCTIONS_BASE_URL}/rooms-service`;
+      console.log('Joining room with URL:', url);
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ action: 'join', roomCode: cleanedRoomCode, playerName: playerName.trim() }),
