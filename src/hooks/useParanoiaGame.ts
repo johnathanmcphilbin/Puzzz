@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface Room {
   id: string;
@@ -105,16 +106,24 @@ export const useParanoiaGame = (room: Room, players: Player[], currentPlayer: Pl
     try {
       const updatedState = { ...gameState, ...newState };
       
-      const { error } = await supabase
-        .from("rooms")
-        .update({ game_state: updatedState })
-        .eq("id", room.id);
+      // Update room state via Redis-based rooms-service
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { gameState: updatedState } 
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update game state');
+      }
 
       onUpdateRoom({ ...room, game_state: updatedState });
     } catch (error) {
-      console.error("Error updating game state:", error);
       toast({
         title: "Error",
         description: "Failed to update game state",

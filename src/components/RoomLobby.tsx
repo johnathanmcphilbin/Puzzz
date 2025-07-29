@@ -10,6 +10,7 @@ import QRCode from "qrcode";
 import { CharacterSelection } from "./CharacterSelection";
 import { getCatImageUrl } from "@/assets/catImages";
 import GameCustomizer from "./GameCustomizer";
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface Room {
   id: string;
@@ -158,32 +159,43 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
      setIsStarting(true);
     try {
-      const { error } = await supabase
-        .from("rooms")
-        .update({
-          current_game: selectedGame,
-          game_state: selectedGame === "paranoia" ? {
-            phase: "waiting",
-            currentTurnIndex: 0,
-            playerOrder: [],
-            currentRound: 1,
-            currentQuestion: null,
-            currentAnswer: null,
-            targetPlayerId: null,
-            usedAskers: [],
-            lastRevealResult: null,
-            isFlipping: false
-          } : {
-            phase: (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "setup" : "playing",
-            currentQuestion: null,
-            questionIndex: 0,
-            votes: {},
-            showResults: false
-          }
-        })
-        .eq("id", room.id);
+      const gameState = selectedGame === "paranoia" ? {
+        phase: "waiting",
+        currentTurnIndex: 0,
+        playerOrder: [],
+        currentRound: 1,
+        currentQuestion: null,
+        currentAnswer: null,
+        targetPlayerId: null,
+        usedAskers: [],
+        lastRevealResult: null,
+        isFlipping: false
+      } : {
+        phase: (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "setup" : "playing",
+        currentQuestion: null,
+        questionIndex: 0,
+        votes: {},
+        showResults: false
+      };
 
-      if (error) throw error;
+      // Update room state via Redis-based rooms-service
+      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ 
+          action: 'update', 
+          roomCode: room.room_code, 
+          updates: { 
+            currentGame: selectedGame,
+            gameState: gameState
+          } 
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to start game');
+      }
 
       const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Dogpatch game" : "Would You Rather";
       
@@ -193,7 +205,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         className: "bg-success text-success-foreground",
       });
     } catch (error) {
-      console.error("Error starting game:", error);
       toast({
         title: "Error",
         description: "Failed to start game",

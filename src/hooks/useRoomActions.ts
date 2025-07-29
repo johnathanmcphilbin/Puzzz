@@ -29,9 +29,7 @@ export const useRoomActions = () => {
 
     setLoading(true);
     try {
-      console.log('Creating room with Redis');
-
-      // Call the new rooms-service edge function
+      // Call the rooms-service edge function
       const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
@@ -44,46 +42,6 @@ export const useRoomActions = () => {
       }
 
       const { room } = await response.json();
-      console.log('Room created successfully:', room.roomCode);
-
-      // Verify the room exists by trying to fetch it
-      console.log('Verifying room exists...');
-      let verificationAttempts = 0;
-      const maxVerificationAttempts = 3;
-      let roomVerified = false;
-
-      while (verificationAttempts < maxVerificationAttempts && !roomVerified) {
-        try {
-          // Small delay to allow for Redis propagation
-          if (verificationAttempts > 0) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-
-          const verifyResponse = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service?roomCode=${room.roomCode}`, { 
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } 
-          });
-
-          if (verifyResponse.ok) {
-            const verifyData = await verifyResponse.json();
-            if (verifyData.roomCode === room.roomCode) {
-              console.log('Room verification successful');
-              roomVerified = true;
-            } else {
-              console.warn('Room verification failed - room code mismatch');
-            }
-          } else {
-            console.warn(`Room verification attempt ${verificationAttempts + 1} failed:`, verifyResponse.status);
-          }
-        } catch (verifyError) {
-          console.warn(`Room verification attempt ${verificationAttempts + 1} error:`, verifyError);
-        }
-        
-        verificationAttempts++;
-      }
-
-      if (!roomVerified) {
-        throw new Error('Room was created but verification failed. Please try again.');
-      }
 
       // Store player info
       localStorage.setItem('puzzz_player_id', room.hostId);
@@ -99,7 +57,6 @@ export const useRoomActions = () => {
       return room.roomCode;
 
     } catch (error: any) {
-      console.error('Error creating room:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to create room',
@@ -134,8 +91,6 @@ export const useRoomActions = () => {
 
     setLoading(true);
     try {
-      console.log('Joining room:', cleanedRoomCode);
-
       const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
@@ -168,7 +123,6 @@ export const useRoomActions = () => {
       return true;
 
     } catch (error: any) {
-      console.error('Error joining room:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to join room',
