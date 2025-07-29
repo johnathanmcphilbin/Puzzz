@@ -162,14 +162,26 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const loadQuestions = async (): Promise<Question[]> => {
-    // Check if AI-generated questions exist for Would You Rather game
+    // Check if AI-generated questions exist in the expected location first
+    if (gameState.aiQuestions && gameState.aiQuestions.length > 0) {
+      console.log('[WouldYouRatherGame] Using AI-generated Would You Rather questions (gameState.aiQuestions):', gameState.aiQuestions.length);
+      return gameState.aiQuestions;
+    }
+
+    // Backwards-compatibility: handle older property names
     if (gameState.wouldYouRatherQuestions && gameState.wouldYouRatherQuestions.length > 0) {
-      console.log('Using AI-generated Would You Rather questions:', gameState.wouldYouRatherQuestions.length);
+      console.log('[WouldYouRatherGame] Using legacy property gameState.wouldYouRatherQuestions:', gameState.wouldYouRatherQuestions.length);
       return gameState.wouldYouRatherQuestions;
     }
 
-    // Fall back to database questions if no AI questions
-    console.log('No AI questions found, falling back to database questions');
+    // Handle customQuestions structure used by other game types
+    if (gameState.customQuestions?.would_you_rather && gameState.customQuestions.would_you_rather.length > 0) {
+      console.log('[WouldYouRatherGame] Using customQuestions.would_you_rather from gameState.customQuestions:', gameState.customQuestions.would_you_rather.length);
+      return gameState.customQuestions.would_you_rather;
+    }
+
+    // Fall back to database questions if no AI questions found
+    console.log('[WouldYouRatherGame] No AI questions found, falling back to database questions');
     const { data: questionsData, error: questionsError } = await supabase
       .from("would_you_rather_questions")
       .select("*");
