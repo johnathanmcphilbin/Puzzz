@@ -351,7 +351,10 @@ export const FormsGame = ({ room, players, currentPlayer, onUpdateRoom }: FormsG
         const playerId = selectedPlayerId as string;
         if (questionResult && playerId) {
           if (playerId in questionResult) {
-            (questionResult as Record<string, number>)[playerId]++;
+            const result = questionResult as Record<string, number>;
+            if (result[playerId] !== undefined) {
+              result[playerId]++;
+            }
           }
         }
       });
