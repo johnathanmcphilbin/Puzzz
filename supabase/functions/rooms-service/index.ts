@@ -3,12 +3,19 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Redis } from "https://deno.land/x/upstash_redis@v1.22.0/mod.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Environment variables for Upstash Redis
 const redis = new Redis({
   url: Deno.env.get("UPSTASH_REDIS_REST_URL")!,
   token: Deno.env.get("UPSTASH_REDIS_REST_TOKEN")!,
 });
+
+// Supabase client for real-time broadcasting
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+);
 // Safely parse JSON (returns null on failure)
 function safeParse(raw: string | null): any | null {
   if (!raw) return null;
@@ -272,6 +279,18 @@ serve(async (req) => {
           );
         }
 
+        // Broadcast real-time update to all clients when player joins
+        try {
+          const channel = supabase.channel(`room_${roomCode}`);
+          await channel.send({
+            type: 'broadcast',
+            event: 'room_update',
+            payload: roomData,
+          });
+        } catch (error) {
+          console.error('Failed to broadcast room update:', error);
+        }
+
         return new Response(
           JSON.stringify({ roomCode, playerId }),
           { 
@@ -331,6 +350,18 @@ serve(async (req) => {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
             }
           );
+        }
+
+        // Broadcast real-time update to all clients
+        try {
+          const channel = supabase.channel(`room_${roomCode}`);
+          await channel.send({
+            type: 'broadcast',
+            event: 'room_update',
+            payload: roomData,
+          });
+        } catch (error) {
+          console.error('Failed to broadcast room update:', error);
         }
 
         return new Response(
@@ -404,6 +435,18 @@ serve(async (req) => {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
             }
           );
+        }
+
+        // Broadcast real-time update to all clients
+        try {
+          const channel = supabase.channel(`room_${roomCode}`);
+          await channel.send({
+            type: 'broadcast',
+            event: 'room_update',
+            payload: roomData,
+          });
+        } catch (error) {
+          console.error('Failed to broadcast room update:', error);
         }
 
         return new Response(

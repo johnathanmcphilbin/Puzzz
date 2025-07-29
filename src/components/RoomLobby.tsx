@@ -34,10 +34,9 @@ interface RoomLobbyProps {
   players: Player[];
   currentPlayer: Player;
   onUpdateRoom: (room: Room) => void;
-  onReload?: () => void;
 }
 
-export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom, onReload }: RoomLobbyProps) => {
+export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLobbyProps) => {
   const [isStarting, setIsStarting] = useState(false);
   const [selectedGame, setSelectedGame] = useState<string>(room.current_game || "would_you_rather");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
@@ -584,15 +583,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom, onReload
                   </div>
                 )}
                 
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={onReload}
-                  className="gap-2"
-                  title="Refresh room data"
-                >
-                  🔄 Sync
-                </Button>
                 
                 <Button 
                   variant="outline" 

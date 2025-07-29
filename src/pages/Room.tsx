@@ -64,7 +64,6 @@ export const Room = () => {
           players={players as any} 
           currentPlayer={currentPlayer as any}
           onUpdateRoom={updateRoom}
-          onReload={reload}
         />
       ) : currentGame === "paranoia" ? (
         <ParanoiaGameV2 
