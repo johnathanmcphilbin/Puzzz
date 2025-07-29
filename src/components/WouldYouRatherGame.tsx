@@ -162,12 +162,14 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const loadQuestions = async (): Promise<Question[]> => {
-    // Check if AI-generated questions exist in room state
-    if (gameState.aiQuestions && gameState.aiQuestions.length > 0) {
-      return gameState.aiQuestions;
+    // Check if AI-generated questions exist for Would You Rather game
+    if (gameState.wouldYouRatherQuestions && gameState.wouldYouRatherQuestions.length > 0) {
+      console.log('Using AI-generated Would You Rather questions:', gameState.wouldYouRatherQuestions.length);
+      return gameState.wouldYouRatherQuestions;
     }
 
     // Fall back to database questions if no AI questions
+    console.log('No AI questions found, falling back to database questions');
     const { data: questionsData, error: questionsError } = await supabase
       .from("would_you_rather_questions")
       .select("*");
