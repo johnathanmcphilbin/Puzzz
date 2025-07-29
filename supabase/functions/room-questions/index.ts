@@ -4,7 +4,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const functionsUrl = Deno.env.get('SUPABASE_URL')?.replace('https://', 'https://') + '/functions/v1';
+const functionsUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1';
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
 const corsHeaders = {
@@ -160,10 +160,19 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured. Please contact the administrator.');
     }
 
+    if (!supabaseAnonKey) {
+      console.error('Supabase anon key not found in environment variables');
+      throw new Error('Supabase configuration error. Please contact the administrator.');
+    }
+
     const { roomCode, customization, crazynessLevel } = await req.json();
     
     if (!roomCode) {
       throw new Error('Room code is required');
+    }
+
+    if (!customization) {
+      throw new Error('Customization text is required');
     }
 
     console.log('Generating room questions for:', { roomCode, customization, crazynessLevel });
@@ -173,19 +182,21 @@ serve(async (req) => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': supabaseAnonKey!,
+        'apikey': supabaseAnonKey,
         'Authorization': `Bearer ${supabaseAnonKey}`,
       },
     });
 
     if (!roomCheckResponse.ok) {
+      const errorText = await roomCheckResponse.text();
+      console.error('Room check failed:', { status: roomCheckResponse.status, error: errorText });
       throw new Error(`Room not found for code: ${roomCode}`);
     }
 
     // Get craziness-specific modifications
     const crazynessConfig = getCrazynessPromptModifications(crazynessLevel || 50);
 
-const systemPrompt = `Generate questions for party games based HEAVILY on the customization theme: "${customization}". 
+    const systemPrompt = `Generate questions for party games based HEAVILY on the customization theme: "${customization}". 
     
     CRAZINESS LEVEL: ${crazynessLevel}% - ${crazynessConfig.description}
     
@@ -294,7 +305,7 @@ const systemPrompt = `Generate questions for party games based HEAVILY on the cu
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': supabaseAnonKey!,
+        'apikey': supabaseAnonKey,
         'Authorization': `Bearer ${supabaseAnonKey}`,
       },
       body: JSON.stringify({
