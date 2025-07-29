@@ -38,14 +38,52 @@ export const useRoom = (roomCode: string) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service?roomCode=${roomCode}`, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        setError(data.error || 'Room not found');
-        return;
+      console.log('Loading room:', roomCode);
+      
+      // Add retry logic for room loading
+      let attempts = 0;
+      const maxAttempts = 3;
+      let response;
+      let roomData;
+
+      while (attempts < maxAttempts) {
+        try {
+          if (attempts > 0) {
+            console.log(`Room load attempt ${attempts + 1}/${maxAttempts}`);
+            // Small delay before retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+
+          response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service?roomCode=${roomCode}`, { 
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } 
+          });
+
+          if (response.ok) {
+            roomData = await response.json();
+            console.log('Room loaded successfully:', roomCode);
+            break;
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.warn(`Room load attempt ${attempts + 1} failed:`, response.status, errorData.error);
+            
+            // If it's a 410 (corrupted data) or 404 (not found), don't retry
+            if (response.status === 410 || response.status === 404) {
+              setError(errorData.error || 'Room not found');
+              return;
+            }
+          }
+        } catch (fetchError) {
+          console.warn(`Room load attempt ${attempts + 1} error:`, fetchError);
+        }
+        
+        attempts++;
       }
 
-      const roomData = await response.json();
+      if (!response || !response.ok || !roomData) {
+        const finalError = await response?.json().catch(() => ({}));
+        setError(finalError.error || 'Failed to load room after multiple attempts');
+        return;
+      }
 
       // compatibility: add legacy field names expected by components
       const playersWithLegacy = (roomData.players || []).map((p: any) => ({
@@ -87,7 +125,7 @@ export const useRoom = (roomCode: string) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [roomCode]);
 
   const updateRoom = useCallback(async (updates: Partial<Room>) => {
     if (!room) return;
@@ -167,7 +205,7 @@ export const useRoom = (roomCode: string) => {
     }
 
     loadRoom();
-  }, [roomCode]);
+  }, [roomCode, loadRoom]);
 
   return {
     room,
