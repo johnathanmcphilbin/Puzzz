@@ -359,7 +359,9 @@ serve(async (req) => {
         created_at: new Date().toISOString()
       }));
 
-      console.log('aiQuestions to store:', aiQuestions);
+      console.log('🔵 [ROOM-QUESTIONS] aiQuestions to store:', JSON.stringify(aiQuestions, null, 2));
+      console.log('🔵 [ROOM-QUESTIONS] Room code:', roomCode);
+      console.log('🔵 [ROOM-QUESTIONS] About to update room with aiQuestions');
 
       // Update room state with AI questions
       const updateResponse = await fetch(`${functionsUrl}/rooms-service`, {
