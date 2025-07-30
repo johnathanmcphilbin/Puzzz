@@ -5,6 +5,7 @@ import { WouldYouRatherGame } from "@/components/WouldYouRatherGame";
 import { ParanoiaGameV2 } from "@/components/ParanoiaGameV2";
 import { OddOneOutGame } from "@/components/OddOneOutGame";
 import { DogpatchGame } from "@/components/DogpatchGame";
+import { DramamatchingGame } from "@/components/DramamatchingGame";
 import AIChatbot from "@/components/AIChatbot";
 import { Loader2 } from "lucide-react";
 import type { Room as LegacyRoom, Player as LegacyPlayer } from "@/types/room";
@@ -81,6 +82,13 @@ export const Room = () => {
         />
       ) : currentGame === "dogpatch" ? (
         <DogpatchGame 
+          room={room as any} 
+          players={players as any} 
+          currentPlayer={currentPlayer as any}
+          onUpdateRoom={updateRoom}
+        />
+      ) : currentGame === "dramamatching" ? (
+        <DramamatchingGame 
           room={room as any} 
           players={players as any} 
           currentPlayer={currentPlayer as any}
