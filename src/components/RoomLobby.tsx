@@ -209,7 +209,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         throw new Error(errorData.error || 'Failed to start game');
       }
 
-      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Dogpatch game" : selectedGame === "dramamatching" ? "Dramamatching" : "Would You Rather";
+      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Dogpatch game" : selectedGame === "dramamatching" ? "Dramamatching" : selectedGame === "forms" ? "Forms Game" : "Would You Rather";
       
       toast({
         title: "Game Started!",
@@ -504,6 +504,26 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                        </div>
                        <div className="flex items-center gap-2">
                          <div className="w-6 h-6 bg-pink-500 rounded text-xs flex items-center justify-center text-white font-bold">💕</div>
+                      </div>
+                    </div>
+                   </div>
+
+                   {/* Forms Game */}
+                   <div 
+                     className={`relative p-4 border rounded-lg transition-all ${
+                       currentPlayer.is_host
+                         ? `cursor-pointer ${selectedGame === "forms" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                         : "border-muted"
+                     }`}
+                     onClick={() => currentPlayer.is_host && setSelectedGame("forms")}
+                   >
+                     <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold">📋 Forms Game</h4>
+                          <p className="text-sm text-muted-foreground">Vote on AI questions, then answer polls</p>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-6 h-6 bg-indigo-500 rounded text-xs flex items-center justify-center text-white font-bold">📝</div>
                       </div>
                     </div>
                    </div>
