@@ -337,6 +337,11 @@ serve(async (req) => {
       // Remove any markdown code blocks or extra text
       const cleanedText = generatedText.replace(/```json\n?/, '').replace(/```\n?$/, '').trim();
       questions = JSON.parse(cleanedText);
+      // Debug: Log the parsed questions object to ensure JSON parsing worked as expected
+      console.log('Parsed questions object:', questions);
+      if (Array.isArray(questions.questions)) {
+        console.log(`Parsed ${questions.questions.length} questions from OpenAI response`);
+      }
     } catch (parseError) {
       console.error('Failed to parse OpenAI response as JSON:', parseError);
       console.error('Raw response:', generatedText);
@@ -345,12 +350,16 @@ serve(async (req) => {
 
     // Store AI questions in room state with proper IDs
     if (gameType === 'would_you_rather') {
+      // Transform the questions into the structure expected by the frontend
+      // and log the result before saving so we can confirm what will be stored.
       const aiQuestions = questions.questions.map((q: any) => ({
         id: `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         option_a: q.option_a,
         option_b: q.option_b,
         created_at: new Date().toISOString()
       }));
+
+      console.log('aiQuestions to store:', aiQuestions);
 
       // Update room state with AI questions
       const updateResponse = await fetch(`${functionsUrl}/rooms-service`, {
