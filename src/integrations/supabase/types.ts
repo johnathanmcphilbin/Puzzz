@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cat_characters_audit_log: {
+        Row: {
+          cat_id: string | null
+          cat_name: string | null
+          details: Json | null
+          id: string
+          operation_timestamp: string | null
+          operation_type: string
+          user_context: string | null
+        }
+        Insert: {
+          cat_id?: string | null
+          cat_name?: string | null
+          details?: Json | null
+          id?: string
+          operation_timestamp?: string | null
+          operation_type: string
+          user_context?: string | null
+        }
+        Update: {
+          cat_id?: string | null
+          cat_name?: string | null
+          details?: Json | null
+          id?: string
+          operation_timestamp?: string | null
+          operation_type?: string
+          user_context?: string | null
+        }
+        Relationships: []
+      }
       forms_questions: {
         Row: {
           category: string | null
