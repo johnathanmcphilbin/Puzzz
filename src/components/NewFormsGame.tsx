@@ -471,13 +471,20 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           </Card>
 
           <div className="space-y-6">
-            {allResults.map((result: any, index: number) => (
-              <Card key={index} className="bg-black/30 border-blue-500/30">
-                <CardHeader>
-                  <CardTitle className="text-xl text-white">
-                    Q{index + 1}: {result.question.text}
-                  </CardTitle>
-                </CardHeader>
+            {allResults.map((result: any, index: number) => {
+              // Add safety checks for result structure
+              if (!result || !result.question) {
+                console.log('Invalid result structure:', result);
+                return null;
+              }
+              
+              return (
+                <Card key={index} className="bg-black/30 border-blue-500/30">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-white">
+                      Q{index + 1}: {result.question.text || 'Question text unavailable'}
+                    </CardTitle>
+                  </CardHeader>
                 <CardContent>
                   {result.question.type === 'yes_no' ? (
                     <div className="grid grid-cols-2 gap-4">
@@ -507,9 +514,10 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                       })}
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            ))}
+                 </CardContent>
+               </Card>
+              );
+            })}
           </div>
 
           {currentPlayer.isHost && (
