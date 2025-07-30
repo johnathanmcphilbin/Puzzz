@@ -214,7 +214,7 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
   }, [room.gameState?.matches, currentPlayer.playerName, matchResult]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-red-900 p-4">
+    <div className="min-h-screen gradient-bg p-4">
       <div className="max-w-4xl mx-auto">
         <Card className="bg-black/20 border-pink-500/30 backdrop-blur-sm">
           <CardHeader className="text-center">

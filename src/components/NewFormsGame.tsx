@@ -78,26 +78,48 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
         const { data: formsData, error: formsError } = await supabase
           .from('forms_questions')
           .select('*')
-          .limit(25);
+          .limit(20);
 
-        if (formsError) throw formsError;
+        if (formsError) {
+          console.error('Database error:', formsError);
+        }
 
         // Convert database questions to Forms game format
-        questions = (formsData || []).map((q: any, index: number) => ({
-          id: `q-${index}`,
+        const dbQuestions = (formsData || []).map((q: any, index: number) => ({
+          id: `db-${index}`,
           text: q.question,
-          type: 'yes_no', // Default to yes/no for database questions
+          type: 'yes_no' as const,
           votes: 0,
           playerVotes: []
         }));
 
-        // Add some "most likely to" questions manually for variety
+        // Always include fallback questions to ensure we have content
+        const fallbackYesNoQuestions = [
+          'Do you prefer coffee over tea?',
+          'Would you rather be invisible or be able to fly?',
+          'Do you believe in love at first sight?',
+          'Would you eat bugs if they were nutritious?',
+          'Do you think aliens exist?',
+          'Would you rather live in the past or future?',
+          'Do you prefer dogs over cats?',
+          'Would you want to know your future?'
+        ].map((text, index) => ({
+          id: `fallback-yn-${index}`,
+          text,
+          type: 'yes_no' as const,
+          votes: 0,
+          playerVotes: []
+        }));
+
+        // Add "most likely to" questions for variety
         const mostLikelyQuestions = [
           'Who is most likely to become famous?',
           'Who is most likely to sleep through their alarm?',
           'Who is most likely to win a game show?',
           'Who is most likely to adopt a stray animal?',
-          'Who is most likely to become a millionaire?'
+          'Who is most likely to become a millionaire?',
+          'Who is most likely to forget their own birthday?',
+          'Who is most likely to become a professional athlete?'
         ].map((text, index) => ({
           id: `ml-${index}`,
           text,
@@ -106,7 +128,10 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           playerVotes: []
         }));
 
-        questions = [...questions, ...mostLikelyQuestions];
+        // Combine all questions - use DB questions if available, otherwise use fallbacks
+        questions = dbQuestions.length > 0 
+          ? [...dbQuestions, ...mostLikelyQuestions] 
+          : [...fallbackYesNoQuestions, ...mostLikelyQuestions];
       }
 
       if (questions.length === 0) {
@@ -261,7 +286,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
 
   if (phase === 'setup') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-4">
+      <div className="min-h-screen gradient-bg p-4">
         <div className="max-w-2xl mx-auto">
           <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm">
             <CardHeader className="text-center">
@@ -323,7 +348,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     const maxVotes = Math.ceil(generatedQuestions.length * 0.4); // Can vote for up to 40% of questions
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-4">
+      <div className="min-h-screen gradient-bg p-4">
         <div className="max-w-4xl mx-auto">
           <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm mb-6">
             <CardHeader className="text-center">
@@ -411,7 +436,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     const allAnswered = answers.length === players.length;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-4">
+      <div className="min-h-screen gradient-bg p-4">
         <div className="max-w-2xl mx-auto">
           <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm">
             <CardHeader className="text-center">
@@ -501,7 +526,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     const allResults = gameState.allAnswers || [];
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-4">
+      <div className="min-h-screen gradient-bg p-4">
         <div className="max-w-4xl mx-auto">
           <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm mb-6">
             <CardHeader className="text-center">
