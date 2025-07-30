@@ -54,44 +54,57 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
       let questions: Question[] = [];
 
       if (prompt.trim()) {
-        // Generate AI questions with custom prompt
-        const { data, error } = await supabase.functions.invoke('room-questions', {
-          body: {
-            roomCode: room.roomCode,
-            customization: prompt.trim(),
-            gameType: 'forms',
-            questionCount: 25
+        // Try to generate AI questions with custom prompt
+        try {
+          const { data, error } = await supabase.functions.invoke('room-questions', {
+            body: {
+              roomCode: room.roomCode,
+              customization: prompt.trim(),
+              gameType: 'forms',
+              questionCount: 25
+            }
+          });
+
+          if (!error && data?.questions) {
+            questions = data.questions.map((q: any, index: number) => ({
+              id: `ai-${index}`,
+              text: q.text,
+              type: q.type,
+              votes: 0,
+              playerVotes: []
+            }));
           }
-        });
-
-        if (error) throw error;
-
-        questions = data.questions.map((q: any, index: number) => ({
-          id: `q-${index}`,
-          text: q.text,
-          type: q.type,
-          votes: 0,
-          playerVotes: []
-        }));
-      } else {
-        // Load default questions from database
-        const { data: formsData, error: formsError } = await supabase
-          .from('forms_questions')
-          .select('*')
-          .limit(20);
-
-        if (formsError) {
-          console.error('Database error:', formsError);
+        } catch (aiError) {
+          console.error('AI generation failed:', aiError);
         }
+      }
 
-        // Convert database questions to Forms game format
-        const dbQuestions = (formsData || []).map((q: any, index: number) => ({
-          id: `db-${index}`,
-          text: q.question,
-          type: 'yes_no' as const,
-          votes: 0,
-          playerVotes: []
-        }));
+      // If no AI questions or no custom prompt, use default questions
+      if (questions.length === 0) {
+        // Load default questions from database
+        try {
+          const { data: formsData, error: formsError } = await supabase
+            .from('forms_questions')
+            .select('*')
+            .limit(20);
+
+          if (formsError) {
+            console.error('Database error:', formsError);
+          }
+
+          // Convert database questions to Forms game format
+          const dbQuestions = (formsData || []).map((q: any, index: number) => ({
+            id: `db-${index}`,
+            text: q.question,
+            type: 'yes_no' as const,
+            votes: 0,
+            playerVotes: []
+          }));
+
+          questions = [...questions, ...dbQuestions];
+        } catch (dbError) {
+          console.error('Database access failed:', dbError);
+        }
 
         // Always include fallback questions to ensure we have content
         const fallbackYesNoQuestions = [
@@ -128,10 +141,8 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           playerVotes: []
         }));
 
-        // Combine all questions - use DB questions if available, otherwise use fallbacks
-        questions = dbQuestions.length > 0 
-          ? [...dbQuestions, ...mostLikelyQuestions] 
-          : [...fallbackYesNoQuestions, ...mostLikelyQuestions];
+        // Add fallback questions
+        questions = [...questions, ...fallbackYesNoQuestions, ...mostLikelyQuestions];
       }
 
       if (questions.length === 0) {
@@ -288,7 +299,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     return (
       <div className="min-h-screen gradient-bg p-4">
         <div className="max-w-2xl mx-auto">
-          <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm">
+          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl">
             <CardHeader className="text-center">
               <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
                 📋 Forms Game
@@ -350,7 +361,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     return (
       <div className="min-h-screen gradient-bg p-4">
         <div className="max-w-4xl mx-auto">
-          <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm mb-6">
+          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl mb-6">
             <CardHeader className="text-center">
               <CardTitle className="text-3xl font-bold text-blue-300">
                 Vote for Your Favorite Questions
@@ -375,7 +386,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
               return (
                 <Card 
                   key={question.id}
-                  className={`bg-black/30 border transition-all cursor-pointer ${
+                  className={`bg-card/90 border transition-all cursor-pointer shadow-md ${
                     hasVoted 
                       ? 'border-green-500/50 bg-green-500/10' 
                       : canVote 
@@ -414,7 +425,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           </div>
 
           {currentPlayer.isHost && (
-            <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm">
+            <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl">
               <CardContent className="p-4 text-center">
                 <Button
                   onClick={startGame}
@@ -438,7 +449,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     return (
       <div className="min-h-screen gradient-bg p-4">
         <div className="max-w-2xl mx-auto">
-          <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm">
+          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl">
             <CardHeader className="text-center">
               <div className="flex justify-between items-center mb-4">
                 <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
@@ -528,7 +539,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     return (
       <div className="min-h-screen gradient-bg p-4">
         <div className="max-w-4xl mx-auto">
-          <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm mb-6">
+          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl mb-6">
             <CardHeader className="text-center">
               <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
                 📊 Final Results
@@ -546,7 +557,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
               }
               
               return (
-                <Card key={index} className="bg-black/30 border-blue-500/30">
+                <Card key={index} className="bg-card/90 border-blue-500/50 shadow-md">
                   <CardHeader>
                     <CardTitle className="text-xl text-white">
                       Q{index + 1}: {result.question.text || 'Question text unavailable'}
@@ -588,7 +599,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           </div>
 
           {currentPlayer.isHost && (
-            <Card className="bg-black/20 border-blue-500/30 backdrop-blur-sm mt-6">
+            <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl mt-6">
               <CardContent className="p-4 text-center">
                 <Button
                   onClick={resetGame}
