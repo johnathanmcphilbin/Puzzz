@@ -329,8 +329,24 @@ serve(async (req) => {
 
         const roomData: Room = JSON.parse(getData.result);
         
-        // Apply updates
-        Object.assign(roomData, updates);
+        console.log('🔵 [ROOMS-SERVICE] Before update - roomData.gameState:', JSON.stringify(roomData.gameState, null, 2));
+        console.log('🔵 [ROOMS-SERVICE] Updates to apply:', JSON.stringify(updates, null, 2));
+        
+        // Apply updates with proper deep merge for gameState
+        if (updates.gameState && roomData.gameState) {
+          // Merge gameState instead of replacing it
+          roomData.gameState = { ...roomData.gameState, ...updates.gameState };
+          console.log('🟢 [ROOMS-SERVICE] After gameState merge:', JSON.stringify(roomData.gameState, null, 2));
+          
+          // Remove gameState from updates to avoid double assignment
+          const { gameState, ...otherUpdates } = updates;
+          Object.assign(roomData, otherUpdates);
+        } else {
+          // No gameState to merge, use regular assignment
+          Object.assign(roomData, updates);
+        }
+        
+        console.log('🟢 [ROOMS-SERVICE] Final roomData.gameState:', JSON.stringify(roomData.gameState, null, 2));
 
         // Update room in Redis
         const setResponse = await fetch(`${REDIS_URL}/setex/room:${roomCode}/28800`, {

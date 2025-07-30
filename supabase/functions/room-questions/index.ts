@@ -364,6 +364,22 @@ serve(async (req) => {
       console.log('🔵 [ROOM-QUESTIONS] About to update room with aiQuestions');
 
       // Update room state with AI questions
+      const updatePayload = {
+        action: 'update',
+        roomCode: roomCode,
+        updates: {
+          gameState: {
+            aiQuestions: aiQuestions,
+            aiCustomization: customization,
+            questionsGenerated: true,
+            crazynessLevel: crazynessLevel,
+            generatedForGame: gameType
+          }
+        }
+      };
+      
+      console.log('🟡 [ROOM-QUESTIONS] Update payload being sent:', JSON.stringify(updatePayload, null, 2));
+      
       const updateResponse = await fetch(`${functionsUrl}/rooms-service`, {
         method: 'POST',
         headers: {
@@ -371,24 +387,19 @@ serve(async (req) => {
           'apikey': supabaseAnonKey,
           'Authorization': `Bearer ${supabaseAnonKey}`
         },
-        body: JSON.stringify({
-          action: 'update',
-          roomCode: roomCode,
-          updates: {
-            gameState: {
-              aiQuestions: aiQuestions,
-              aiCustomization: customization,
-              questionsGenerated: true,
-              crazynessLevel: crazynessLevel,
-              generatedForGame: gameType
-            }
-          }
-        })
+        body: JSON.stringify(updatePayload)
       });
 
+      console.log('🟡 [ROOM-QUESTIONS] Update response status:', updateResponse.status);
+      
       if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        console.error('🔴 [ROOM-QUESTIONS] Failed to update room:', errorText);
         throw new Error('Failed to store AI questions in room state');
       }
+      
+      const updateResult = await updateResponse.json();
+      console.log('🟢 [ROOM-QUESTIONS] Update successful, result:', JSON.stringify(updateResult, null, 2));
 
       console.log(`Successfully stored ${questions.questions?.length || 0} Would You Rather AI questions for room ${roomCode} with ${crazynessLevel}% craziness`);
     } else {
