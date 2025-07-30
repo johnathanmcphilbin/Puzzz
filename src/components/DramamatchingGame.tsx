@@ -127,13 +127,6 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
         }
       };
 
-      await onUpdateRoom({
-        gameState: {
-          ...room.gameState,
-          selfies: updatedSelfies
-        }
-      });
-
       // Get all other players with selfies (excluding current player)
       const otherPlayersWithSelfies = Object.keys(updatedSelfies).filter(id => id !== currentPlayer.playerId);
       
@@ -166,7 +159,26 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
 
       if (error) throw error;
 
-      setMatchResult(data);
+      // Create a unique match ID and store the result in room state
+      const matchId = `${currentPlayer.playerId}-${randomPlayerId}-${Date.now()}`;
+      const matchResult = {
+        ...data,
+        matchId,
+        timestamp: Date.now()
+      };
+
+      // Store the match result in room state so all players see the same result
+      const existingMatches = room.gameState?.matches || [];
+      await onUpdateRoom({
+        gameState: {
+          ...room.gameState,
+          selfies: updatedSelfies,
+          matches: [...existingMatches, matchResult],
+          latestMatchId: matchId
+        }
+      });
+
+      setMatchResult(matchResult);
       toast.success('Drama match complete! 🎭');
     } catch (error) {
       console.error('Matching error:', error);
@@ -187,6 +199,19 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
   const playersWithSelfies = Object.keys(currentSelfies).length;
   const totalPlayers = players.length;
   const currentPlayerHasSelfie = currentSelfies[currentPlayer.playerId] !== undefined;
+
+  // Check if there's a recent match involving this player
+  React.useEffect(() => {
+    const matches = room.gameState?.matches || [];
+    const latestMatch = matches.find((match: any) => 
+      match.player1.name === currentPlayer.playerName || 
+      match.player2.name === currentPlayer.playerName
+    );
+    
+    if (latestMatch && !matchResult) {
+      setMatchResult(latestMatch);
+    }
+  }, [room.gameState?.matches, currentPlayer.playerName, matchResult]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-red-900 p-4">
