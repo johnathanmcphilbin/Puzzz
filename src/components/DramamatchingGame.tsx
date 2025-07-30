@@ -67,7 +67,7 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
     setIsCapturing(false);
   };
 
-  const takeSelfie = () => {
+  const takeSelfie = async () => {
     if (videoRef.current && canvasRef.current) {
       const canvas = canvasRef.current;
       const video = videoRef.current;
@@ -80,7 +80,27 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
       setSelfie(imageData);
       stopCamera();
-      toast.success('Selfie captured!');
+      
+      // Immediately store the selfie so other players can see the progress
+      try {
+        const currentSelfies = room.gameState?.selfies || {};
+        await onUpdateRoom({
+          gameState: {
+            ...room.gameState,
+            selfies: {
+              ...currentSelfies,
+              [currentPlayer.playerId]: {
+                name: currentPlayer.playerName,
+                selfie: imageData
+              }
+            }
+          }
+        });
+        toast.success('Selfie captured and shared!');
+      } catch (error) {
+        console.error('Error storing selfie:', error);
+        toast.success('Selfie captured!');
+      }
     }
   };
 
@@ -95,34 +115,37 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
       return;
     }
 
-    // Get all players with selfies (stored in room.gameState.selfies)
-    const selfies = room.gameState?.selfies || {};
-    const playersWithSelfies = Object.keys(selfies).filter(id => id !== currentPlayer.id);
-    
-    if (playersWithSelfies.length === 0) {
-      toast.error('No other players have selfies yet!');
-      return;
-    }
-
     setIsMatching(true);
     try {
-      // Store current player's selfie
+      // First store current player's selfie
+      const currentSelfies = room.gameState?.selfies || {};
+      const updatedSelfies = {
+        ...currentSelfies,
+        [currentPlayer.playerId]: {
+          name: currentPlayer.playerName,
+          selfie: selfie
+        }
+      };
+
       await onUpdateRoom({
         gameState: {
           ...room.gameState,
-          selfies: {
-            ...selfies,
-            [currentPlayer.id]: {
-              name: currentPlayer.name,
-              selfie: selfie
-            }
-          }
+          selfies: updatedSelfies
         }
       });
 
+      // Get all other players with selfies (excluding current player)
+      const otherPlayersWithSelfies = Object.keys(updatedSelfies).filter(id => id !== currentPlayer.playerId);
+      
+      if (otherPlayersWithSelfies.length === 0) {
+        toast.error('No other players have selfies yet! Wait for others to take their photos.');
+        setIsMatching(false);
+        return;
+      }
+
       // Select random player for matching
-      const randomPlayerId = playersWithSelfies[Math.floor(Math.random() * playersWithSelfies.length)];
-      const matchedPlayer = randomPlayerId ? selfies[randomPlayerId] : null;
+      const randomPlayerId = otherPlayersWithSelfies[Math.floor(Math.random() * otherPlayersWithSelfies.length)];
+      const matchedPlayer = randomPlayerId ? updatedSelfies[randomPlayerId] : null;
       
       if (!matchedPlayer) {
         toast.error('Selected player data not found!');
@@ -134,7 +157,7 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
       const { data, error } = await supabase.functions.invoke('drama-matching', {
         body: {
           player1: {
-            name: currentPlayer.name,
+            name: currentPlayer.playerName,
             selfie: selfie
           },
           player2: matchedPlayer
@@ -159,6 +182,12 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
     stopCamera();
   };
 
+  // Calculate selfie progress
+  const currentSelfies = room.gameState?.selfies || {};
+  const playersWithSelfies = Object.keys(currentSelfies).length;
+  const totalPlayers = players.length;
+  const currentPlayerHasSelfie = currentSelfies[currentPlayer.playerId] !== undefined;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-red-900 p-4">
       <div className="max-w-4xl mx-auto">
@@ -172,6 +201,25 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Progress Counter */}
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Badge variant="secondary" className="bg-pink-500/20 text-pink-300 border-pink-400 px-4 py-2">
+                  📸 {playersWithSelfies}/{totalPlayers} players have selfies
+                </Badge>
+                {currentPlayerHasSelfie && (
+                  <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-400">
+                    ✅ You're ready!
+                  </Badge>
+                )}
+              </div>
+              {currentPlayerHasSelfie && playersWithSelfies < totalPlayers && (
+                <p className="text-pink-300 text-sm mb-4">
+                  Waiting for other players to take their selfies...
+                </p>
+              )}
+            </div>
+
             {!matchResult ? (
               <>
                 {/* Selfie Capture Section */}
