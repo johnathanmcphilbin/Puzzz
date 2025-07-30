@@ -49,45 +49,85 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
   const answers: PlayerAnswer[] = gameState.currentAnswers || [];
 
   const generateQuestions = async () => {
-    if (!prompt.trim()) {
-      toast.error('Please enter a topic or theme for the questions');
-      return;
-    }
-
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('room-questions', {
-        body: {
-          roomCode: room.roomCode,
-          customization: prompt.trim(),
-          gameType: 'forms',
-          questionCount: 25
-        }
-      });
+      let questions: Question[] = [];
 
-      if (error) throw error;
+      if (prompt.trim()) {
+        // Generate AI questions with custom prompt
+        const { data, error } = await supabase.functions.invoke('room-questions', {
+          body: {
+            roomCode: room.roomCode,
+            customization: prompt.trim(),
+            gameType: 'forms',
+            questionCount: 25
+          }
+        });
 
-      const questions: Question[] = data.questions.map((q: any, index: number) => ({
-        id: `q-${index}`,
-        text: q.text,
-        type: q.type,
-        votes: 0,
-        playerVotes: []
-      }));
+        if (error) throw error;
+
+        questions = data.questions.map((q: any, index: number) => ({
+          id: `q-${index}`,
+          text: q.text,
+          type: q.type,
+          votes: 0,
+          playerVotes: []
+        }));
+      } else {
+        // Load default questions from database
+        const { data: formsData, error: formsError } = await supabase
+          .from('forms_questions')
+          .select('*')
+          .limit(25);
+
+        if (formsError) throw formsError;
+
+        // Convert database questions to Forms game format
+        questions = (formsData || []).map((q: any, index: number) => ({
+          id: `q-${index}`,
+          text: q.question,
+          type: 'yes_no', // Default to yes/no for database questions
+          votes: 0,
+          playerVotes: []
+        }));
+
+        // Add some "most likely to" questions manually for variety
+        const mostLikelyQuestions = [
+          'Who is most likely to become famous?',
+          'Who is most likely to sleep through their alarm?',
+          'Who is most likely to win a game show?',
+          'Who is most likely to adopt a stray animal?',
+          'Who is most likely to become a millionaire?'
+        ].map((text, index) => ({
+          id: `ml-${index}`,
+          text,
+          type: 'most_likely' as const,
+          votes: 0,
+          playerVotes: []
+        }));
+
+        questions = [...questions, ...mostLikelyQuestions];
+      }
+
+      if (questions.length === 0) {
+        toast.error('No questions available. Please try again.');
+        return;
+      }
 
       await onUpdateRoom({
         gameState: {
           ...gameState,
           phase: 'question-voting',
           generatedQuestions: questions,
-          prompt: prompt.trim()
+          prompt: prompt.trim() || 'Default Questions'
         }
       });
 
-      toast.success(`Generated ${questions.length} questions! Now vote for your favorites.`);
+      const sourceText = prompt.trim() ? 'AI-generated' : 'default';
+      toast.success(`Loaded ${questions.length} ${sourceText} questions! Now vote for your favorites.`);
     } catch (error) {
       console.error('Error generating questions:', error);
-      toast.error('Failed to generate questions. Please try again.');
+      toast.error('Failed to load questions. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -237,29 +277,31 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                 <>
                   <div className="space-y-4">
                     <Label htmlFor="prompt" className="text-blue-200">
-                      Enter a topic or theme for the questions:
+                      Enter a topic or theme (optional):
                     </Label>
                     <Input
                       id="prompt"
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="e.g., 'college friends', 'work colleagues', 'party crowd'"
+                      placeholder="e.g., 'college friends', 'work colleagues' - or leave blank for default questions"
                       className="bg-black/30 border-blue-500/50 text-white placeholder-blue-300"
                       onKeyPress={(e) => e.key === 'Enter' && !isGenerating && generateQuestions()}
                     />
                   </div>
                   <Button
                     onClick={generateQuestions}
-                    disabled={!prompt.trim() || isGenerating}
+                    disabled={isGenerating}
                     className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
                   >
                     {isGenerating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating Questions...
+                        Loading Questions...
                       </>
+                    ) : prompt.trim() ? (
+                      '🤖 Generate Custom Questions with AI'
                     ) : (
-                      '🤖 Generate Questions with AI'
+                      '📋 Load Default Questions'
                     )}
                   </Button>
                 </>
