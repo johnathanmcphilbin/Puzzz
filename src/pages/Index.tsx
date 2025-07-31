@@ -581,6 +581,82 @@ const Index = () => {
             </Card>
             */}
 
+            {/* Cat Coup Game */}
+            <Card 
+              className="cursor-pointer hover:scale-105 transition-all duration-300 group overflow-hidden"
+              onClick={() => handleGameClick('coup')}
+            >
+              <div className="relative aspect-video w-full overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-500 flex items-center justify-center">
+                  <div className="text-6xl">👑</div>
+                </div>
+                <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+                  <span className="bg-orange-500 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                    BETA
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Cat Coup</CardTitle>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>👑 Cat Coup</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            A game of deduction, deception, and cute cats! Use bluffing and strategy to be the last player standing.
+                          </p>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">How to Play:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Each player starts with 2 coins and 2 influence cards</li>
+                              <li>• Take turns performing actions with cat characters</li>
+                              <li>• Bluff about your cards or challenge others</li>
+                              <li>• Lose influence when challenged or attacked</li>
+                              <li>• Last player with influence wins!</li>
+                            </ul>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Cat Characters:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• 🩰 Ballet Cat: Tax (3 coins), Block Foreign Aid</li>
+                              <li>• 🦕 Dino Cat: Assassinate opponents</li>
+                              <li>• ✨ Aura Cat: Steal coins from others</li>
+                              <li>• 😎 Chill Cat: Exchange cards, Block stealing</li>
+                              <li>• 👑 Princess Cat: Block assassination</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <span>Bluffing & Strategy</span>
+                    <span>•</span>
+                    <span>3-6 players</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-6 pt-0 flex-grow flex flex-col justify-between">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    A game of deduction and deception! Use cat characters to bluff, steal, and eliminate opponents in this strategic social game.
+                  </p>
+                </CardContent>
+              </div>
+            </Card>
+
           </div>
         </div>
       </div>
