@@ -168,7 +168,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
   };
 
   const getCurrentGamePlayer = () => {
-    return gameState.players.find(p => p.id === currentPlayer.id);
+    return (gameState.players || []).find(p => p.id === currentPlayer.id);
   };
 
   const isCurrentPlayerTurn = () => {
@@ -354,7 +354,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
   };
 
   const getAvailableTargets = () => {
-    return gameState.players.filter(p => p.id !== currentPlayer.id && !p.eliminated);
+    return (gameState.players || []).filter(p => p.id !== currentPlayer.id && !p.eliminated);
   };
 
   const renderPlayerCard = (player: CoupPlayer) => {
@@ -373,7 +373,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 mb-2">
-            {player.influences.map((influence, index) => (
+            {(player.influences || []).map((influence, index) => (
               <div
                 key={influence.id}
                 className={`w-12 h-16 rounded border-2 ${influence.revealed ? 'border-destructive' : 'border-primary'} bg-card flex items-center justify-center`}
@@ -484,7 +484,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
   };
 
   useEffect(() => {
-    if (room.gameState && room.gameState.phase) {
+    if (room.gameState && room.gameState.phase && room.gameState.players) {
       setGameState(room.gameState);
     }
   }, [room.gameState]);
@@ -530,7 +530,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {gameState.players.map(renderPlayerCard)}
+        {(gameState.players || []).map(renderPlayerCard)}
       </div>
 
       {renderActionButtons()}
@@ -539,7 +539,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
       <div className="bg-muted p-4 rounded-lg">
         <h3 className="font-semibold mb-2">Action Log</h3>
         <div className="space-y-1 max-h-32 overflow-y-auto">
-          {gameState.actionLog.slice(-5).map((log, index) => (
+          {(gameState.actionLog || []).slice(-5).map((log, index) => (
             <p key={index} className="text-sm">{log}</p>
           ))}
         </div>
