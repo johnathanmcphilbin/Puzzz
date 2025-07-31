@@ -150,6 +150,8 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
         return;
       }
 
+      console.log('Generated questions:', questions);
+
       await onUpdateRoom({
         gameState: {
           ...gameState,
@@ -163,7 +165,25 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
       toast.success(`Loaded ${questions.length} ${sourceText} questions! Now vote for your favorites.`);
     } catch (error) {
       console.error('Error generating questions:', error);
-      toast.error('Failed to load questions. Please try again.');
+      // Even if there's an error, provide fallback questions
+      const fallbackQuestions: Question[] = [
+        { id: 'f1', text: 'Do you prefer coffee over tea?', type: 'yes_no', votes: 0, playerVotes: [] },
+        { id: 'f2', text: 'Would you rather be invisible or fly?', type: 'yes_no', votes: 0, playerVotes: [] },
+        { id: 'f3', text: 'Do you believe in aliens?', type: 'yes_no', votes: 0, playerVotes: [] },
+        { id: 'f4', text: 'Who is most likely to become famous?', type: 'most_likely', votes: 0, playerVotes: [] },
+        { id: 'f5', text: 'Who is most likely to sleep through their alarm?', type: 'most_likely', votes: 0, playerVotes: [] }
+      ];
+
+      await onUpdateRoom({
+        gameState: {
+          ...gameState,
+          phase: 'question-voting',
+          generatedQuestions: fallbackQuestions,
+          prompt: 'Emergency Fallback Questions'
+        }
+      });
+
+      toast.success(`Loaded ${fallbackQuestions.length} emergency questions! Now vote for your favorites.`);
     } finally {
       setIsGenerating(false);
     }
