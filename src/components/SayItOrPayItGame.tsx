@@ -458,7 +458,7 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
         )}
 
         {/* Host Controls */}
-        {currentPlayer.isHost && phase === 'playing' && !currentQuestion && (
+        {currentPlayer.isHost && phase === 'playing' && !currentQuestion && currentRound > 1 && (
           <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl">
             <CardContent className="p-4 text-center">
               <Button
@@ -467,6 +467,23 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
               >
                 🎲 Random Question
               </Button>
+              <Button
+                onClick={resetGame}
+                variant="outline"
+              >
+                Reset Game
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* First Round Instructions */}
+        {currentPlayer.isHost && phase === 'playing' && !currentQuestion && currentRound === 1 && (
+          <Card className="bg-card/95 border-yellow-500/50 backdrop-blur-sm shadow-xl">
+            <CardContent className="p-4 text-center">
+              <p className="text-yellow-300 mb-4">
+                🎯 Round 1 started! Players can now submit questions for {hotSeatPlayer?.playerName}
+              </p>
               <Button
                 onClick={resetGame}
                 variant="outline"
