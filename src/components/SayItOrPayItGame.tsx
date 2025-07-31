@@ -133,7 +133,8 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
     try {
       // AI auto-chooses spice level randomly
       const spiceLevels = ['mild', 'spicy', 'nuclear'] as const;
-      const randomSpiceLevel = spiceLevels[Math.floor(Math.random() * spiceLevels.length)];
+      const randomIndex = Math.floor(Math.random() * spiceLevels.length);
+      const randomSpiceLevel = spiceLevels[randomIndex]!; // Non-null assertion since we know index is valid
 
       const newQuestion: Question = {
         id: `custom-${Date.now()}`,
