@@ -599,7 +599,7 @@ const Index = () => {
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Coup</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Cat Conspiracy</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -613,7 +613,7 @@ const Index = () => {
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                          <DialogTitle>👑 Coup</DialogTitle>
+                          <DialogTitle>👑 Cat Conspiracy</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
                           <p className="text-sm text-muted-foreground">

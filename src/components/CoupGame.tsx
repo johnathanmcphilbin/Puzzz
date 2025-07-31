@@ -507,7 +507,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
     return (
       <div className="container mx-auto p-4 space-y-6">
         <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">Coup</h1>
+          <h1 className="text-3xl font-bold">Cat Conspiracy</h1>
           <p className="text-muted-foreground">
             A game of deduction, deception, and cute cats! Each player gets 2 influence cards and must be the last one standing.
           </p>
@@ -539,7 +539,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold">Coup</h1>
+        <h1 className="text-2xl font-bold">Cat Conspiracy</h1>
         <p className="text-muted-foreground">Treasury: {gameState.treasury} coins</p>
       </div>
 
