@@ -457,16 +457,27 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
           </Card>
         )}
 
-        {/* Host Controls */}
-        {currentPlayer.isHost && phase === 'playing' && !currentQuestion && currentRound > 1 && (
-          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl">
-            <CardContent className="p-4 text-center">
+        {/* Hot Seat Player Controls */}
+        {isHotSeat && phase === 'playing' && !currentQuestion && (
+          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl mb-6">
+            <CardContent className="p-6 text-center">
+              <p className="text-blue-300 mb-4">
+                🎯 You're in the hot seat! Generate an AI question or wait for others to submit one.
+              </p>
               <Button
                 onClick={generateRandomQuestion}
-                className="mr-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
               >
-                🎲 Random Question
+                🎲 Get AI Question
               </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Host Controls */}
+        {currentPlayer.isHost && (
+          <Card className="bg-card/95 border-gray-500/50 backdrop-blur-sm shadow-xl">
+            <CardContent className="p-4 text-center">
               <Button
                 onClick={resetGame}
                 variant="outline"
