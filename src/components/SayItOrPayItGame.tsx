@@ -457,12 +457,12 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
           </Card>
         )}
 
-        {/* Hot Seat Player Controls */}
-        {isHotSeat && phase === 'playing' && !currentQuestion && (
+        {/* Non-Hot Seat Player Controls */}
+        {!isHotSeat && phase === 'playing' && !currentQuestion && (
           <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl mb-6">
             <CardContent className="p-6 text-center">
               <p className="text-blue-300 mb-4">
-                🎯 You're in the hot seat! Generate an AI question or wait for others to submit one.
+                🎯 Generate an AI question for {hotSeatPlayer?.playerName} or submit your own below.
               </p>
               <Button
                 onClick={generateRandomQuestion}
@@ -478,23 +478,6 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
         {currentPlayer.isHost && (
           <Card className="bg-card/95 border-gray-500/50 backdrop-blur-sm shadow-xl">
             <CardContent className="p-4 text-center">
-              <Button
-                onClick={resetGame}
-                variant="outline"
-              >
-                Reset Game
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* First Round Instructions */}
-        {currentPlayer.isHost && phase === 'playing' && !currentQuestion && currentRound === 1 && (
-          <Card className="bg-card/95 border-yellow-500/50 backdrop-blur-sm shadow-xl">
-            <CardContent className="p-4 text-center">
-              <p className="text-yellow-300 mb-4">
-                🎯 Round 1 started! Players can now submit questions for {hotSeatPlayer?.playerName}
-              </p>
               <Button
                 onClick={resetGame}
                 variant="outline"
