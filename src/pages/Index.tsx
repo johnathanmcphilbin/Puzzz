@@ -646,7 +646,7 @@ const Index = () => {
                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
                     <span>Bluffing & Strategy</span>
                     <span>•</span>
-                    <span>3-6 players</span>
+                    <span>2-10 players</span>
                   </div>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-6 pt-0 flex-grow flex flex-col justify-between">
