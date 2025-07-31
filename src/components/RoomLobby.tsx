@@ -170,25 +170,37 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
      }
 
      setIsStarting(true);
-    try {
-      const gameState = selectedGame === "paranoia" ? {
-        phase: "waiting",
-        currentTurnIndex: 0,
-        playerOrder: [],
-        currentRound: 1,
-        currentQuestion: null,
-        currentAnswer: null,
-        targetPlayerId: null,
-        usedAskers: [],
-        lastRevealResult: null,
-        isFlipping: false
-      } : {
-        phase: (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "setup" : "playing",
-        currentQuestion: null,
-        questionIndex: 0,
-        votes: {},
-        showResults: false
-      };
+     try {
+       const gameState = selectedGame === "paranoia" ? {
+         phase: "waiting",
+         currentTurnIndex: 0,
+         playerOrder: [],
+         currentRound: 1,
+         currentQuestion: null,
+         currentAnswer: null,
+         targetPlayerId: null,
+         usedAskers: [],
+         lastRevealResult: null,
+         isFlipping: false
+       } : selectedGame === "coup" ? {
+         phase: "playing",
+         currentPlayerIndex: 0,
+         players: players.map(p => ({
+           id: p.player_id,
+           name: p.player_name,
+           coins: 2,
+           influence: ['ballet-cat', 'dino-cat'], // Will be randomized in game component
+           alive: true
+         })),
+         pendingAction: null,
+         actionQueue: []
+       } : {
+         phase: (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "setup" : "playing",
+         currentQuestion: null,
+         questionIndex: 0,
+         votes: {},
+         showResults: false
+       };
 
       // Update room state via Redis-based rooms-service
       const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
@@ -209,7 +221,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         throw new Error(errorData.error || 'Failed to start game');
       }
 
-      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Dogpatch game" : selectedGame === "dramamatching" ? "Dramamatching" : selectedGame === "forms" ? "Forms Game" : selectedGame === "say_it_or_pay_it" ? "Say it or pay it" : "Would You Rather";
+      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Dogpatch game" : selectedGame === "dramamatching" ? "Dramamatching" : selectedGame === "forms" ? "Forms Game" : selectedGame === "say_it_or_pay_it" ? "Say it or pay it" : selectedGame === "coup" ? "Cat Conspiracy" : "Would You Rather";
       
       toast({
         title: "Game Started!",
@@ -544,6 +556,26 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                        </div>
                        <div className="flex items-center gap-2">
                          <div className="w-6 h-6 bg-red-500 rounded text-xs flex items-center justify-center text-white font-bold">💬</div>
+                      </div>
+                    </div>
+                   </div>
+
+                   {/* Cat Conspiracy Game */}
+                   <div 
+                     className={`relative p-4 border rounded-lg transition-all ${
+                       currentPlayer.is_host
+                         ? `cursor-pointer ${selectedGame === "coup" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                         : "border-muted"
+                     }`}
+                     onClick={() => currentPlayer.is_host && setSelectedGame("coup")}
+                   >
+                     <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold">👑 Cat Conspiracy</h4>
+                          <p className="text-sm text-muted-foreground">Bluffing & strategy with cats (2-10 players)</p>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-6 h-6 bg-purple-500 rounded text-xs flex items-center justify-center text-white font-bold">👑</div>
                       </div>
                     </div>
                    </div>
