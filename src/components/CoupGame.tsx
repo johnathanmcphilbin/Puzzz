@@ -193,20 +193,60 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
       role
     };
 
-    // Check if action can be challenged
+    // Check if action can be challenged or blocked
     const challengeable = ['tax', 'steal', 'exchange', 'assassinate'];
+    const blockable = ['foreign-aid', 'steal', 'assassinate'];
+    
     if (challengeable.includes(action)) {
-      setGameState(prev => ({
-        ...prev,
-        phase: 'challenge-pending',
-        pendingAction,
-        challengeTimer: 10
-      }));
+      setGameState(prev => {
+        const newState = {
+          ...prev,
+          phase: 'challenge-pending' as const,
+          pendingAction,
+          challengeTimer: 10
+        };
+        updateRoomGameState(newState);
+        return newState;
+      });
       
       // Auto-resolve if no challenge after timer
       setTimeout(() => {
         setGameState(prev => {
           if (prev.phase === 'challenge-pending') {
+            // Check if action can be blocked
+            if (blockable.includes(action)) {
+              const newState = {
+                ...prev,
+                phase: 'block-pending' as const,
+                blockTimer: 10
+              };
+              updateRoomGameState(newState);
+              return newState;
+            } else {
+              const newState = resolveAction(prev);
+              updateRoomGameState(newState);
+              return newState;
+            }
+          }
+          return prev;
+        });
+      }, 10000);
+    } else if (blockable.includes(action)) {
+      // Actions that can be blocked but not challenged
+      setGameState(prev => {
+        const newState = {
+          ...prev,
+          phase: 'block-pending' as const,
+          pendingAction,
+          blockTimer: 10
+        };
+        updateRoomGameState(newState);
+        return newState;
+      });
+      
+      setTimeout(() => {
+        setGameState(prev => {
+          if (prev.phase === 'block-pending') {
             const newState = resolveAction(prev);
             updateRoomGameState(newState);
             return newState;
@@ -215,7 +255,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
         });
       }, 10000);
     } else {
-      // Actions that can't be challenged
+      // Actions that can't be challenged or blocked
       setGameState(currentState => {
         const newState = resolveAction({ ...currentState, pendingAction });
         updateRoomGameState(newState);
@@ -338,11 +378,19 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
     const canBlock = COUP_ROLES[blockingRole].blocks.includes(action.type as any);
 
     if (canBlock) {
-      setGameState(prev => ({
-        ...prev,
-        phase: 'challenge-pending', // Block can be challenged
-        actionLog: [...prev.actionLog, `${blocker.name} attempts to block with ${COUP_ROLES[blockingRole].name}`]
-      }));
+      setGameState(prev => {
+        const newState = {
+          ...prev,
+          phase: 'challenge-pending' as const, // Block can be challenged
+          actionLog: [...prev.actionLog, `${blocker.name} attempts to block with ${COUP_ROLES[blockingRole].name}`],
+          pendingAction: {
+            ...prev.pendingAction!,
+            role: blockingRole // Store which role was claimed for blocking
+          }
+        };
+        updateRoomGameState(newState);
+        return newState;
+      });
     }
   };
 
@@ -487,8 +535,80 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
                   Challenge
                 </Button>
               )}
-              <Button onClick={() => setGameState(prev => resolveAction(prev))} variant="outline">
+              <Button onClick={() => {
+                setGameState(prev => {
+                  // Check if action can be blocked after challenge phase
+                  const blockable = ['foreign-aid', 'steal', 'assassinate'];
+                  if (blockable.includes(prev.pendingAction!.type)) {
+                    const newState = {
+                      ...prev,
+                      phase: 'block-pending' as const,
+                      blockTimer: 10
+                    };
+                    updateRoomGameState(newState);
+                    return newState;
+                  } else {
+                    const newState = resolveAction(prev);
+                    updateRoomGameState(newState);
+                    return newState;
+                  }
+                });
+              }} variant="outline">
                 Allow
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  const renderBlockDialog = () => {
+    if (gameState.phase !== 'block-pending' || !gameState.pendingAction) return null;
+
+    const action = gameState.pendingAction;
+    const actor = gameState.players.find(p => p.id === action.playerId)!;
+    const canBlock = currentPlayer.id !== action.playerId;
+    const targetedPlayer = action.targetId === currentPlayer.id;
+
+    // Get possible blocking roles for this action
+    const blockingRoles = Object.entries(COUP_ROLES).filter(([role, data]) => 
+      data.blocks.includes(action.type as any)
+    );
+
+    return (
+      <Dialog open={true}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Block Opportunity</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>{actor.name} is attempting to {action.type}
+              {action.targetId ? ` against ${gameState.players.find(p => p.id === action.targetId)?.name}` : ''}
+            </p>
+            {targetedPlayer && <p className="text-destructive font-medium">You are the target!</p>}
+            <p>Do you want to block this action?</p>
+            <div className="flex flex-wrap gap-2">
+              {canBlock && blockingRoles.map(([role, data]) => (
+                <Button 
+                  key={role}
+                  onClick={() => blockAction(role as CoupRole)} 
+                  variant="secondary"
+                >
+                  Block with {data.name}
+                </Button>
+              ))}
+              <Button 
+                onClick={() => {
+                  setGameState(prev => {
+                    const newState = resolveAction(prev);
+                    updateRoomGameState(newState);
+                    return newState;
+                  });
+                }} 
+                variant="outline"
+              >
+                Allow Action
               </Button>
             </div>
           </div>
@@ -549,6 +669,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
 
       {renderActionButtons()}
       {renderChallengeDialog()}
+      {renderBlockDialog()}
 
       <div className="bg-muted p-4 rounded-lg">
         <h3 className="font-semibold mb-2">Action Log</h3>
