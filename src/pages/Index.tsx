@@ -581,13 +581,14 @@ const Index = () => {
             </Card>
             */}
 
-            {/* Cat Coup Game */}
+            {/* Cat Conspiracy Game */}
             <Card 
-              className="cursor-pointer hover:scale-105 transition-all duration-300 group overflow-hidden"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-purple-500/20 to-blue-500/20 overflow-hidden h-full"
               onClick={() => handleGameClick('coup')}
             >
-              <div className="relative aspect-video w-full overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-500 flex items-center justify-center">
+              <div className="aspect-video bg-gradient-to-br from-purple-500 to-blue-500 relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
+                <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-6xl">👑</div>
                 </div>
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
@@ -649,11 +650,6 @@ const Index = () => {
                     <span>2-10 players</span>
                   </div>
                 </CardHeader>
-                <CardContent className="p-2 sm:p-6 pt-0 flex-grow flex flex-col justify-between">
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    A game of deduction and deception! Use cat characters to bluff, steal, and eliminate opponents in this strategic social game.
-                  </p>
-                </CardContent>
               </div>
             </Card>
 
