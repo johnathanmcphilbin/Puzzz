@@ -94,11 +94,6 @@ const Index = () => {
                     style={{ objectPosition: 'center 68%' }}
                   />
                 </div>
-                <div className="absolute top-1 right-1 sm:top-3 sm:right-3">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
-                    LIVE
-                  </span>
-                </div>
               </div>
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
@@ -169,11 +164,6 @@ const Index = () => {
                     className="w-full h-full object-cover object-center"
                     style={{ objectPosition: 'center 65%' }}
                   />
-                </div>
-                <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
-                    NEW
-                  </span>
                 </div>
               </div>
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
@@ -246,11 +236,6 @@ const Index = () => {
                     style={{ objectPosition: 'center 50%' }}
                   />
                 </div>
-                <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
-                    LIVE
-                  </span>
-                </div>
               </div>
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
@@ -317,8 +302,8 @@ const Index = () => {
                   <div className="text-6xl">🎭</div>
                 </div>
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
-                    NEW
+                  <span className="bg-orange-500 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                    BETA
                   </span>
                 </div>
               </div>
@@ -388,8 +373,8 @@ const Index = () => {
                   <div className="text-6xl">📋</div>
                 </div>
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
-                    NEW
+                  <span className="bg-orange-500 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                    BETA
                   </span>
                 </div>
               </div>
@@ -459,8 +444,8 @@ const Index = () => {
                   <div className="text-6xl">🔥</div>
                 </div>
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-                  <span className="bg-destructive text-destructive-foreground px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
-                    NEW
+                  <span className="bg-orange-500 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                    BETA
                   </span>
                 </div>
               </div>
