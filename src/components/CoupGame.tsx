@@ -207,14 +207,20 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
       setTimeout(() => {
         setGameState(prev => {
           if (prev.phase === 'challenge-pending') {
-            return resolveAction(prev);
+            const newState = resolveAction(prev);
+            updateRoomGameState(newState);
+            return newState;
           }
           return prev;
         });
       }, 10000);
     } else {
       // Actions that can't be challenged
-      setGameState(prev => resolveAction({ ...prev, pendingAction }));
+      setGameState(currentState => {
+        const newState = resolveAction({ ...currentState, pendingAction });
+        updateRoomGameState(newState);
+        return newState;
+      });
     }
   };
 
@@ -384,8 +390,16 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
                     alt={COUP_ROLES[influence.role].name}
                     className="w-8 h-8 object-cover rounded"
                   />
+                ) : isCurrentPlayer ? (
+                  // Only show actual cards to current player
+                  <img
+                    src={getCatImageUrl(COUP_ROLES[influence.role].icon)}
+                    alt={COUP_ROLES[influence.role].name}
+                    className="w-8 h-8 object-cover rounded"
+                  />
                 ) : (
-                  <div className="w-8 h-8 bg-muted rounded"></div>
+                  // Show card back to other players
+                  <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">?</div>
                 )}
               </div>
             ))}
@@ -493,7 +507,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
     return (
       <div className="container mx-auto p-4 space-y-6">
         <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">Cat Coup</h1>
+          <h1 className="text-3xl font-bold">Coup</h1>
           <p className="text-muted-foreground">
             A game of deduction, deception, and cute cats! Each player gets 2 influence cards and must be the last one standing.
           </p>
@@ -525,7 +539,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold">Cat Coup</h1>
+        <h1 className="text-2xl font-bold">Coup</h1>
         <p className="text-muted-foreground">Treasury: {gameState.treasury} coins</p>
       </div>
 
