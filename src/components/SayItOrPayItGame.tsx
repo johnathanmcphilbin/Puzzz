@@ -49,7 +49,6 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
   onUpdateRoom
 }) => {
   const [customQuestion, setCustomQuestion] = useState('');
-  const [selectedSpiceLevel, setSelectedSpiceLevel] = useState<'mild' | 'spicy' | 'nuclear'>('mild');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -76,38 +75,34 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
     "Share an embarrassing story"
   ];
 
+  const preloadedQuestions: Question[] = [
+    // Mild questions
+    { id: 'mild1', text: 'What\'s the most embarrassing thing you\'ve done in public?', spiceLevel: 'mild', source: 'ai' },
+    { id: 'mild2', text: 'What\'s a secret talent you have that no one knows about?', spiceLevel: 'mild', source: 'ai' },
+    { id: 'mild3', text: 'What\'s the weirdest food combination you actually enjoy?', spiceLevel: 'mild', source: 'ai' },
+    { id: 'mild4', text: 'What\'s your most irrational fear?', spiceLevel: 'mild', source: 'ai' },
+    { id: 'mild5', text: 'What\'s the dumbest thing you believed as a child?', spiceLevel: 'mild', source: 'ai' },
+    
+    // Spicy questions
+    { id: 'spicy1', text: 'Have you ever had a crush on someone in this room?', spiceLevel: 'spicy', source: 'ai' },
+    { id: 'spicy2', text: 'What\'s the biggest lie you\'ve ever told?', spiceLevel: 'spicy', source: 'ai' },
+    { id: 'spicy3', text: 'What\'s something you\'ve done that you hope your parents never find out about?', spiceLevel: 'spicy', source: 'ai' },
+    { id: 'spicy4', text: 'Who here do you think would be the worst roommate?', spiceLevel: 'spicy', source: 'ai' },
+    { id: 'spicy5', text: 'What\'s your most unpopular opinion about someone here?', spiceLevel: 'spicy', source: 'ai' },
+    
+    // Nuclear questions
+    { id: 'nuclear1', text: 'Who here do you find least attractive?', spiceLevel: 'nuclear', source: 'ai' },
+    { id: 'nuclear2', text: 'Have you ever cheated on a test or in a relationship?', spiceLevel: 'nuclear', source: 'ai' },
+    { id: 'nuclear3', text: 'What\'s the most illegal thing you\'ve ever done?', spiceLevel: 'nuclear', source: 'ai' },
+    { id: 'nuclear4', text: 'Who here would you least want to be stuck in an elevator with and why?', spiceLevel: 'nuclear', source: 'ai' },
+    { id: 'nuclear5', text: 'What\'s the meanest thing you\'ve ever said about someone here behind their back?', spiceLevel: 'nuclear', source: 'ai' }
+  ];
+
   const generateAIQuestions = async () => {
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('room-questions', {
-        body: {
-          roomCode: room.roomCode,
-          customization: `Generate truth questions for "Say it or pay it" game with spice levels from mild to nuclear. Include personal, relationship, and life questions.`,
-          gameType: 'say_it_or_pay_it',
-          crazynessLevel: 75, // Higher level for more diverse questions
-          questionCount: 30
-        }
-      });
-
-      if (error) throw error;
-
-      const aiQuestions: Question[] = data.questions.map((q: any, index: number) => ({
-        id: `ai-${index}`,
-        text: q.text,
-        spiceLevel: index < 10 ? 'mild' : index < 20 ? 'spicy' : 'nuclear',
-        source: 'ai'
-      }));
-
-      // Add some guaranteed fallback questions
-      const fallbackQuestions: Question[] = [
-        { id: 'fb1', text: 'What\'s the most embarrassing thing you\'ve done in public?', spiceLevel: 'mild', source: 'ai' },
-        { id: 'fb2', text: 'Have you ever had a crush on someone in this room?', spiceLevel: 'spicy', source: 'ai' },
-        { id: 'fb3', text: 'What\'s the biggest lie you\'ve ever told?', spiceLevel: 'spicy', source: 'ai' },
-        { id: 'fb4', text: 'Who here would you least want to be stuck in an elevator with?', spiceLevel: 'nuclear', source: 'ai' },
-        { id: 'fb5', text: 'Have you ever cheated on a test or in a relationship?', spiceLevel: 'nuclear', source: 'ai' }
-      ];
-
-      const allQuestions = aiQuestions.length > 0 ? aiQuestions : fallbackQuestions;
+      // Start with preloaded questions
+      const allQuestions = [...preloadedQuestions];
 
       await onUpdateRoom({
         gameState: {
@@ -119,7 +114,7 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
         }
       });
 
-      toast.success(`Generated ${allQuestions.length} questions! Let the game begin! 🔥`);
+      toast.success(`Loaded ${allQuestions.length} questions! Let the game begin! 🔥`);
     } catch (error) {
       console.error('Error generating questions:', error);
       toast.error('Failed to generate questions. Please try again.');
@@ -136,10 +131,14 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
 
     setIsSubmitting(true);
     try {
+      // AI auto-chooses spice level randomly
+      const spiceLevels = ['mild', 'spicy', 'nuclear'] as const;
+      const randomSpiceLevel = spiceLevels[Math.floor(Math.random() * spiceLevels.length)];
+
       const newQuestion: Question = {
         id: `custom-${Date.now()}`,
         text: customQuestion.trim(),
-        spiceLevel: selectedSpiceLevel,
+        spiceLevel: randomSpiceLevel,
         source: 'player',
         submittedBy: currentPlayer.playerName
       };
@@ -420,22 +419,9 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label>Spice Level:</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(spiceLevelConfig).map(([level, config]) => (
-                    <Button
-                      key={level}
-                      variant={selectedSpiceLevel === level ? 'default' : 'outline'}
-                      onClick={() => setSelectedSpiceLevel(level as any)}
-                      className="h-12"
-                    >
-                      {config.icon}<br />
-                      <span className="text-xs">{level}</span>
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                The AI will automatically assign a spice level to your question! 🎲
+              </p>
               
               <div className="flex gap-2">
                 <Button
