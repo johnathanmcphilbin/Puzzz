@@ -183,15 +183,9 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
          lastRevealResult: null,
          isFlipping: false
        } : selectedGame === "coup" ? {
-         phase: "playing",
+         phase: "waiting",
          currentPlayerIndex: 0,
-         players: players.map(p => ({
-           id: p.player_id,
-           name: p.player_name,
-           coins: 2,
-           influence: ['ballet-cat', 'dino-cat'], // Will be randomized in game component
-           alive: true
-         })),
+         players: [],
          pendingAction: null,
          actionQueue: []
        } : {
