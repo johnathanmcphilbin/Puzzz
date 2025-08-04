@@ -228,7 +228,7 @@ const Index = () => {
             >
               <div className="aspect-video bg-gradient-to-br from-amber-500 to-orange-600 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center bg-white">
                   <img 
                     src="/lovable-uploads/4e6b1f5d-d7f0-40a7-bf86-96b9457c20f8.png" 
                     alt="Odd One Out - Detective puzzle game"
