@@ -232,8 +232,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/4e6b1f5d-d7f0-40a7-bf86-96b9457c20f8.png" 
                     alt="Odd One Out - Detective puzzle game"
-                    className="w-full h-full object-cover object-center"
-                    style={{ objectPosition: 'center 50%' }}
+                    className="w-4/5 h-4/5 object-contain"
                   />
                 </div>
               </div>
