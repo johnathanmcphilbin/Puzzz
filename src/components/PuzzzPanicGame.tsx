@@ -1180,7 +1180,13 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      <div 
+        className="min-h-screen relative"
+        style={{
+          background: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('/lovable-uploads/de24dc2c-7e3c-4f05-9e34-a18dc7d1e29c.png') repeat center center`,
+          backgroundSize: 'auto'
+        }}
+      >
         <div className="flex h-screen">
           {/* Main Challenge Area */}
           <div className="flex-1 p-6 flex flex-col">
@@ -1266,7 +1272,13 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div className="min-h-screen gradient-bg p-6">
+      <div 
+        className="min-h-screen relative p-6"
+        style={{
+          background: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('/lovable-uploads/de24dc2c-7e3c-4f05-9e34-a18dc7d1e29c.png') repeat center center`,
+          backgroundSize: 'auto'
+        }}
+      >
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8">
             <Trophy className="h-16 w-16 mx-auto mb-4 text-yellow-500" />
