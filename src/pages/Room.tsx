@@ -8,6 +8,7 @@ import { DogpatchGame } from "@/components/DogpatchGame";
 import { NewFormsGame } from "@/components/NewFormsGame";
 import { DramamatchingGame } from "@/components/DramamatchingGame";
 import { SayItOrPayItGame } from "@/components/SayItOrPayItGame";
+import { PuzzzPanicGame } from "@/components/PuzzzPanicGame";
 import CoupGame from "@/components/CoupGame";
 import AIChatbot from "@/components/AIChatbot";
 import { Loader2 } from "lucide-react";
@@ -113,6 +114,13 @@ export const Room = () => {
         />
       ) : currentGame === "coup" ? (
         <CoupGame 
+          room={room as any} 
+          players={players as any} 
+          currentPlayer={currentPlayer as any}
+          onUpdateRoom={updateRoom}
+        />
+      ) : currentGame === "puzzz_panic" ? (
+        <PuzzzPanicGame 
           room={room as any} 
           players={players as any} 
           currentPlayer={currentPlayer as any}
