@@ -652,6 +652,73 @@ const Index = () => {
               </div>
             </Card>
 
+            {/* Puzzz Panic Game */}
+            <Card 
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-yellow-500/20 overflow-hidden h-full"
+              onClick={() => handleGameClick("puzzz_panic")}
+            >
+              <div className="aspect-video bg-gradient-to-br from-red-500 to-yellow-500 relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-6xl">⚡</div>
+                </div>
+              </div>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Puzzz Panic</CardTitle>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>⚡ Puzzz Panic</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            Fast-paced, interactive party game with 15 different rapid-fire challenges! Tap, swipe, think fast - each challenge completed in under 20 seconds.
+                          </p>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Challenge Types:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Tap to Ten - Tap exactly 10 times as fast as possible</li>
+                              <li>• Color Flash - Tap the word that matches its text</li>
+                              <li>• Reaction Time - Tap when the screen turns green</li>
+                              <li>• Quick Math - Solve equations rapidly</li>
+                              <li>• Memory Games - Pattern matching and recall</li>
+                              <li>• + 10 more exciting challenges!</li>
+                            </ul>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Features:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• 10 random challenges per game</li>
+                              <li>• Speed and accuracy scoring</li>
+                              <li>• Live leaderboard updates</li>
+                              <li>• Perfect for large groups (up to 250 players)</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <span>Fast Action</span>
+                    <span>•</span>
+                    <span>1-250 Players</span>
+                  </div>
+                </CardHeader>
+              </div>
+            </Card>
+
           </div>
         </div>
       </div>
