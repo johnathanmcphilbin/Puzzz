@@ -123,6 +123,15 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     return <div>Loading challenge...</div>;
   }
 
+  // Determine if current player is host
+  const isHost = currentPlayer?.isHost || false;
+  
+  // Host view logic - host doesn't participate but can see leaderboard
+  const showHostView = isHost && gamePhase === "challenge";
+  
+  // Get player responses for real-time updates
+  const playerResponses = room.gameState?.playerResponses || {};
+
   // Sync with room state
   useEffect(() => {
     if (room.gameState) {
@@ -417,11 +426,13 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     
     const shuffledChallenges = Array.from({length: 10}, () => Math.floor(Math.random() * CHALLENGES.length));
     
+    const activePlayers = players.filter(p => !p.isHost); // Only include non-host players in scoring
+    
     onUpdateRoom({
       gameState: {
         phase: "challenge",
         currentChallenge: 0,
-        scores: players.reduce((acc, p) => ({ ...acc, [p.id]: 0 }), {}),
+        scores: activePlayers.reduce((acc, p) => ({ ...acc, [p.id]: 0 }), {}),
         challengeOrder: shuffledChallenges,
         playerResponses: {}
       }
@@ -536,8 +547,9 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     if (gamePhase === "challenge" && currentPlayer.isHost) {
       const playerResponses = room.gameState?.playerResponses || {};
       const responseCount = Object.keys(playerResponses).length;
+      const activePlayers = players.filter(p => !p.isHost); // Exclude host from response count
       
-      if (responseCount === players.length) {
+      if (responseCount === activePlayers.length) {
         // Wait a moment then move to next challenge
         setTimeout(() => nextChallenge(), 2000);
       }
@@ -574,11 +586,11 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       case "color_word":
         return (
           <div className="text-center space-y-8">
-            <div className={`text-8xl font-bold ${colorWords?.color}`}>
-              {colorWords?.word}
+            <div className={`text-8xl font-bold ${colorWords?.color || 'text-red-500'}`}>
+              {colorWords?.word || 'Loading...'}
             </div>
             <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-              {colorWords?.options.map(word => (
+              {(colorWords?.options || []).map(word => (
                 <Button
                   key={word}
                   size="lg"
@@ -1034,10 +1046,17 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                     {player.playerName.charAt(0).toUpperCase()}
                   </div>
                   <span className="text-sm font-medium">{player.playerName}</span>
-                  {player.isHost && <Badge variant="secondary">Host</Badge>}
+                  {player.isHost && <Badge variant="secondary">Host (Spectator)</Badge>}
                 </div>
               ))}
             </div>
+            {currentPlayer.isHost && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  <strong>Host Info:</strong> You'll see the live leaderboard and player progress, but won't participate in challenges.
+                </p>
+              </div>
+            )}
           </Card>
 
           {currentPlayer.isHost && (
@@ -1048,6 +1067,102 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               </Button>
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  // Host View - Special screen for host during challenges
+  if (gamePhase === "challenge" && showHostView) {
+    const sortedPlayers = players
+      .filter(p => !p.isHost) // Exclude host from participating
+      .map(player => ({
+        ...player,
+        score: scores[player.id] || 0,
+        hasResponded: playerResponses[player.id] !== undefined
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    return (
+      <div className="min-h-screen gradient-bg p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-2">
+              🎮 Host Dashboard
+            </h1>
+            <div className="flex justify-center items-center gap-4 mb-4">
+              <Badge variant="outline">Challenge {currentChallengeIndex + 1}/10</Badge>
+              <Badge variant="outline" className="text-lg px-3 py-1">
+                <Clock className="h-4 w-4 mr-1" />
+                {timeLeft}s
+              </Badge>
+            </div>
+            <Progress value={(currentChallengeIndex / 10) * 100} className="mb-4" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Current Challenge Info */}
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold mb-4">{challenge.name}</h2>
+              <p className="text-lg mb-4">{challenge.instructions}</p>
+              <Badge variant="secondary" className="text-sm">
+                Players are solving this challenge...
+              </Badge>
+            </Card>
+
+            {/* Response Status */}
+            <Card className="p-6">
+              <h3 className="text-xl font-bold mb-4">Response Status</h3>
+              <div className="space-y-2">
+                {sortedPlayers.map(player => (
+                  <div 
+                    key={player.id}
+                    className={`flex justify-between items-center p-3 rounded-lg ${
+                      player.hasResponded 
+                        ? "bg-green-100 border border-green-300" 
+                        : "bg-yellow-100 border border-yellow-300"
+                    }`}
+                  >
+                    <span className="font-medium">{player.playerName}</span>
+                    <Badge variant={player.hasResponded ? "default" : "secondary"}>
+                      {player.hasResponded ? "✅ Done" : "⏳ Thinking..."}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* Live Leaderboard */}
+          <Card className="p-6 mt-6">
+            <h2 className="text-2xl font-bold mb-4 text-center">🏆 Live Leaderboard</h2>
+            <div className="space-y-3">
+              {sortedPlayers.map((player, index) => (
+                <div
+                  key={player.id}
+                  className={`flex items-center justify-between p-4 rounded-lg ${
+                    index === 0 ? "bg-yellow-100 border-2 border-yellow-400" :
+                    index === 1 ? "bg-gray-100 border-2 border-gray-400" :
+                    index === 2 ? "bg-orange-100 border-2 border-orange-400" :
+                    "bg-secondary"
+                  } ${player.hasResponded ? "opacity-100" : "opacity-70"}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-bold">
+                      {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+                    </span>
+                    <span className="font-medium text-lg">{player.playerName}</span>
+                    {player.hasResponded && (
+                      <Badge variant="outline" className="text-xs">
+                        Responded
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-xl font-bold">{player.score} pts</span>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
       </div>
     );
