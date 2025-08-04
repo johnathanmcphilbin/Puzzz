@@ -1084,7 +1084,13 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      <div 
+        className="min-h-screen relative"
+        style={{
+          background: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('/lovable-uploads/de24dc2c-7e3c-4f05-9e34-a18dc7d1e29c.png') repeat center center`,
+          backgroundSize: 'auto'
+        }}
+      >
         <div className="flex h-screen">
           {/* Main Challenge Area */}
           <div className="flex-1 p-6 flex flex-col">
