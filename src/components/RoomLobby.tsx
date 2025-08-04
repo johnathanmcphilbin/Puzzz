@@ -171,30 +171,36 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
 
      setIsStarting(true);
      try {
-       const gameState = selectedGame === "paranoia" ? {
-         phase: "waiting",
-         currentTurnIndex: 0,
-         playerOrder: [],
-         currentRound: 1,
-         currentQuestion: null,
-         currentAnswer: null,
-         targetPlayerId: null,
-         usedAskers: [],
-         lastRevealResult: null,
-         isFlipping: false
-       } : selectedGame === "coup" ? {
-         phase: "waiting",
-         currentPlayerIndex: 0,
-         players: [],
-         pendingAction: null,
-         actionQueue: []
-       } : {
-         phase: (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "setup" : "playing",
-         currentQuestion: null,
-         questionIndex: 0,
-         votes: {},
-         showResults: false
-       };
+        const gameState = selectedGame === "paranoia" ? {
+          phase: "waiting",
+          currentTurnIndex: 0,
+          playerOrder: [],
+          currentRound: 1,
+          currentQuestion: null,
+          currentAnswer: null,
+          targetPlayerId: null,
+          usedAskers: [],
+          lastRevealResult: null,
+          isFlipping: false
+        } : selectedGame === "coup" ? {
+          phase: "waiting",
+          currentPlayerIndex: 0,
+          players: [],
+          pendingAction: null,
+          actionQueue: []
+        } : selectedGame === "puzzz_panic" ? {
+          phase: "waiting",
+          currentChallenge: 0,
+          scores: players.reduce((acc, p) => ({ ...acc, [p.player_id]: 0 }), {}),
+          challengeOrder: [],
+          playerResponses: {}
+        } : {
+          phase: (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "setup" : "playing",
+          currentQuestion: null,
+          questionIndex: 0,
+          votes: {},
+          showResults: false
+        };
 
       // Update room state via Redis-based rooms-service
       const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
