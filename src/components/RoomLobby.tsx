@@ -215,7 +215,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         throw new Error(errorData.error || 'Failed to start game');
       }
 
-      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Dogpatch game" : selectedGame === "dramamatching" ? "Dramamatching" : selectedGame === "forms" ? "Forms Game" : selectedGame === "say_it_or_pay_it" ? "Say it or pay it" : selectedGame === "coup" ? "Cat Conspiracy" : "Would You Rather";
+      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Dogpatch game" : selectedGame === "dramamatching" ? "Dramamatching" : selectedGame === "forms" ? "Forms Game" : selectedGame === "say_it_or_pay_it" ? "Say it or pay it" : selectedGame === "coup" ? "Cat Conspiracy" : selectedGame === "puzzz_panic" ? "Puzzz Panic" : "Would You Rather";
       
       toast({
         title: "Game Started!",
@@ -572,7 +572,27 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                          <div className="w-6 h-6 bg-purple-500 rounded text-xs flex items-center justify-center text-white font-bold">👑</div>
                       </div>
                     </div>
-                   </div>
+                    </div>
+
+                    {/* Puzzz Panic Game */}
+                    <div 
+                      className={`relative p-4 border rounded-lg transition-all ${
+                        currentPlayer.is_host
+                          ? `cursor-pointer ${selectedGame === "puzzz_panic" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                          : "border-muted"
+                      }`}
+                      onClick={() => currentPlayer.is_host && setSelectedGame("puzzz_panic")}
+                    >
+                      <div className="flex items-center justify-between">
+                         <div>
+                           <h4 className="font-semibold">⚡ Puzzz Panic</h4>
+                           <p className="text-sm text-muted-foreground">Fast-paced 15 mini-challenges (1-250 players)</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-red-500 rounded text-xs flex items-center justify-center text-white font-bold">⚡</div>
+                       </div>
+                     </div>
+                    </div>
 
                    {/* Dogpatch Game - Hidden for now, can be easily restored */}
                   {/*

@@ -266,11 +266,11 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         const nonEmptyPositions: {row: number, col: number, emoji: string}[] = [];
         for (let r = 0; r < 3; r++) {
           for (let c = 0; c < 3; c++) {
-             if (memoryGrid[r][c]) {
-               nonEmptyPositions.push({row: r, col: c, emoji: memoryGrid[r][c] || "🐱"});
-             }
-           }
-         }
+            if (memoryGrid[r] && memoryGrid[r]![c]) {
+              nonEmptyPositions.push({row: r, col: c, emoji: memoryGrid[r]![c]!});
+            }
+          }
+        }
          if (nonEmptyPositions.length > 0) {
            const targetPosition = nonEmptyPositions[Math.floor(Math.random() * nonEmptyPositions.length)];
            if (targetPosition) {
