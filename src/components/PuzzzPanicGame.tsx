@@ -1084,122 +1084,174 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div className="min-h-screen gradient-bg p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-2">
-              🎮 Host Dashboard
-            </h1>
-            <div className="flex justify-center items-center gap-4 mb-4">
-              <Badge variant="outline">Challenge {currentChallengeIndex + 1}/10</Badge>
-              <Badge variant="outline" className="text-lg px-3 py-1">
-                <Clock className="h-4 w-4 mr-1" />
-                {timeLeft}s
-              </Badge>
-            </div>
-            <Progress value={(currentChallengeIndex / 10) * 100} className="mb-4" />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Current Challenge Info */}
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold mb-4">{challenge.name}</h2>
-              <p className="text-lg mb-4">{challenge.instructions}</p>
-              <Badge variant="secondary" className="text-sm">
-                Players are solving this challenge...
-              </Badge>
-            </Card>
-
-            {/* Response Status */}
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4">Response Status</h3>
-              <div className="space-y-2">
-                {sortedPlayers.map(player => (
-                  <div 
-                    key={player.id}
-                    className={`flex justify-between items-center p-3 rounded-lg ${
-                      player.hasResponded 
-                        ? "bg-green-100 border border-green-300" 
-                        : "bg-yellow-100 border border-yellow-300"
-                    }`}
-                  >
-                    <span className="font-medium">{player.playerName}</span>
-                    <Badge variant={player.hasResponded ? "default" : "secondary"}>
-                      {player.hasResponded ? "✅ Done" : "⏳ Thinking..."}
-                    </Badge>
-                  </div>
-                ))}
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="flex h-screen">
+          {/* Main Challenge Area */}
+          <div className="flex-1 p-6 flex flex-col">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-2">
+                🎮 Host Dashboard
+              </h1>
+              <div className="flex justify-center items-center gap-4 mb-4">
+                <div className="bg-white/10 px-4 py-2 rounded-lg text-white">
+                  Challenge {currentChallengeIndex + 1}/15
+                </div>
+                <div className="bg-white/10 px-4 py-2 rounded-lg text-white font-bold text-xl">
+                  {timeLeft}s
+                </div>
               </div>
-            </Card>
+              <div className="w-full bg-white/20 rounded-full h-3">
+                <div 
+                  className="bg-gradient-to-r from-green-400 to-blue-400 h-3 rounded-full transition-all duration-1000"
+                  style={{width: `${(timeLeft / 20) * 100}%`}}
+                />
+              </div>
+            </div>
+
+            <div className="bg-white/10 rounded-lg p-8 backdrop-blur-sm flex-1">
+              <h2 className="text-3xl font-bold text-white mb-4">{challenge.name}</h2>
+              <p className="text-white/80 text-xl mb-6">{challenge.instructions}</p>
+              <p className="text-yellow-400 text-lg">Players are currently solving this challenge...</p>
+              
+              {/* Response Status */}
+              <div className="mt-8">
+                <h3 className="text-xl font-bold text-white mb-4">Response Status</h3>
+                <div className="flex flex-wrap gap-3">
+                  {sortedPlayers.map(player => (
+                    <div 
+                      key={player.id}
+                      className={`px-4 py-2 rounded-full text-sm font-medium ${
+                        player.hasResponded 
+                          ? "bg-green-500 text-white" 
+                          : "bg-yellow-500 text-black"
+                      }`}
+                    >
+                      {player.playerName} {player.hasResponded ? "✅" : "⏳"}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Live Leaderboard */}
-          <Card className="p-6 mt-6">
-            <h2 className="text-2xl font-bold mb-4 text-center">🏆 Live Leaderboard</h2>
+          {/* Sidebar Leaderboard */}
+          <div className="w-80 bg-black/20 backdrop-blur-sm p-6 border-l border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">🏆 Live Leaderboard</h2>
             <div className="space-y-3">
               {sortedPlayers.map((player, index) => (
                 <div
                   key={player.id}
-                  className={`flex items-center justify-between p-4 rounded-lg ${
-                    index === 0 ? "bg-yellow-100 border-2 border-yellow-400" :
-                    index === 1 ? "bg-gray-100 border-2 border-gray-400" :
-                    index === 2 ? "bg-orange-100 border-2 border-orange-400" :
-                    "bg-secondary"
+                  className={`flex items-center justify-between p-4 rounded-lg transition-all ${
+                    index === 0 ? "bg-yellow-500/20 border border-yellow-400" :
+                    index === 1 ? "bg-gray-300/20 border border-gray-400" :
+                    index === 2 ? "bg-orange-400/20 border border-orange-400" :
+                    "bg-white/10"
                   } ${player.hasResponded ? "opacity-100" : "opacity-70"}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl font-bold">
+                    <span className="text-xl font-bold text-white">
                       {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
                     </span>
-                    <span className="font-medium text-lg">{player.playerName}</span>
-                    {player.hasResponded && (
-                      <Badge variant="outline" className="text-xs">
-                        Responded
-                      </Badge>
-                    )}
+                    <div>
+                      <div className="text-white font-medium">{player.playerName}</div>
+                      {player.hasResponded && (
+                        <div className="text-green-400 text-xs">Responded</div>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-xl font-bold">{player.score} pts</span>
+                  <span className="text-white text-xl font-bold">{player.score}</span>
                 </div>
               ))}
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     );
   }
 
   if (gamePhase === "challenge") {
+    const sortedPlayers = players
+      .filter(p => !p.isHost)
+      .map(player => ({
+        ...player,
+        score: scores[player.id] || 0,
+        hasResponded: playerResponses[player.id] !== undefined
+      }))
+      .sort((a, b) => b.score - a.score);
+
     return (
-      <div className="min-h-screen gradient-bg p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">Challenge {currentChallengeIndex + 1}/10</Badge>
-              <h2 className="text-2xl font-bold">{challenge.name}</h2>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="flex h-screen">
+          {/* Main Challenge Area */}
+          <div className="flex-1 p-6 flex flex-col">
+            <div className="text-center mb-6">
+              <div className="flex justify-center items-center gap-4 mb-4">
+                <div className="bg-white/10 px-4 py-2 rounded-lg text-white">
+                  Challenge {currentChallengeIndex + 1}/15
+                </div>
+                <div className="bg-white/10 px-4 py-2 rounded-lg text-white font-bold text-xl">
+                  {timeLeft}s
+                </div>
+              </div>
+              <div className="w-full bg-white/20 rounded-full h-3 mb-4">
+                <div 
+                  className="bg-gradient-to-r from-green-400 to-blue-400 h-3 rounded-full transition-all duration-1000"
+                  style={{width: `${(timeLeft / 20) * 100}%`}}
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              <span className="text-2xl font-bold text-primary">{timeLeft}s</span>
+
+            <div className="bg-white/10 rounded-lg p-8 backdrop-blur-sm flex-1">
+              <h2 className="text-3xl font-bold text-white mb-4 text-center">{challenge.name}</h2>
+              <p className="text-white/80 text-lg mb-8 text-center">{challenge.instructions}</p>
+              
+              <div className="flex justify-center">
+                {renderChallenge()}
+              </div>
+
+              {hasResponded && (
+                <div className="text-center mt-8">
+                  <div className="bg-green-500/20 border border-green-400 rounded-lg px-6 py-3 inline-block">
+                    <span className="text-green-400 font-medium">✅ Response Submitted! Waiting for others...</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          <Progress value={(currentChallengeIndex / 10) * 100} className="mb-6" />
-
-          <Card className="p-4 mb-6">
-            <p className="text-center text-lg font-medium">{challenge.instructions}</p>
-          </Card>
-
-          <Card className="p-8">
-            {renderChallenge()}
-          </Card>
-
-          {hasResponded && (
-            <div className="text-center mt-6">
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                ✅ Response Submitted! Waiting for others...
-              </Badge>
+          {/* Sidebar Leaderboard */}
+          <div className="w-80 bg-black/20 backdrop-blur-sm p-6 border-l border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">🏆 Leaderboard</h2>
+            <div className="space-y-3">
+              {sortedPlayers.map((player, index) => (
+                <div
+                  key={player.id}
+                  className={`flex items-center justify-between p-4 rounded-lg transition-all ${
+                    index === 0 ? "bg-yellow-500/20 border border-yellow-400" :
+                    index === 1 ? "bg-gray-300/20 border border-gray-400" :
+                    index === 2 ? "bg-orange-400/20 border border-orange-400" :
+                    "bg-white/10"
+                  } ${player.hasResponded ? "opacity-100" : "opacity-70"}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl font-bold text-white">
+                      {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+                    </span>
+                    <div>
+                      <div className="text-white font-medium">{player.playerName}</div>
+                      {player.hasResponded && (
+                        <div className="text-green-400 text-xs">✅ Done</div>
+                      )}
+                      {!player.hasResponded && (
+                        <div className="text-yellow-400 text-xs">⏳ Playing...</div>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-white text-xl font-bold">{player.score}</span>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       </div>
     );
