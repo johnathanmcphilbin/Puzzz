@@ -419,11 +419,11 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         if (nonEmptyPositions.length > 0) {
           const targetPosition = nonEmptyPositions[Math.floor(Math.random() * nonEmptyPositions.length)];
           const targetCat = targetPosition?.cat ?? null;
-          setGridMemory({grid: memoryGrid, target: targetCat || STATIC_CATS[0], targetPos: {row: targetPosition?.row || 1, col: targetPosition?.col || 1}});
+          setGridMemory({grid: memoryGrid, target: targetCat || (STATIC_CATS[0] ?? null), targetPos: {row: targetPosition?.row || 1, col: targetPosition?.col || 1}});
         } else {
           // Fallback - ensure at least one cat exists
-          memoryGrid[1]![1] = STATIC_CATS[0];
-          setGridMemory({grid: memoryGrid, target: STATIC_CATS[0], targetPos: {row: 1, col: 1}});
+          memoryGrid[1]![1] = STATIC_CATS[0] ?? null;
+          setGridMemory({grid: memoryGrid, target: STATIC_CATS[0] ?? null, targetPos: {row: 1, col: 1}});
         }
         setShowGrid(true);
         gridTimeoutRef.current = setTimeout(() => setShowGrid(false), 2500);
