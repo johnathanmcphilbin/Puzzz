@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Trophy, Clock, Zap, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { STATIC_CATS, getCatImageUrl } from "@/assets/catImages";
+import { supabase } from '@/integrations/supabase/client';
 
 interface Challenge {
   id: string;
@@ -19,6 +20,7 @@ interface Player {
   id: string;
   playerName: string;
   isHost: boolean;
+  selectedCharacterId?: string;
 }
 
 interface Room {
@@ -91,6 +93,8 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const [hasResponded, setHasResponded] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [challengeOrder] = useState(room.gameState?.challengeOrder || []);
+  const [characterData, setCharacterData] = useState<{[key: string]: any}>({});
+  const [currentBreakRoast, setCurrentBreakRoast] = useState<string | null>(null);
   
   // Challenge-specific state
   const [tapCount, setTapCount] = useState(0);
@@ -147,15 +151,58 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   // Get player responses for real-time updates
   const playerResponses = room.gameState?.playerResponses || {};
 
+  // Load character data whenever players change
+  useEffect(() => {
+    loadCharacterData();
+  }, [players]);
+
+  const loadCharacterData = async () => {
+    const characterIds = players.map(p => p.selectedCharacterId).filter((id): id is string => Boolean(id));
+    
+    if (characterIds.length === 0) {
+      return;
+    }
+
+    try {
+      // Load characters from database
+      const { data, error } = await supabase
+        .from('cat_characters')
+        .select('id, name, icon_url')
+        .in('id', characterIds);
+      
+      if (error) {
+        console.error('Error loading character data:', error);
+        return;
+      }
+
+      const characterMap = data?.reduce((acc, char) => {
+        acc[char.id] = char;
+        return acc;
+      }, {} as {[key: string]: any}) || {};
+
+      setCharacterData(characterMap);
+    } catch (error) {
+      console.error('Error loading character data:', error);
+    }
+  };
+
   // Sync with room state
   useEffect(() => {
     if (room.gameState) {
-      setGamePhase(room.gameState.phase || "waiting");
+      const newPhase = room.gameState.phase || "waiting";
+      const oldPhase = gamePhase;
+      
+      setGamePhase(newPhase);
       setCurrentChallengeIndex(room.gameState.currentChallenge || 0);
       setScores(room.gameState.scores || {});
       
+      // Reset roast when entering a new break phase
+      if (newPhase === "break" && oldPhase !== "break") {
+        setCurrentBreakRoast(null);
+      }
+      
       // Reset timer flags when phase changes
-      if (room.gameState.phase !== "challenge") {
+      if (newPhase !== "challenge") {
         setIsTimerRunning(false);
         setHasResponded(false);
       }
@@ -1297,6 +1344,11 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
   // Name and shame function
   const getNameAndShameComment = () => {
+    // Return cached roast if we're in the same break
+    if (currentBreakRoast) {
+      return currentBreakRoast;
+    }
+    
     // Only show for non-host players with scores
     const nonHostPlayers = players.filter(p => !p.isHost);
     if (nonHostPlayers.length === 0) return null;
@@ -1324,10 +1376,27 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       `${worstPlayer.playerName} might need some practice! 🎯`,
       `${worstPlayer.playerName} is giving everyone else a chance! 🎁`,
       `${worstPlayer.playerName} is keeping it interesting! 🎭`,
-      `${worstPlayer.playerName} is playing the long game! 🐌`
+      `${worstPlayer.playerName} is playing the long game! 🐌`,
+      `${worstPlayer.playerName} forgot to bring their A-game today! 💤`,
+      `${worstPlayer.playerName} is making everyone else look like pros! 🏆`,
+      `${worstPlayer.playerName} must be playing with their eyes closed! 👀`,
+      `${worstPlayer.playerName} is proof that participation trophies exist! 🥴`,
+      `${worstPlayer.playerName} is really testing everyone's patience! ⏰`,
+      `${worstPlayer.playerName} should consider switching to easier games! 🧩`,
+      `${worstPlayer.playerName} is bringing down the collective IQ! 🧠`,
+      `${worstPlayer.playerName} makes watching paint dry seem exciting! 🎨`,
+      `${worstPlayer.playerName} is the human equivalent of buffering! ⌛`,
+      `${worstPlayer.playerName} clearly skipped brain day at the gym! 💪`,
+      `${worstPlayer.playerName} is making rocks look intelligent! 🪨`,
+      `${worstPlayer.playerName} should come with a warning label: 'May cause secondhand embarrassment'! ⚠️`
     ];
     
-    return roastComments[Math.floor(Math.random() * roastComments.length)];
+    const selectedRoast = roastComments[Math.floor(Math.random() * roastComments.length)] || null;
+    
+    // Cache the roast for this break
+    setCurrentBreakRoast(selectedRoast);
+    
+    return selectedRoast;
   };
 
   // Break phase
@@ -1366,14 +1435,27 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md mx-auto">
             <h3 className="text-lg sm:text-xl font-bold text-black mb-4">Current Standings</h3>
             <div className="space-y-2">
-              {sortedPlayers.slice(0, 3).map((player, index) => (
-                <div key={player.id} className="flex justify-between items-center">
-                  <span className="font-medium text-black">
-                    {index + 1}. {player.playerName}
-                  </span>
-                  <span className="font-bold text-black">{player.score}</span>
-                </div>
-              ))}
+              {sortedPlayers.slice(0, 3).map((player, index) => {
+                const playerCharacter = player.selectedCharacterId ? characterData[player.selectedCharacterId] : null;
+                return (
+                  <div key={player.id} className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-black">{index + 1}.</span>
+                      {playerCharacter && (
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-100">
+                          <img
+                            src={getCatImageUrl(playerCharacter.icon_url)}
+                            alt={playerCharacter.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <span className="font-medium text-black">{player.playerName}</span>
+                    </div>
+                    <span className="font-bold text-black">{player.score}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -1657,23 +1739,35 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           <Card className="p-6 mb-6">
             <h2 className="text-2xl font-semibold mb-4">Final Leaderboard</h2>
             <div className="space-y-3">
-              {sortedPlayers.map((player, index) => (
-                <div
-                  key={player.id}
-                  className={`flex items-center justify-between p-3 rounded-lg ${
-                    index === 0 ? "bg-yellow-100 border-2 border-yellow-300" :
-                    index === 1 ? "bg-gray-100 border-2 border-gray-300" :
-                    index === 2 ? "bg-orange-100 border-2 border-orange-300" :
-                    "bg-secondary"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl font-bold">#{index + 1}</span>
-                    <span className="font-medium">{player.playerName}</span>
+              {sortedPlayers.map((player, index) => {
+                const playerCharacter = player.selectedCharacterId ? characterData[player.selectedCharacterId] : null;
+                return (
+                  <div
+                    key={player.id}
+                    className={`flex items-center justify-between p-3 rounded-lg ${
+                      index === 0 ? "bg-yellow-100 border-2 border-yellow-300" :
+                      index === 1 ? "bg-gray-100 border-2 border-gray-300" :
+                      index === 2 ? "bg-orange-100 border-2 border-orange-300" :
+                      "bg-secondary"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl font-bold">#{index + 1}</span>
+                      {playerCharacter && (
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-white">
+                          <img
+                            src={getCatImageUrl(playerCharacter.icon_url)}
+                            alt={playerCharacter.name}
+                            className="w-full h-full object-cover p-0.5"
+                          />
+                        </div>
+                      )}
+                      <span className="font-medium">{player.playerName}</span>
+                    </div>
+                    <span className="text-xl font-bold">{player.score} pts</span>
                   </div>
-                  <span className="text-xl font-bold">{player.score} pts</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
 
