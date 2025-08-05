@@ -659,21 +659,6 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     }
   };
 
-
-  const resetGame = () => {
-    if (!currentPlayer.isHost) return;
-    
-    onUpdateRoom({
-      gameState: {
-        phase: "waiting",
-        currentChallenge: 0,
-        scores: {},
-        playerResponses: {},
-        challengeOrder: []
-      }
-    });
-  };
-
   // Name and shame function for worst performing player
   const getNameAndShameComment = () => {
     const playerScores = Object.entries(scores);
@@ -706,6 +691,20 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     // Use round number to cycle through different roasts
     const roastIndex = currentChallengeIndex % roasts.length;
     return roasts[roastIndex];
+  };
+
+  const resetGame = () => {
+    if (!currentPlayer.isHost) return;
+    
+    onUpdateRoom({
+      gameState: {
+        phase: "waiting",
+        currentChallenge: 0,
+        scores: {},
+        playerResponses: {},
+        challengeOrder: []
+      }
+    });
   };
 
   // Touch/gesture handlers
