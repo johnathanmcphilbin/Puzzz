@@ -613,7 +613,11 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const startGame = () => {
     if (!currentPlayer.isHost) return;
     
-    const shuffledChallenges = Array.from({length: 10}, () => Math.floor(Math.random() * CHALLENGES.length));
+    // Create array of all challenge indices and shuffle them to ensure no repeats
+    const allChallengeIndices = Array.from({length: CHALLENGES.length}, (_, i) => i);
+    const shuffledChallenges = allChallengeIndices
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 10); // Take first 10 from shuffled array
     
     const activePlayers = players.filter(p => !p.isHost); // Only include non-host players in scoring
     
