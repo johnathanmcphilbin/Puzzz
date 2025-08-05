@@ -81,6 +81,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const [timeLeft, setTimeLeft] = useState(0);
   const [challengeStartTime, setChallengeStartTime] = useState(0);
   const [hasResponded, setHasResponded] = useState(false);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [challengeOrder] = useState(room.gameState?.challengeOrder || []);
   
   // Challenge-specific state
@@ -144,27 +145,40 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       setGamePhase(room.gameState.phase || "waiting");
       setCurrentChallengeIndex(room.gameState.currentChallenge || 0);
       setScores(room.gameState.scores || {});
+      
+      // Reset timer flags when phase changes
+      if (room.gameState.phase !== "challenge") {
+        setIsTimerRunning(false);
+        setHasResponded(false);
+      }
     }
   }, [room.gameState]);
 
   // Timer effect - sync across all devices using room data
   useEffect(() => {
     if (gamePhase === "challenge" && timeLeft > 0) {
+      setIsTimerRunning(true);
       timerRef.current = setTimeout(() => {
         const newTime = timeLeft - 1;
         setTimeLeft(newTime);
         
-        // Only trigger nextChallenge when timer naturally reaches 0, not from sync
-        if (newTime === 0 && currentPlayer.isHost) {
-          setTimeout(() => nextChallenge(), 1000);
+        // Only trigger nextChallenge and submit null response when timer naturally reaches 0
+        if (newTime === 0) {
+          if (currentPlayer.isHost) {
+            setTimeout(() => nextChallenge(), 1000);
+          }
+          // Submit null response if player hasn't responded
+          if (!hasResponded) {
+            submitResponse(null, Date.now() - challengeStartTime);
+          }
         }
       }, 1000);
+    } else if (gamePhase !== "challenge") {
+      setIsTimerRunning(false);
     }
     
-    // Submit null response if player hasn't responded and time is up
-    if (timeLeft === 0 && gamePhase === "challenge" && !hasResponded) {
-      submitResponse(null, Date.now() - challengeStartTime);
-    }
+    // Only submit null response if timer naturally reaches 0 (not from sync)
+    // We track this by checking if the timer was actually running before reaching 0
     
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
