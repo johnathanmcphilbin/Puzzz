@@ -102,19 +102,19 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const [currentSwipeIndex, setCurrentSwipeIndex] = useState(0);
   const [showSwipeSequence, setShowSwipeSequence] = useState(true);
   const [pattern, setPattern] = useState<{shapes: string[], nextOptions: string[]}>({shapes: [], nextOptions: []});
-  const [emojiMemory, setEmojiMemory] = useState<{shown: string[], missing: string, options: string[]}>({shown: [], missing: "", options: []});
+  const [emojiMemory, setEmojiMemory] = useState<{shown: any[], missing: any, options: any[]}>({shown: [], missing: null, options: []});
   const [showEmojiMemory, setShowEmojiMemory] = useState(true);
-  const [sequenceMatch, setSequenceMatch] = useState<{seq1: string[], seq2: string[], match: boolean}>({seq1: [], seq2: [], match: false});
+  const [sequenceMatch, setSequenceMatch] = useState<{seq1: any[], seq2: any[], match: boolean}>({seq1: [], seq2: [], match: false});
   const [showSequences, setShowSequences] = useState(true);
   const [mathProblem, setMathProblem] = useState<{question: string, answer: number, options: number[]}>({question: "", answer: 0, options: []});
   const [colorShapes, setColorShapes] = useState<{shapes: {cat?: {id: string, name: string, icon_url: string} | undefined, color: string, id: number}[], tapped: Set<number>}>({shapes: [], tapped: new Set()});
   const [movingIcons, setMovingIcons] = useState<{icons: {cat?: {id: string, name: string, icon_url: string} | undefined, speed: number, id: number}[], fastest: number}>({icons: [], fastest: 0});
-  const [gridMemory, setGridMemory] = useState<{grid: string[][], target: string, targetPos: {row: number, col: number}}>({grid: [], target: "", targetPos: {row: 0, col: 0}});
+  const [gridMemory, setGridMemory] = useState<{grid: any[][], target: any, targetPos: {row: number, col: number}}>({grid: [], target: null, targetPos: {row: 0, col: 0}});
   const [showGrid, setShowGrid] = useState(true);
   const [barPosition, setBarPosition] = useState(0);
   const [targetZone, setTargetZone] = useState({start: 40, end: 60});
   const [arrowDirection, setArrowDirection] = useState<typeof ARROW_DIRECTIONS[0]>();
-  const [countingEmojis, setCountingEmojis] = useState<{emojis: string[], catCount: number}>({emojis: [], catCount: 0});
+  const [countingEmojis, setCountingEmojis] = useState<{emojis: any[], catCount: number}>({emojis: [], catCount: 0});
   const [showCountingEmojis, setShowCountingEmojis] = useState(true);
   const [holdStartTime, setHoldStartTime] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
@@ -347,27 +347,21 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         break;
 
       case "emoji_memory":
-        const allEmojis = [...EMOJIS];
-        const shownEmojis = allEmojis.splice(0, 3);
-        const missingEmoji = allEmojis[Math.floor(Math.random() * allEmojis.length)] || "🐱";
-        const wrongEmojis = allEmojis.filter(e => e !== missingEmoji).slice(0, 2);
-        const emojiOptions = [missingEmoji, ...wrongEmojis].sort(() => Math.random() - 0.5);
-        setEmojiMemory({shown: shownEmojis, missing: missingEmoji, options: emojiOptions});
+        const allCats = [...STATIC_CATS];
+        const shownCats = allCats.splice(0, 3);
+        const missingCat = allCats[Math.floor(Math.random() * allCats.length)] || STATIC_CATS[0];
+        const wrongCats = allCats.filter(c => c && c.id !== missingCat?.id).slice(0, 2);
+        const catOptions = [missingCat, ...wrongCats].sort(() => Math.random() - 0.5);
+        setEmojiMemory({shown: shownCats, missing: missingCat, options: catOptions});
         setShowEmojiMemory(true);
         emojiTimeoutRef.current = setTimeout(() => setShowEmojiMemory(false), 2000);
         break;
 
       case "sequence_match":
-        const seq1 = Array.from({length: 3}, () => {
-          const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
-          return emoji || "🐱";
-        });
+        const seq1Cats = getRandomCats(3);
         const isMatch = Math.random() > 0.5;
-        const seq2 = isMatch ? [...seq1] : Array.from({length: 3}, () => {
-          const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
-          return emoji || "🐶";
-        });
-        setSequenceMatch({seq1, seq2, match: isMatch});
+        const seq2Cats = isMatch ? [...seq1Cats] : getRandomCats(3);
+        setSequenceMatch({seq1: seq1Cats, seq2: seq2Cats, match: isMatch});
         setShowSequences(true);
         sequenceTimeoutRef.current = setTimeout(() => setShowSequences(false), 3000);
         break;
@@ -405,30 +399,25 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "grid_memory":
         const memoryGrid = Array.from({length: 3}, () => 
-          Array.from({length: 3}, () => Math.random() > 0.7 ? EMOJIS[Math.floor(Math.random() * EMOJIS.length)] || "🐱" : "")
+          Array.from({length: 3}, () => Math.random() > 0.7 ? (getRandomCats(1)[0] || null) : null)
         );
-        const nonEmptyPositions: {row: number, col: number, emoji: string}[] = [];
+        const nonEmptyPositions: {row: number, col: number, cat: any}[] = [];
         for (let r = 0; r < 3; r++) {
           for (let c = 0; c < 3; c++) {
             if (memoryGrid[r] && memoryGrid[r]![c]) {
-              nonEmptyPositions.push({row: r, col: c, emoji: memoryGrid[r]![c]!});
+              nonEmptyPositions.push({row: r, col: c, cat: memoryGrid[r]![c]!});
             }
           }
         }
         
         if (nonEmptyPositions.length > 0) {
           const targetPosition = nonEmptyPositions[Math.floor(Math.random() * nonEmptyPositions.length)];
-          if (targetPosition) {
-            setGridMemory({grid: memoryGrid, target: targetPosition.emoji, targetPos: {row: targetPosition.row, col: targetPosition.col}});
-          } else {
-            // Ensure at least one emoji exists
-            memoryGrid[1]![1] = "🐱";
-            setGridMemory({grid: memoryGrid, target: "🐱", targetPos: {row: 1, col: 1}});
-          }
+          const targetCat = targetPosition?.cat ?? null;
+          setGridMemory({grid: memoryGrid, target: targetCat || STATIC_CATS[0], targetPos: {row: targetPosition?.row || 1, col: targetPosition?.col || 1}});
         } else {
-          // Fallback - ensure at least one emoji exists
-          memoryGrid[1]![1] = "🐱";
-          setGridMemory({grid: memoryGrid, target: "🐱", targetPos: {row: 1, col: 1}});
+          // Fallback - ensure at least one cat exists
+          memoryGrid[1]![1] = STATIC_CATS[0];
+          setGridMemory({grid: memoryGrid, target: STATIC_CATS[0], targetPos: {row: 1, col: 1}});
         }
         setShowGrid(true);
         gridTimeoutRef.current = setTimeout(() => setShowGrid(false), 2500);
@@ -456,15 +445,16 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         break;
 
       case "counting":
-        const totalEmojis = Math.floor(Math.random() * 15) + 10;
-        const catCount = Math.floor(Math.random() * 6) + 2;
-        const catEmojis = Array(catCount).fill("🐱");
-        const otherEmojis = Array(totalEmojis - catCount).fill(null).map(() => {
-          const nonCatEmojis = EMOJIS.filter(e => e !== "🐱");
-          return nonCatEmojis[Math.floor(Math.random() * nonCatEmojis.length)] || "🐶";
+        const totalCats = Math.floor(Math.random() * 15) + 10;
+        const targetCatCount = Math.floor(Math.random() * 6) + 2;
+        const targetCat = STATIC_CATS[0]; // Always use the first cat as the target
+        const targetCatImages = Array(targetCatCount).fill(targetCat);
+        const otherCats = Array(totalCats - targetCatCount).fill(null).map(() => {
+          const otherCatOptions = STATIC_CATS.filter(c => c.id !== targetCat?.id);
+          return otherCatOptions[Math.floor(Math.random() * otherCatOptions.length)] || STATIC_CATS[1];
         });
-        const allCountingEmojis = [...catEmojis, ...otherEmojis].sort(() => Math.random() - 0.5);
-        setCountingEmojis({emojis: allCountingEmojis, catCount});
+        const allCountingCats = [...targetCatImages, ...otherCats].sort(() => Math.random() - 0.5);
+        setCountingEmojis({emojis: allCountingCats, catCount: targetCatCount});
         setShowCountingEmojis(true);
         countingTimeoutRef.current = setTimeout(() => setShowCountingEmojis(false), 3000);
         break;
@@ -921,28 +911,36 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           <div className="text-center space-y-4 px-4">
             {showEmojiMemory ? (
               <div>
-                <div className="text-lg sm:text-xl mb-4">Remember these emojis:</div>
+                <div className="text-lg sm:text-xl mb-4">Remember these cats:</div>
                 <div className="flex justify-center gap-2 sm:gap-4 flex-wrap">
-                  {emojiMemory.shown.map((emoji, idx) => (
-                    <div key={idx} className="text-4xl sm:text-6xl p-2 sm:p-4 bg-gray-100 rounded-lg">
-                      {emoji}
+                  {emojiMemory.shown.map((cat, idx) => (
+                    <div key={idx} className="w-16 h-16 sm:w-20 sm:h-20 p-2 bg-gray-100 rounded-lg">
+                      <img 
+                        src={getCatImageUrl(cat?.icon_url)} 
+                        alt={cat?.name || "Cat"}
+                        className="w-full h-full object-cover rounded"
+                      />
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
               <div>
-                <div className="text-lg sm:text-xl mb-4">Which emoji was missing?</div>
+                <div className="text-lg sm:text-xl mb-4">Which cat was missing?</div>
                 <div className="flex justify-center gap-2 sm:gap-4 flex-wrap max-w-sm mx-auto">
-                  {emojiMemory.options.map(option => (
+                  {emojiMemory.options.map((cat, idx) => (
                     <Button
-                      key={option}
+                      key={cat?.id || idx}
                       size="lg"
-                      onClick={() => submitResponse(option, Date.now() - challengeStartTime)}
+                      onClick={() => submitResponse(cat, Date.now() - challengeStartTime)}
                       disabled={hasResponded}
-                      className="text-3xl sm:text-4xl h-14 w-14 sm:h-16 sm:w-16 bg-black text-white hover:bg-gray-800"
+                      className="h-14 w-14 sm:h-16 sm:w-16 bg-black text-white hover:bg-gray-800 p-1"
                     >
-                      {option}
+                      <img 
+                        src={getCatImageUrl(cat?.icon_url)} 
+                        alt={cat?.name || "Cat"}
+                        className="w-full h-full object-cover rounded"
+                      />
                     </Button>
                   ))}
                 </div>
@@ -953,22 +951,30 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "sequence_match":
         return (
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-6 px-4">
             {showSequences ? (
               <div>
-                <div className="text-xl mb-6">Do these sequences match?</div>
+                <div className="text-lg sm:text-xl mb-6">Do these sequences match?</div>
                 <div className="space-y-4">
                   <div className="flex justify-center gap-2">
-                    {sequenceMatch.seq1.map((emoji, idx) => (
-                      <div key={idx} className="text-4xl p-2 bg-blue-100 rounded-lg">
-                        {emoji}
+                    {sequenceMatch.seq1.map((cat, idx) => (
+                      <div key={idx} className="w-12 h-12 sm:w-16 sm:h-16 p-2 bg-blue-100 rounded-lg border-2 border-blue-300">
+                        <img 
+                          src={getCatImageUrl(cat?.icon_url)} 
+                          alt={cat?.name || "Cat"}
+                          className="w-full h-full object-cover rounded"
+                        />
                       </div>
                     ))}
                   </div>
                   <div className="flex justify-center gap-2">
-                    {sequenceMatch.seq2.map((emoji, idx) => (
-                      <div key={idx} className="text-4xl p-2 bg-green-100 rounded-lg">
-                        {emoji}
+                    {sequenceMatch.seq2.map((cat, idx) => (
+                      <div key={idx} className="w-12 h-12 sm:w-16 sm:h-16 p-2 bg-green-100 rounded-lg border-2 border-green-300">
+                        <img 
+                          src={getCatImageUrl(cat?.icon_url)} 
+                          alt={cat?.name || "Cat"}
+                          className="w-full h-full object-cover rounded"
+                        />
                       </div>
                     ))}
                   </div>
@@ -976,13 +982,13 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               </div>
             ) : (
               <div>
-                <div className="text-xl mb-6">Did they match?</div>
+                <div className="text-lg sm:text-xl mb-6">Did they match?</div>
                 <div className="flex justify-center gap-4">
                   <Button
                     size="lg"
                     onClick={() => submitResponse(true, Date.now() - challengeStartTime)}
                     disabled={hasResponded}
-                    className="text-xl h-16 px-8 bg-black text-white hover:bg-gray-800"
+                    className="text-lg sm:text-xl h-14 sm:h-16 px-6 sm:px-8 bg-black text-white hover:bg-gray-800"
                   >
                     YES
                   </Button>
@@ -990,7 +996,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                     size="lg"
                     onClick={() => submitResponse(false, Date.now() - challengeStartTime)}
                     disabled={hasResponded}
-                    className="text-xl h-16 px-8 bg-black text-white hover:bg-gray-800"
+                    className="text-lg sm:text-xl h-14 sm:h-16 px-6 sm:px-8 bg-black text-white hover:bg-gray-800"
                   >
                     NO
                   </Button>
@@ -1084,18 +1090,24 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "grid_memory":
         return (
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-6 px-4">
             {showGrid ? (
               <div>
-                <div className="text-xl mb-6">Remember where the {gridMemory.target} is!</div>
+                <div className="text-lg sm:text-xl mb-6">Remember where this cat is!</div>
                 <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
                   {gridMemory.grid.map((row, rowIdx) =>
                     row.map((cell, colIdx) => (
                       <div
                         key={`${rowIdx}-${colIdx}`}
-                        className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl"
+                        className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg flex items-center justify-center p-1"
                       >
-                        {cell}
+                        {cell && (
+                          <img 
+                            src={getCatImageUrl(cell?.icon_url)} 
+                            alt={cell?.name || "Cat"}
+                            className="w-full h-full object-cover rounded"
+                          />
+                        )}
                       </div>
                     ))
                   )}
@@ -1103,7 +1115,16 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               </div>
             ) : (
               <div>
-                <div className="text-xl mb-6">Where was the {gridMemory.target}?</div>
+                <div className="text-lg sm:text-xl mb-6">Where was this cat?</div>
+                <div className="mb-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-gray-100 rounded-lg p-1">
+                    <img 
+                      src={getCatImageUrl(gridMemory.target?.icon_url)} 
+                      alt={gridMemory.target?.name || "Target Cat"}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  </div>
+                </div>
                 <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
                   {Array.from({length: 9}).map((_, idx) => {
                     const row = Math.floor(idx / 3);
@@ -1114,7 +1135,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                         size="lg"
                         onClick={() => submitResponse({row, col}, Date.now() - challengeStartTime)}
                         disabled={hasResponded}
-                        className="w-16 h-16 text-xl bg-black text-white hover:bg-gray-800"
+                        className="w-12 h-12 sm:w-16 sm:h-16 text-lg bg-black text-white hover:bg-gray-800"
                       >
                         ?
                       </Button>
@@ -1192,21 +1213,34 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "counting":
         return (
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-6 px-4">
             {showCountingEmojis ? (
               <div>
-                <div className="text-xl mb-6">Count the cats! 🐱</div>
-                <div className="grid grid-cols-6 gap-2 max-w-lg mx-auto">
-                  {countingEmojis.emojis.map((emoji, idx) => (
-                    <div key={idx} className="text-3xl p-2">
-                      {emoji}
+                <div className="text-lg sm:text-xl mb-6">Count this specific cat!</div>
+                <div className="mb-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-gray-100 rounded-lg p-1 border-2 border-yellow-400">
+                    <img 
+                      src={getCatImageUrl(STATIC_CATS[0]?.icon_url || null)} 
+                      alt={STATIC_CATS[0]?.name || "Target Cat"}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-6 gap-1 sm:gap-2 max-w-lg mx-auto">
+                  {countingEmojis.emojis.map((cat, idx) => (
+                    <div key={idx} className="w-8 h-8 sm:w-12 sm:h-12 p-1">
+                      <img 
+                        src={getCatImageUrl(cat?.icon_url)} 
+                        alt={cat?.name || "Cat"}
+                        className="w-full h-full object-cover rounded"
+                      />
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
               <div>
-                <div className="text-xl mb-6">How many cats did you see?</div>
+                <div className="text-lg sm:text-xl mb-6">How many of this cat did you see?</div>
                 <div className="grid grid-cols-5 gap-3 max-w-md mx-auto">
                   {Array.from({length: 10}, (_, i) => i + 1).map(num => (
                     <Button
@@ -1214,7 +1248,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                       size="lg"
                       onClick={() => submitResponse(num, Date.now() - challengeStartTime)}
                       disabled={hasResponded}
-                      className="text-xl h-12 bg-black text-white hover:bg-gray-800"
+                      className="text-lg sm:text-xl h-12 sm:h-14 bg-black text-white hover:bg-gray-800"
                     >
                       {num}
                     </Button>
