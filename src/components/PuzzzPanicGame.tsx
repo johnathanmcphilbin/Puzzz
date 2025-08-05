@@ -280,15 +280,19 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
             }
           }
         }
-         if (nonEmptyPositions.length > 0) {
-           const targetPosition = nonEmptyPositions[Math.floor(Math.random() * nonEmptyPositions.length)];
-           if (targetPosition) {
-             setGridMemory({grid: memoryGrid, target: targetPosition.emoji, targetPos: {row: targetPosition.row, col: targetPosition.col}});
-           } else {
-             setGridMemory({grid: memoryGrid, target: "🐱", targetPos: {row: 1, col: 1}});
-           }
+        
+        if (nonEmptyPositions.length > 0) {
+          const targetPosition = nonEmptyPositions[Math.floor(Math.random() * nonEmptyPositions.length)];
+          if (targetPosition) {
+            setGridMemory({grid: memoryGrid, target: targetPosition.emoji, targetPos: {row: targetPosition.row, col: targetPosition.col}});
+          } else {
+            // Ensure at least one emoji exists
+            memoryGrid[1]![1] = "🐱";
+            setGridMemory({grid: memoryGrid, target: "🐱", targetPos: {row: 1, col: 1}});
+          }
         } else {
-          // Fallback if no emojis generated
+          // Fallback - ensure at least one emoji exists
+          memoryGrid[1]![1] = "🐱";
           setGridMemory({grid: memoryGrid, target: "🐱", targetPos: {row: 1, col: 1}});
         }
         setShowGrid(true);
@@ -297,11 +301,13 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "timing":
         setBarPosition(0);
-        setTargetZone({start: Math.random() * 40 + 20, end: Math.random() * 20 + 60});
+        const targetStart = Math.random() * 40 + 20;
+        const targetWidth = Math.random() * 20 + 15; // Ensure reasonable target size
+        setTargetZone({start: targetStart, end: Math.min(targetStart + targetWidth, 90)});
         const startTime = Date.now();
         const animate = () => {
           const elapsed = Date.now() - startTime;
-          const progress = (elapsed / 4000) * 100;
+          const progress = (elapsed / (challenge.timeLimit * 100)) * 100; // Adjust speed based on time limit
           setBarPosition(progress);
           if (progress < 100 && !hasResponded) {
             animationRef.current = requestAnimationFrame(animate);
@@ -368,7 +374,12 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         baseScore = response === colorWords?.word ? 1000 : 0;
         break;
       case "reaction_time":
-        baseScore = response && isGreen ? Math.max(200, 1000 - (responseTime - greenStartTime) / 2) : 0;
+        if (response && isGreen && greenStartTime > 0) {
+          const reactionTime = responseTime - (challengeStartTime - greenStartTime);
+          baseScore = Math.max(200, 1000 - Math.abs(reactionTime) / 2);
+        } else {
+          baseScore = 0;
+        }
         break;
       case "swipe_sequence":
         baseScore = JSON.stringify(response) === JSON.stringify(swipeSequence) ? 1000 : 0;
@@ -568,7 +579,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               size="lg"
               className="w-64 h-32 text-3xl"
               onClick={() => {
-                if (!hasResponded) {
+                if (!hasResponded && tapCount < 10) {
                   const newCount = tapCount + 1;
                   setTapCount(newCount);
                   if (newCount === 10) {
@@ -576,9 +587,9 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                   }
                 }
               }}
-              disabled={hasResponded}
+              disabled={hasResponded || tapCount >= 10}
             >
-              TAP!
+              {tapCount >= 10 ? "DONE!" : "TAP!"}
             </Button>
           </div>
         );
@@ -619,11 +630,14 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               onClick={() => {
                 if (isGreen && !hasResponded) {
                   submitResponse(true, Date.now() - challengeStartTime);
+                } else if (!isGreen && !hasResponded) {
+                  // Clicked too early - penalize
+                  submitResponse(false, Date.now() - challengeStartTime);
                 }
               }}
-              disabled={hasResponded || !isGreen}
+              disabled={hasResponded}
             >
-              {isGreen ? "TAP NOW!" : "WAIT..."}
+              {hasResponded ? "DONE!" : isGreen ? "TAP NOW!" : "WAIT..."}
             </Button>
           </div>
         );
@@ -1084,13 +1098,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div 
-        className="min-h-screen relative"
-        style={{
-          background: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('/lovable-uploads/de24dc2c-7e3c-4f05-9e34-a18dc7d1e29c.png') repeat center center`,
-          backgroundSize: 'auto'
-        }}
-      >
+      <div className="min-h-screen gradient-bg">
         <div className="flex h-screen">
           {/* Main Challenge Area */}
           <div className="flex-1 p-6 flex flex-col">
@@ -1100,7 +1108,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               </h1>
               <div className="flex justify-center items-center gap-4 mb-4">
                 <div className="bg-white/10 px-4 py-2 rounded-lg text-white">
-                  Challenge {currentChallengeIndex + 1}/15
+                  Challenge {currentChallengeIndex + 1}/10
                 </div>
                 <div className="bg-white/10 px-4 py-2 rounded-lg text-white font-bold text-xl">
                   {timeLeft}s
@@ -1109,7 +1117,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               <div className="w-full bg-white/20 rounded-full h-3">
                 <div 
                   className="bg-gradient-to-r from-green-400 to-blue-400 h-3 rounded-full transition-all duration-1000"
-                  style={{width: `${(timeLeft / 20) * 100}%`}}
+                  style={{width: `${(timeLeft / challenge.timeLimit) * 100}%`}}
                 />
               </div>
             </div>
@@ -1186,20 +1194,14 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div 
-        className="min-h-screen relative"
-        style={{
-          background: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('/lovable-uploads/de24dc2c-7e3c-4f05-9e34-a18dc7d1e29c.png') repeat center center`,
-          backgroundSize: 'auto'
-        }}
-      >
+      <div className="min-h-screen gradient-bg">
         <div className="flex h-screen">
           {/* Main Challenge Area */}
           <div className="flex-1 p-6 flex flex-col">
             <div className="text-center mb-6">
               <div className="flex justify-center items-center gap-4 mb-4">
                 <div className="bg-white/10 px-4 py-2 rounded-lg text-white">
-                  Challenge {currentChallengeIndex + 1}/15
+                  Challenge {currentChallengeIndex + 1}/10
                 </div>
                 <div className="bg-white/10 px-4 py-2 rounded-lg text-white font-bold text-xl">
                   {timeLeft}s
@@ -1208,14 +1210,14 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               <div className="w-full bg-white/20 rounded-full h-3 mb-4">
                 <div 
                   className="bg-gradient-to-r from-green-400 to-blue-400 h-3 rounded-full transition-all duration-1000"
-                  style={{width: `${(timeLeft / 20) * 100}%`}}
+                  style={{width: `${(timeLeft / challenge.timeLimit) * 100}%`}}
                 />
               </div>
             </div>
 
             <div className="bg-white/10 rounded-lg p-8 backdrop-blur-sm flex-1">
-              <h2 className="text-3xl font-bold text-white mb-4 text-center">{challenge.name}</h2>
-              <p className="text-white/80 text-lg mb-8 text-center">{challenge.instructions}</p>
+              <h2 className="text-3xl font-bold text-foreground mb-4 text-center">{challenge.name}</h2>
+              <p className="text-foreground/80 text-lg mb-8 text-center">{challenge.instructions}</p>
               
               <div className="flex justify-center">
                 {renderChallenge()}
@@ -1224,46 +1226,48 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               {hasResponded && (
                 <div className="text-center mt-8">
                   <div className="bg-green-500/20 border border-green-400 rounded-lg px-6 py-3 inline-block">
-                    <span className="text-green-400 font-medium">✅ Response Submitted! Waiting for others...</span>
+                    <span className="text-green-600 font-medium">✅ Response Submitted! Waiting for others...</span>
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Sidebar Leaderboard */}
-          <div className="w-80 bg-black/20 backdrop-blur-sm p-6 border-l border-white/10">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">🏆 Leaderboard</h2>
-            <div className="space-y-3">
-              {sortedPlayers.map((player, index) => (
-                <div
-                  key={player.id}
-                  className={`flex items-center justify-between p-4 rounded-lg transition-all ${
-                    index === 0 ? "bg-yellow-500/20 border border-yellow-400" :
-                    index === 1 ? "bg-gray-300/20 border border-gray-400" :
-                    index === 2 ? "bg-orange-400/20 border border-orange-400" :
-                    "bg-white/10"
-                  } ${player.hasResponded ? "opacity-100" : "opacity-70"}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl font-bold text-white">
-                      {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
-                    </span>
-                    <div>
-                      <div className="text-white font-medium">{player.playerName}</div>
-                      {player.hasResponded && (
-                        <div className="text-green-400 text-xs">✅ Done</div>
-                      )}
-                      {!player.hasResponded && (
-                        <div className="text-yellow-400 text-xs">⏳ Playing...</div>
-                      )}
+          {/* Sidebar Leaderboard - Only show for host */}
+          {currentPlayer.isHost && (
+            <div className="w-80 bg-black/20 backdrop-blur-sm p-6 border-l border-white/10">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">🏆 Leaderboard</h2>
+              <div className="space-y-3">
+                {sortedPlayers.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className={`flex items-center justify-between p-4 rounded-lg transition-all ${
+                      index === 0 ? "bg-yellow-500/20 border border-yellow-400" :
+                      index === 1 ? "bg-gray-300/20 border border-gray-400" :
+                      index === 2 ? "bg-orange-400/20 border border-orange-400" :
+                      "bg-white/10"
+                    } ${player.hasResponded ? "opacity-100" : "opacity-70"}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl font-bold text-white">
+                        {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+                      </span>
+                      <div>
+                        <div className="text-white font-medium">{player.playerName}</div>
+                        {player.hasResponded && (
+                          <div className="text-green-400 text-xs">✅ Done</div>
+                        )}
+                        {!player.hasResponded && (
+                          <div className="text-yellow-400 text-xs">⏳ Playing...</div>
+                        )}
+                      </div>
                     </div>
+                    <span className="text-white text-xl font-bold">{player.score}</span>
                   </div>
-                  <span className="text-white text-xl font-bold">{player.score}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
@@ -1278,13 +1282,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div 
-        className="min-h-screen relative p-6"
-        style={{
-          background: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('/lovable-uploads/de24dc2c-7e3c-4f05-9e34-a18dc7d1e29c.png') repeat center center`,
-          backgroundSize: 'auto'
-        }}
-      >
+      <div className="min-h-screen gradient-bg p-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8">
             <Trophy className="h-16 w-16 mx-auto mb-4 text-yellow-500" />
