@@ -1622,11 +1622,14 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
   if (gamePhase === "finished") {
     const sortedPlayers = players
+      .filter(p => !p.isHost) // Exclude host from final results
       .map(player => ({
         ...player,
         score: scores[player.id] || 0
       }))
       .sort((a, b) => b.score - a.score);
+
+    const nameAndShameComment = getNameAndShameComment();
 
     return (
       <div className="min-h-screen gradient-bg p-6">
@@ -1638,6 +1641,18 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               🎉 {sortedPlayers[0]?.playerName} wins with {sortedPlayers[0]?.score} points!
             </p>
           </div>
+
+          {/* Final Name and Shame Section */}
+          {nameAndShameComment && (
+            <div className="bg-white rounded-lg p-4 sm:p-6 mx-auto mb-6 border-4 border-red-500 max-w-2xl">
+              <div className="text-xl sm:text-2xl font-bold text-red-600 mb-3">
+                🔥 FINAL ROAST 🔥
+              </div>
+              <div className="text-base sm:text-lg font-semibold text-black">
+                {nameAndShameComment}
+              </div>
+            </div>
+          )}
 
           <Card className="p-6 mb-6">
             <h2 className="text-2xl font-semibold mb-4">Final Leaderboard</h2>
