@@ -358,10 +358,16 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         break;
 
       case "sequence_match":
-        const seq1Cats = getRandomCats(3);
+        const seq1 = Array.from({length: 3}, () => {
+          const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+          return emoji || "🐱";
+        });
         const isMatch = Math.random() > 0.5;
-        const seq2Cats = isMatch ? [...seq1Cats] : getRandomCats(3);
-        setSequenceMatch({seq1: seq1Cats, seq2: seq2Cats, match: isMatch});
+        const seq2 = isMatch ? [...seq1] : Array.from({length: 3}, () => {
+          const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+          return emoji || "🐶";
+        });
+        setSequenceMatch({seq1, seq2, match: isMatch});
         setShowSequences(true);
         sequenceTimeoutRef.current = setTimeout(() => setShowSequences(false), 3000);
         break;
@@ -949,24 +955,16 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                 <div className="text-lg sm:text-xl mb-6">Do these sequences match?</div>
                 <div className="space-y-4">
                   <div className="flex justify-center gap-2">
-                    {sequenceMatch.seq1.map((cat, idx) => (
-                      <div key={idx} className="w-12 h-12 sm:w-16 sm:h-16 p-2 bg-blue-100 rounded-lg border-2 border-blue-300">
-                        <img 
-                          src={getCatImageUrl(cat?.icon_url)} 
-                          alt={cat?.name || "Cat"}
-                          className="w-full h-full object-cover rounded"
-                        />
+                    {sequenceMatch.seq1.map((emoji, idx) => (
+                      <div key={idx} className="text-4xl p-2 bg-blue-100 rounded-lg border-2 border-blue-300">
+                        {emoji}
                       </div>
                     ))}
                   </div>
                   <div className="flex justify-center gap-2">
-                    {sequenceMatch.seq2.map((cat, idx) => (
-                      <div key={idx} className="w-12 h-12 sm:w-16 sm:h-16 p-2 bg-green-100 rounded-lg border-2 border-green-300">
-                        <img 
-                          src={getCatImageUrl(cat?.icon_url)} 
-                          alt={cat?.name || "Cat"}
-                          className="w-full h-full object-cover rounded"
-                        />
+                    {sequenceMatch.seq2.map((emoji, idx) => (
+                      <div key={idx} className="text-4xl p-2 bg-green-100 rounded-lg border-2 border-green-300">
+                        {emoji}
                       </div>
                     ))}
                   </div>
