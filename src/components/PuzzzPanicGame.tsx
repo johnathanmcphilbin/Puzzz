@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Trophy, Clock, Zap, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { STATIC_CATS, getCatImageUrl } from "@/assets/catImages";
 
 interface Challenge {
   id: string;
@@ -62,6 +63,13 @@ const CHALLENGES: Challenge[] = [
 
 const EMOJIS = ["🐱", "🐶", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐸", "🐵", "🐔", "🐧", "🦆"];
 const SHAPES = ["⭐", "🔴", "🔵", "🟢", "🟡", "🟣", "⚫", "⚪", "🔶", "🔷"];
+
+// Get random cat images for games
+const getRandomCats = (count: number) => {
+  const shuffled = [...STATIC_CATS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+};
+
 const ARROW_DIRECTIONS = [
   { name: "up", icon: ArrowUp, swipe: "up" },
   { name: "down", icon: ArrowDown, swipe: "down" },
@@ -99,8 +107,8 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const [sequenceMatch, setSequenceMatch] = useState<{seq1: string[], seq2: string[], match: boolean}>({seq1: [], seq2: [], match: false});
   const [showSequences, setShowSequences] = useState(true);
   const [mathProblem, setMathProblem] = useState<{question: string, answer: number, options: number[]}>({question: "", answer: 0, options: []});
-  const [colorShapes, setColorShapes] = useState<{shapes: {emoji: string, color: string, id: number}[], tapped: Set<number>}>({shapes: [], tapped: new Set()});
-  const [movingIcons, setMovingIcons] = useState<{icons: {emoji: string, speed: number, id: number}[], fastest: number}>({icons: [], fastest: 0});
+  const [colorShapes, setColorShapes] = useState<{shapes: {cat?: {id: string, name: string, icon_url: string} | undefined, color: string, id: number}[], tapped: Set<number>}>({shapes: [], tapped: new Set()});
+  const [movingIcons, setMovingIcons] = useState<{icons: {cat?: {id: string, name: string, icon_url: string} | undefined, speed: number, id: number}[], fastest: number}>({icons: [], fastest: 0});
   const [gridMemory, setGridMemory] = useState<{grid: string[][], target: string, targetPos: {row: number, col: number}}>({grid: [], target: "", targetPos: {row: 0, col: 0}});
   const [showGrid, setShowGrid] = useState(true);
   const [barPosition, setBarPosition] = useState(0);
@@ -375,17 +383,19 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         break;
 
       case "color_tap":
-        const colorShapesArray = Array.from({length: 8}, (_, i) => ({
-          emoji: SHAPES[Math.floor(Math.random() * SHAPES.length)] || "⭐",
-          color: Math.random() > 0.4 ? "text-blue-500" : (["text-red-500", "text-green-500", "text-yellow-500"][Math.floor(Math.random() * 3)] || "text-red-500"),
+        const randomCats = getRandomCats(8);
+        const colorCatsArray = Array.from({length: 8}, (_, i) => ({
+          cat: randomCats[i] || STATIC_CATS[0],
+          color: Math.random() > 0.4 ? "blue" : (["red", "green", "yellow"][Math.floor(Math.random() * 3)] || "red"),
           id: i
         }));
-        setColorShapes({shapes: colorShapesArray, tapped: new Set()});
+        setColorShapes({shapes: colorCatsArray, tapped: new Set()});
         break;
 
       case "speed_tap":
+        const randomCatsForSpeed = getRandomCats(4);
         const iconArray = Array.from({length: 4}, (_, i) => ({
-          emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)] || "🐱",
+          cat: randomCatsForSpeed[i] || STATIC_CATS[i],
           speed: Math.random() * 2 + 1,
           id: i
         }));
@@ -522,7 +532,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         baseScore = response === mathProblem.answer ? 1000 : 0;
         break;
       case "color_tap":
-        const blueShapes = colorShapes.shapes.filter(s => s.color === "text-blue-500").length;
+        const blueShapes = colorShapes.shapes.filter(s => s.color === "blue").length;
         const correctTaps = response || 0;
         baseScore = correctTaps === blueShapes ? 1000 : Math.max(0, 1000 - Math.abs(correctTaps - blueShapes) * 200);
         break;
@@ -712,15 +722,27 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const handleColorShapeTap = (shapeId: number) => {
     if (hasResponded) return;
     
+    // Add debugging to see what's happening
+    console.log('Color tap clicked:', shapeId, 'hasResponded:', hasResponded);
+    
     const shape = colorShapes.shapes.find(s => s.id === shapeId);
-    if (shape?.color === "text-blue-500") {
+    console.log('Found shape:', shape);
+    
+    if (shape?.color === "blue") {
       const newTapped = new Set([...colorShapes.tapped, shapeId]);
       setColorShapes(prev => ({...prev, tapped: newTapped}));
       
-      const blueShapes = colorShapes.shapes.filter(s => s.color === "text-blue-500");
+      console.log('Tapped blue shape, new tapped count:', newTapped.size);
+      
+      const blueShapes = colorShapes.shapes.filter(s => s.color === "blue");
+      console.log('Total blue shapes:', blueShapes.length);
+      
       if (newTapped.size === blueShapes.length) {
+        console.log('All blue shapes tapped, submitting response');
         submitResponse(newTapped.size, Date.now() - challengeStartTime);
       }
+    } else {
+      console.log('Not a blue shape, color was:', shape?.color);
     }
   };
 
@@ -1000,19 +1022,28 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "color_tap":
         return (
-          <div className="text-center space-y-8">
-            <div className="text-xl mb-4">Tap all the BLUE shapes!</div>
-            <div className="grid grid-cols-4 gap-4 max-w-md mx-auto">
+          <div className="text-center space-y-4 px-4">
+            <div className="text-lg sm:text-xl mb-4">Tap all the BLUE cats!</div>
+            <div className="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto">
               {colorShapes.shapes.map(shape => (
                 <Button
                   key={shape.id}
                   size="lg"
                   onClick={() => handleColorShapeTap(shape.id)}
                   disabled={hasResponded || colorShapes.tapped.has(shape.id)}
-                  className={`text-4xl h-16 bg-black text-white hover:bg-gray-800 ${colorShapes.tapped.has(shape.id) ? 'opacity-50' : ''}`}
+                  className={`h-16 sm:h-20 p-1 bg-black text-white hover:bg-gray-800 relative ${colorShapes.tapped.has(shape.id) ? 'opacity-50' : ''}`}
                   variant={colorShapes.tapped.has(shape.id) ? "secondary" : "outline"}
                 >
-                  <span className={shape.color}>{shape.emoji}</span>
+                  <img 
+                    src={getCatImageUrl(shape.cat?.icon_url || null)} 
+                    alt={shape.cat?.name || "Cat"}
+                    className={`w-full h-full object-cover rounded ${
+                      shape.color === 'blue' ? 'filter hue-rotate-[240deg] saturate-150' :
+                      shape.color === 'red' ? 'filter hue-rotate-[0deg] saturate-150' :
+                      shape.color === 'green' ? 'filter hue-rotate-[120deg] saturate-150' :
+                      shape.color === 'yellow' ? 'filter hue-rotate-[60deg] saturate-150' : ''
+                    }`}
+                  />
                 </Button>
               ))}
             </div>
@@ -1022,7 +1053,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       case "speed_tap":
         return (
           <div className="text-center space-y-4 px-4">
-            <div className="text-lg sm:text-xl mb-4">Tap the FASTEST moving icon!</div>
+            <div className="text-lg sm:text-xl mb-4">Tap the FASTEST moving cat!</div>
             <div className="flex justify-center gap-3 sm:gap-6 flex-wrap max-w-lg mx-auto">
               {movingIcons.icons.map(icon => (
                 <Button
@@ -1030,16 +1061,20 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                   size="lg"
                   onClick={() => submitResponse(icon.id, Date.now() - challengeStartTime)}
                   disabled={hasResponded}
-                  className="text-3xl sm:text-4xl h-14 w-14 sm:h-16 sm:w-16 relative overflow-hidden bg-black text-white hover:bg-gray-800"
+                  className="h-14 w-14 sm:h-16 sm:w-16 relative overflow-hidden bg-black text-white hover:bg-gray-800 p-1"
                 >
                   <div 
-                    className="absolute inset-0 flex items-center justify-center animate-bounce"
+                    className="absolute inset-1 flex items-center justify-center animate-bounce"
                     style={{
                       animationDuration: `${2 / icon.speed}s`,
                       animationTimingFunction: 'ease-in-out'
                     }}
                   >
-                    {icon.emoji}
+                    <img 
+                      src={getCatImageUrl(icon.cat?.icon_url || null)} 
+                      alt={icon.cat?.name || "Cat"}
+                      className="w-full h-full object-cover rounded"
+                    />
                   </div>
                 </Button>
               ))}
