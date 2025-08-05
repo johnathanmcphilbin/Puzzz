@@ -110,6 +110,8 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const [holdStartTime, setHoldStartTime] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [holdDuration, setHoldDuration] = useState(0);
+  const [countdown, setCountdown] = useState(3);
+  const [breakTime, setBreakTime] = useState(5);
   
   const timerRef = useRef<NodeJS.Timeout>();
   const animationRef = useRef<number>();
@@ -173,7 +175,41 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         setChallengeStartTime(serverStartTime);
       }
     }
-  }, [room.gameState?.challengeStartTime, gamePhase]);
+    }, [room.gameState?.challengeStartTime, gamePhase]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (gamePhase === "countdown" && room.gameState?.countdownStart) {
+      const startTime = room.gameState.countdownStart;
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const timeLeft = Math.max(0, 3 - elapsed);
+      setCountdown(timeLeft);
+      
+      if (timeLeft > 0) {
+        const timer = setTimeout(() => {
+          setCountdown(timeLeft - 1);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [room.gameState?.countdownStart, countdown, gamePhase]);
+
+  // Break timer effect  
+  useEffect(() => {
+    if (gamePhase === "break" && room.gameState?.breakStart) {
+      const startTime = room.gameState.breakStart;
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const timeLeft = Math.max(0, 5 - elapsed);
+      setBreakTime(timeLeft);
+      
+      if (timeLeft > 0) {
+        const timer = setTimeout(() => {
+          setBreakTime(timeLeft - 1);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [room.gameState?.breakStart, breakTime, gamePhase]);
 
   // Initialize challenge when it starts
   useEffect(() => {
@@ -1131,24 +1167,6 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
   // Countdown phase
   if (gamePhase === "countdown") {
-    const [countdown, setCountdown] = useState(3);
-    
-    useEffect(() => {
-      if (room.gameState?.countdownStart) {
-        const startTime = room.gameState.countdownStart;
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const timeLeft = Math.max(0, 3 - elapsed);
-        setCountdown(timeLeft);
-        
-        if (timeLeft > 0) {
-          const timer = setTimeout(() => {
-            setCountdown(timeLeft - 1);
-          }, 1000);
-          return () => clearTimeout(timer);
-        }
-      }
-    }, [room.gameState?.countdownStart, countdown]);
-
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center">
         <div className="text-center">
@@ -1164,24 +1182,6 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
   // Break phase
   if (gamePhase === "break") {
-    const [breakTime, setBreakTime] = useState(5);
-    
-    useEffect(() => {
-      if (room.gameState?.breakStart) {
-        const startTime = room.gameState.breakStart;
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const timeLeft = Math.max(0, 5 - elapsed);
-        setBreakTime(timeLeft);
-        
-        if (timeLeft > 0) {
-          const timer = setTimeout(() => {
-            setBreakTime(timeLeft - 1);
-          }, 1000);
-          return () => clearTimeout(timer);
-        }
-      }
-    }, [room.gameState?.breakStart, breakTime]);
-
     // Show current leaderboard during break
     const sortedPlayers = players
       .filter(p => !p.isHost)
