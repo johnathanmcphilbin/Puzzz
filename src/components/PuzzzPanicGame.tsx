@@ -311,13 +311,30 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         break;
 
       case "pattern":
-        const patternShapes = Array.from({length: 4}, () => {
-          const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-          return shape || "⭐";
-        });
-        const nextShape = SHAPES[Math.floor(Math.random() * SHAPES.length)] || "⭐";
-        const wrongOptions = SHAPES.filter(s => s !== nextShape).slice(0, 2);
-        const patternOptions = [nextShape, ...wrongOptions].sort(() => Math.random() - 0.5);
+        // Create actual patterns instead of random shapes
+        const patternTypes = [
+          // Simple repeating patterns
+          () => ["⭐", "🔴", "⭐", "🔴"], // Star-Red repeating
+          () => ["🔵", "🔵", "🟢", "🔵"], // Blue-Blue-Green repeating  
+          () => ["🟡", "🔶", "🟡", "🔶"], // Yellow-Orange repeating
+          // Alternating size patterns  
+          () => ["⭐", "🔴", "🔵", "🟢"], // Rainbow sequence
+          () => ["🔵", "🟢", "🟡", "🔴"], // Color wheel
+          // Number-based patterns
+          () => ["🔴", "🔴", "🔵", "🔴"], // 2-1-1 pattern
+        ];
+        
+        const patternType = patternTypes[Math.floor(Math.random() * patternTypes.length)];
+        const basePattern = patternType?.() || ["⭐", "🔴", "⭐", "🔴"];
+        
+        // Show first 3 elements, ask for 4th
+        const patternShapes = basePattern.slice(0, 3);
+        const correctNext = basePattern[3] || "⭐";
+        
+        // Create wrong options that don't match the pattern
+        const wrongOptions = SHAPES.filter(s => s !== correctNext).slice(0, 2);
+        const patternOptions = [correctNext, ...wrongOptions].sort(() => Math.random() - 0.5);
+        
         setPattern({shapes: patternShapes, nextOptions: patternOptions});
         break;
 
@@ -851,24 +868,24 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "pattern":
         return (
-          <div className="text-center space-y-8">
-            <div className="text-xl mb-4">What comes next?</div>
-            <div className="flex justify-center gap-4 mb-8">
+          <div className="text-center space-y-4 px-4">
+            <div className="text-lg sm:text-xl mb-4">What comes next in this pattern?</div>
+            <div className="flex justify-center gap-2 sm:gap-4 mb-6 flex-wrap">
               {pattern.shapes.map((shape, idx) => (
-                <div key={idx} className="text-6xl p-2 bg-gray-100 rounded-lg">
+                <div key={idx} className="text-4xl sm:text-6xl p-2 sm:p-3 bg-gray-100 rounded-lg">
                   {shape}
                 </div>
               ))}
-              <div className="text-6xl p-2 bg-gray-300 rounded-lg">?</div>
+              <div className="text-4xl sm:text-6xl p-2 sm:p-3 bg-gray-300 rounded-lg">?</div>
             </div>
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-3 flex-wrap max-w-sm mx-auto">
               {pattern.nextOptions.map(option => (
                 <Button
                   key={option}
                   size="lg"
                   onClick={() => submitResponse(option, Date.now() - challengeStartTime)}
                   disabled={hasResponded}
-                  className="text-4xl h-16 w-16 bg-black text-white hover:bg-gray-800"
+                  className="text-3xl sm:text-4xl h-14 w-14 sm:h-16 sm:w-16 bg-black text-white hover:bg-gray-800"
                 >
                   {option}
                 </Button>
