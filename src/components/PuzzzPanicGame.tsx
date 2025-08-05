@@ -659,39 +659,6 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     }
   };
 
-  // Name and shame function for worst performing player
-  const getNameAndShameComment = () => {
-    const playerScores = Object.entries(scores);
-    if (playerScores.length === 0) return null;
-    
-    // Find the worst performer
-    const sortedScores = playerScores.sort(([,a], [,b]) => a - b);
-    const worstPlayerEntry = sortedScores[0];
-    if (!worstPlayerEntry) return null;
-    
-    const [worstPlayerId, worstScore] = worstPlayerEntry;
-    const worstPlayer = players.find(p => p.id === worstPlayerId);
-    
-    if (!worstPlayer || playerScores.length < 2) return null;
-    
-    // Generate different roasts based on round number to avoid repetition
-    const roasts = [
-      `${worstPlayer.playerName} is playing like they're wearing boxing gloves! 🥊`,
-      `I think ${worstPlayer.playerName} needs to go back to preschool! 🍼`,
-      `${worstPlayer.playerName} is making everyone else look like geniuses! 🧠`,
-      `Did ${worstPlayer.playerName} forget how to use their brain today? 🤔`,
-      `${worstPlayer.playerName} is putting the 'L' in loser right now! 📉`,
-      `Someone get ${worstPlayer.playerName} a tutorial! They clearly need it! 📚`,
-      `${worstPlayer.playerName} is playing like they're blindfolded! 👻`,
-      `I've seen rocks with better reflexes than ${worstPlayer.playerName}! 🪨`,
-      `${worstPlayer.playerName} is making this too easy for everyone else! 😴`,
-      `${worstPlayer.playerName} should stick to tic-tac-toe! ❌⭕`,
-    ];
-    
-    // Use round number to cycle through different roasts
-    const roastIndex = currentChallengeIndex % roasts.length;
-    return roasts[roastIndex];
-  };
 
   const resetGame = () => {
     if (!currentPlayer.isHost) return;
@@ -1328,9 +1295,44 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     );
   }
 
+  // Name and shame function
+  const getNameAndShameComment = () => {
+    // Only show for non-host players with scores
+    const nonHostPlayers = players.filter(p => !p.isHost);
+    if (nonHostPlayers.length === 0) return null;
+    
+    const playersWithScores = nonHostPlayers.map(player => ({
+      ...player,
+      score: scores[player.id] || 0
+    }));
+    
+    // Find the worst performing player (lowest score)
+    const worstPlayer = playersWithScores.reduce((worst, current) => 
+      current.score < worst.score ? current : worst
+    );
+    
+    // Don't shame if there's no clear worst player or if all players have 0 score
+    if (!worstPlayer || playersWithScores.every(p => p.score === worstPlayer.score)) {
+      return null;
+    }
+    
+    const roastComments = [
+      `${worstPlayer.playerName} is making this too easy for everyone else! 😴`,
+      `${worstPlayer.playerName} should stick to tic-tac-toe! ❌⭕`,
+      `${worstPlayer.playerName} needs to wake up! ☕`,
+      `${worstPlayer.playerName} is having a rough time! 😅`,
+      `${worstPlayer.playerName} might need some practice! 🎯`,
+      `${worstPlayer.playerName} is giving everyone else a chance! 🎁`,
+      `${worstPlayer.playerName} is keeping it interesting! 🎭`,
+      `${worstPlayer.playerName} is playing the long game! 🐌`
+    ];
+    
+    return roastComments[Math.floor(Math.random() * roastComments.length)];
+  };
+
   // Break phase
   if (gamePhase === "break") {
-    // Show current leaderboard during break
+    // Show current leaderboard during break (excluding host)
     const sortedPlayers = players
       .filter(p => !p.isHost)
       .map(player => ({
@@ -1339,6 +1341,8 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       }))
       .sort((a, b) => b.score - a.score);
 
+    const nameAndShameComment = getNameAndShameComment();
+
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center px-4">
         <div className="text-center max-w-2xl mx-auto">
@@ -1346,19 +1350,19 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           <div className="text-5xl sm:text-6xl font-bold text-white mb-4">{breakTime}s</div>
           <p className="text-lg sm:text-xl text-white/80 mb-8">Next challenge starting soon...</p>
           
-          {/* Name and Shame Section */}
-          {getNameAndShameComment() && (
+          {/* Name and Shame Section - shows throughout entire break */}
+          {nameAndShameComment && (
             <div className="bg-white rounded-lg p-4 sm:p-6 mx-auto mb-6 border-4 border-red-500">
               <div className="text-xl sm:text-2xl font-bold text-red-600 mb-3">
                 🔥 ROAST OF THE ROUND 🔥
               </div>
               <div className="text-base sm:text-lg font-semibold text-black">
-                {getNameAndShameComment()}
+                {nameAndShameComment}
               </div>
             </div>
           )}
           
-          {/* Mini leaderboard */}
+          {/* Mini leaderboard (excluding host) */}
           <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md mx-auto">
             <h3 className="text-lg sm:text-xl font-bold text-black mb-4">Current Standings</h3>
             <div className="space-y-2">
