@@ -1472,10 +1472,13 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       <div className="min-h-screen gradient-bg p-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-2">
-              <Zap className="h-8 w-8" />
-              Puzzz Panic
-            </h1>
+            <div className="mb-6">
+              <img 
+                src="/lovable-uploads/f3e4c1e6-0768-4256-bb63-274764483b98.png" 
+                alt="Puzzz Panic Logo"
+                className="mx-auto max-w-md w-full h-auto"
+              />
+            </div>
             <p className="text-lg text-muted-foreground">
               Fast-paced challenges for {players.length} players!
             </p>
