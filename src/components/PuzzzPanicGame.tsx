@@ -29,6 +29,9 @@ interface Room {
     challengeData?: any;
     playerResponses?: Record<string, any>;
     challengeOrder?: number[];
+    challengeStartTime?: number;
+    countdownStart?: number;
+    breakStart?: number;
   };
 }
 
@@ -88,6 +91,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const [swipeSequence, setSwipeSequence] = useState<string[]>([]);
   const [userSwipes, setUserSwipes] = useState<string[]>([]);
   const [currentSwipeIndex, setCurrentSwipeIndex] = useState(0);
+  const [showSwipeSequence, setShowSwipeSequence] = useState(true);
   const [pattern, setPattern] = useState<{shapes: string[], nextOptions: string[]}>({shapes: [], nextOptions: []});
   const [emojiMemory, setEmojiMemory] = useState<{shown: string[], missing: string, options: string[]}>({shown: [], missing: "", options: []});
   const [showEmojiMemory, setShowEmojiMemory] = useState(true);
@@ -141,7 +145,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     }
   }, [room.gameState]);
 
-  // Timer effect
+  // Timer effect - sync across all devices using room data
   useEffect(() => {
     if (gamePhase === "challenge" && timeLeft > 0) {
       timerRef.current = setTimeout(() => {
@@ -155,6 +159,21 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [timeLeft, gamePhase, hasResponded]);
+
+  // Global timer sync - get timer start from room data
+  useEffect(() => {
+    if (gamePhase === "challenge" && room.gameState?.challengeStartTime) {
+      const serverStartTime = room.gameState.challengeStartTime;
+      const now = Date.now();
+      const elapsed = Math.floor((now - serverStartTime) / 1000);
+      const newTimeLeft = Math.max(0, challenge.timeLimit - elapsed);
+      
+      if (Math.abs(timeLeft - newTimeLeft) > 1) { // Only sync if difference is significant
+        setTimeLeft(newTimeLeft);
+        setChallengeStartTime(serverStartTime);
+      }
+    }
+  }, [room.gameState?.challengeStartTime, gamePhase]);
 
   // Initialize challenge when it starts
   useEffect(() => {
@@ -171,6 +190,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     setIsGreen(false);
     setUserSwipes([]);
     setCurrentSwipeIndex(0);
+    setShowSwipeSequence(true);
     setHoldStartTime(0);
     setIsHolding(false);
     setHoldDuration(0);
@@ -200,6 +220,11 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           return dir || "up";
         });
         setSwipeSequence(sequence);
+        setShowSwipeSequence(true);
+        // Show sequence for 5 seconds, then hide it
+        setTimeout(() => {
+          setShowSwipeSequence(false);
+        }, 5000);
         break;
 
       case "pattern":
@@ -375,8 +400,8 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         break;
       case "reaction_time":
         if (response && isGreen && greenStartTime > 0) {
-          const reactionTime = responseTime - (challengeStartTime - greenStartTime);
-          baseScore = Math.max(200, 1000 - Math.abs(reactionTime) / 2);
+          const reactionTime = Date.now() - greenStartTime;
+          baseScore = Math.max(200, 1000 - reactionTime / 5);
         } else {
           baseScore = 0;
         }
@@ -441,13 +466,28 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     
     onUpdateRoom({
       gameState: {
-        phase: "challenge",
+        phase: "countdown",
         currentChallenge: 0,
         scores: activePlayers.reduce((acc, p) => ({ ...acc, [p.id]: 0 }), {}),
         challengeOrder: shuffledChallenges,
-        playerResponses: {}
+        playerResponses: {},
+        countdownStart: Date.now()
       }
     });
+    
+    // Start countdown then begin challenge
+    setTimeout(() => {
+      onUpdateRoom({
+        gameState: {
+          phase: "challenge",
+          currentChallenge: 0,
+          scores: activePlayers.reduce((acc, p) => ({ ...acc, [p.id]: 0 }), {}),
+          challengeOrder: shuffledChallenges,
+          playerResponses: {},
+          challengeStartTime: Date.now()
+        }
+      });
+    }, 3000); // 3 second countdown
   };
 
   const nextChallenge = () => {
@@ -471,14 +511,45 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         }
       });
     } else {
+      // Add break phase before next challenge
       onUpdateRoom({
         gameState: {
           ...room.gameState,
+          phase: "break",
           currentChallenge: nextIndex,
           scores: newScores,
-          playerResponses: {}
+          playerResponses: {},
+          breakStart: Date.now()
         }
       });
+      
+      // Auto-start next challenge after 5 seconds
+      setTimeout(() => {
+        onUpdateRoom({
+          gameState: {
+            ...room.gameState,
+            phase: "countdown",
+            currentChallenge: nextIndex,
+            scores: newScores,
+            playerResponses: {},
+            countdownStart: Date.now()
+          }
+        });
+        
+        // Then start the actual challenge after countdown
+        setTimeout(() => {
+          onUpdateRoom({
+            gameState: {
+              ...room.gameState,
+              phase: "challenge",
+              currentChallenge: nextIndex,
+              scores: newScores,
+              playerResponses: {},
+              challengeStartTime: Date.now()
+            }
+          });
+        }, 3000); // 3 second countdown
+      }, 5000); // 5 second break
     }
   };
 
@@ -645,38 +716,62 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       case "swipe_sequence":
         return (
           <div className="text-center space-y-8">
-            <div className="text-2xl mb-4">Swipe in order:</div>
-            <div className="flex justify-center gap-4 mb-8">
-              {swipeSequence.map((direction, idx) => {
-                const Icon = ARROW_DIRECTIONS.find(d => d.swipe === direction)?.icon || ArrowUp;
-                return (
-                  <div 
-                    key={idx} 
-                    className={`p-4 rounded-lg border-2 ${
-                      idx < currentSwipeIndex ? "bg-green-200 border-green-500" : "bg-gray-100 border-gray-300"
-                    }`}
-                  >
-                    <Icon className="h-8 w-8" />
-                  </div>
-                );
-              })}
-            </div>
-            <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
-              {ARROW_DIRECTIONS.map(direction => {
-                const Icon = direction.icon;
-                return (
-                  <Button
-                    key={direction.swipe}
-                    size="lg"
-                    onClick={() => handleSwipe(direction.swipe)}
-                    disabled={hasResponded}
-                    className="h-16 bg-black text-white hover:bg-gray-800"
-                  >
-                    <Icon className="h-6 w-6" />
-                  </Button>
-                );
-              })}
-            </div>
+            {showSwipeSequence ? (
+              <div>
+                <div className="text-2xl mb-4">Remember this sequence:</div>
+                <div className="flex justify-center gap-4 mb-8">
+                  {swipeSequence.map((direction, idx) => {
+                    const Icon = ARROW_DIRECTIONS.find(d => d.swipe === direction)?.icon || ArrowUp;
+                    return (
+                      <div 
+                        key={idx} 
+                        className="p-6 rounded-lg border-2 bg-blue-100 border-blue-500"
+                      >
+                        <Icon className="h-12 w-12 text-blue-600" />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-lg text-yellow-600">
+                  Memorize the sequence... You'll need to swipe from memory!
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="text-2xl mb-4">Now swipe in the same order!</div>
+                <div className="flex justify-center gap-4 mb-8">
+                  {swipeSequence.map((direction, idx) => {
+                    const Icon = ARROW_DIRECTIONS.find(d => d.swipe === direction)?.icon || ArrowUp;
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`p-4 rounded-lg border-2 ${
+                          idx < currentSwipeIndex ? "bg-green-200 border-green-500" : "bg-gray-100 border-gray-300"
+                        }`}
+                      >
+                        <Icon className="h-8 w-8" />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+                  {ARROW_DIRECTIONS.map(direction => {
+                    const Icon = direction.icon;
+                    return (
+                      <Button
+                        key={direction.swipe}
+                        size="lg"
+                        onClick={() => handleSwipe(direction.swipe)}
+                        disabled={hasResponded}
+                        className="h-16 bg-black text-white hover:bg-gray-800"
+                      >
+                        <Icon className="h-6 w-6" />
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -1033,6 +1128,94 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         );
     }
   };
+
+  // Countdown phase
+  if (gamePhase === "countdown") {
+    const [countdown, setCountdown] = useState(3);
+    
+    useEffect(() => {
+      if (room.gameState?.countdownStart) {
+        const startTime = room.gameState.countdownStart;
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const timeLeft = Math.max(0, 3 - elapsed);
+        setCountdown(timeLeft);
+        
+        if (timeLeft > 0) {
+          const timer = setTimeout(() => {
+            setCountdown(timeLeft - 1);
+          }, 1000);
+          return () => clearTimeout(timer);
+        }
+      }
+    }, [room.gameState?.countdownStart, countdown]);
+
+    return (
+      <div className="min-h-screen gradient-bg flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-6xl font-bold text-white mb-8">Get Ready!</h1>
+          <div className="text-9xl font-bold text-white animate-pulse">
+            {countdown || "GO!"}
+          </div>
+          <p className="text-xl text-white/80 mt-4">Challenge starting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Break phase
+  if (gamePhase === "break") {
+    const [breakTime, setBreakTime] = useState(5);
+    
+    useEffect(() => {
+      if (room.gameState?.breakStart) {
+        const startTime = room.gameState.breakStart;
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const timeLeft = Math.max(0, 5 - elapsed);
+        setBreakTime(timeLeft);
+        
+        if (timeLeft > 0) {
+          const timer = setTimeout(() => {
+            setBreakTime(timeLeft - 1);
+          }, 1000);
+          return () => clearTimeout(timer);
+        }
+      }
+    }, [room.gameState?.breakStart, breakTime]);
+
+    // Show current leaderboard during break
+    const sortedPlayers = players
+      .filter(p => !p.isHost)
+      .map(player => ({
+        ...player,
+        score: scores[player.id] || 0
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    return (
+      <div className="min-h-screen gradient-bg flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-white mb-8">Take a Break!</h1>
+          <div className="text-6xl font-bold text-white mb-4">{breakTime}s</div>
+          <p className="text-xl text-white/80 mb-8">Next challenge starting soon...</p>
+          
+          {/* Mini leaderboard */}
+          <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
+            <h3 className="text-xl font-bold text-foreground mb-4">Current Standings</h3>
+            <div className="space-y-2">
+              {sortedPlayers.slice(0, 3).map((player, index) => (
+                <div key={player.id} className="flex justify-between items-center">
+                  <span className="font-medium">
+                    {index + 1}. {player.playerName}
+                  </span>
+                  <span className="font-bold">{player.score}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (gamePhase === "waiting") {
     return (
