@@ -896,13 +896,13 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "emoji_memory":
         return (
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-4 px-4">
             {showEmojiMemory ? (
               <div>
-                <div className="text-xl mb-6">Remember these emojis:</div>
-                <div className="flex justify-center gap-4">
+                <div className="text-lg sm:text-xl mb-4">Remember these emojis:</div>
+                <div className="flex justify-center gap-2 sm:gap-4 flex-wrap">
                   {emojiMemory.shown.map((emoji, idx) => (
-                    <div key={idx} className="text-6xl p-4 bg-gray-100 rounded-lg">
+                    <div key={idx} className="text-4xl sm:text-6xl p-2 sm:p-4 bg-gray-100 rounded-lg">
                       {emoji}
                     </div>
                   ))}
@@ -910,15 +910,15 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               </div>
             ) : (
               <div>
-                <div className="text-xl mb-6">Which emoji was missing?</div>
-                <div className="flex justify-center gap-4">
+                <div className="text-lg sm:text-xl mb-4">Which emoji was missing?</div>
+                <div className="flex justify-center gap-2 sm:gap-4 flex-wrap max-w-sm mx-auto">
                   {emojiMemory.options.map(option => (
                     <Button
                       key={option}
                       size="lg"
                       onClick={() => submitResponse(option, Date.now() - challengeStartTime)}
                       disabled={hasResponded}
-                      className="text-4xl h-16 w-16 bg-black text-white hover:bg-gray-800"
+                      className="text-3xl sm:text-4xl h-14 w-14 sm:h-16 sm:w-16 bg-black text-white hover:bg-gray-800"
                     >
                       {option}
                     </Button>
@@ -1021,16 +1021,16 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "speed_tap":
         return (
-          <div className="text-center space-y-8">
-            <div className="text-xl mb-4">Tap the FASTEST moving icon!</div>
-            <div className="flex justify-center gap-8">
+          <div className="text-center space-y-4 px-4">
+            <div className="text-lg sm:text-xl mb-4">Tap the FASTEST moving icon!</div>
+            <div className="flex justify-center gap-3 sm:gap-6 flex-wrap max-w-lg mx-auto">
               {movingIcons.icons.map(icon => (
                 <Button
                   key={icon.id}
                   size="lg"
                   onClick={() => submitResponse(icon.id, Date.now() - challengeStartTime)}
                   disabled={hasResponded}
-                  className="text-4xl h-16 w-16 relative overflow-hidden bg-black text-white hover:bg-gray-800"
+                  className="text-3xl sm:text-4xl h-14 w-14 sm:h-16 sm:w-16 relative overflow-hidden bg-black text-white hover:bg-gray-800"
                 >
                   <div 
                     className="absolute inset-0 flex items-center justify-center animate-bounce"
