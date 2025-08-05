@@ -151,17 +151,19 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   useEffect(() => {
     if (gamePhase === "challenge" && timeLeft > 0) {
       timerRef.current = setTimeout(() => {
-        setTimeLeft(prev => prev - 1);
+        const newTime = timeLeft - 1;
+        setTimeLeft(newTime);
+        
+        // Only trigger nextChallenge when timer naturally reaches 0, not from sync
+        if (newTime === 0 && currentPlayer.isHost) {
+          setTimeout(() => nextChallenge(), 1000);
+        }
       }, 1000);
-    } else if (timeLeft === 0 && gamePhase === "challenge") {
-      // When timer runs out, host should transition to break phase
-      if (currentPlayer.isHost) {
-        setTimeout(() => nextChallenge(), 1000);
-      }
-      // Submit null response if player hasn't responded
-      if (!hasResponded) {
-        submitResponse(null, Date.now() - challengeStartTime);
-      }
+    }
+    
+    // Submit null response if player hasn't responded and time is up
+    if (timeLeft === 0 && gamePhase === "challenge" && !hasResponded) {
+      submitResponse(null, Date.now() - challengeStartTime);
     }
     
     return () => {
