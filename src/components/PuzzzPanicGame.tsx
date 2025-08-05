@@ -102,9 +102,9 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const [currentSwipeIndex, setCurrentSwipeIndex] = useState(0);
   const [showSwipeSequence, setShowSwipeSequence] = useState(true);
   const [pattern, setPattern] = useState<{shapes: string[], nextOptions: string[]}>({shapes: [], nextOptions: []});
-  const [emojiMemory, setEmojiMemory] = useState<{shown: any[], missing: any, options: any[]}>({shown: [], missing: null, options: []});
+  const [emojiMemory, setEmojiMemory] = useState<{shown: string[], missing: string, options: string[]}>({shown: [], missing: "", options: []});
   const [showEmojiMemory, setShowEmojiMemory] = useState(true);
-  const [sequenceMatch, setSequenceMatch] = useState<{seq1: any[], seq2: any[], match: boolean}>({seq1: [], seq2: [], match: false});
+  const [sequenceMatch, setSequenceMatch] = useState<{seq1: string[], seq2: string[], match: boolean}>({seq1: [], seq2: [], match: false});
   const [showSequences, setShowSequences] = useState(true);
   const [mathProblem, setMathProblem] = useState<{question: string, answer: number, options: number[]}>({question: "", answer: 0, options: []});
   const [colorShapes, setColorShapes] = useState<{shapes: {cat?: {id: string, name: string, icon_url: string} | undefined, color: string, id: number}[], tapped: Set<number>}>({shapes: [], tapped: new Set()});
@@ -347,12 +347,12 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         break;
 
       case "emoji_memory":
-        const allCats = [...STATIC_CATS];
-        const shownCats = allCats.splice(0, 3);
-        const missingCat = allCats[Math.floor(Math.random() * allCats.length)] || STATIC_CATS[0];
-        const wrongCats = allCats.filter(c => c && c.id !== missingCat?.id).slice(0, 2);
-        const catOptions = [missingCat, ...wrongCats].sort(() => Math.random() - 0.5);
-        setEmojiMemory({shown: shownCats, missing: missingCat, options: catOptions});
+        const allEmojis = [...EMOJIS];
+        const shownEmojis = allEmojis.splice(0, 3);
+        const missingEmoji = allEmojis[Math.floor(Math.random() * allEmojis.length)] || "🐱";
+        const wrongEmojis = allEmojis.filter(e => e !== missingEmoji).slice(0, 2);
+        const emojiOptions = [missingEmoji, ...wrongEmojis].sort(() => Math.random() - 0.5);
+        setEmojiMemory({shown: shownEmojis, missing: missingEmoji, options: emojiOptions});
         setShowEmojiMemory(true);
         emojiTimeoutRef.current = setTimeout(() => setShowEmojiMemory(false), 2000);
         break;
@@ -911,36 +911,28 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           <div className="text-center space-y-4 px-4">
             {showEmojiMemory ? (
               <div>
-                <div className="text-lg sm:text-xl mb-4">Remember these cats:</div>
+                <div className="text-lg sm:text-xl mb-4">Remember these emojis:</div>
                 <div className="flex justify-center gap-2 sm:gap-4 flex-wrap">
-                  {emojiMemory.shown.map((cat, idx) => (
-                    <div key={idx} className="w-16 h-16 sm:w-20 sm:h-20 p-2 bg-gray-100 rounded-lg">
-                      <img 
-                        src={getCatImageUrl(cat?.icon_url)} 
-                        alt={cat?.name || "Cat"}
-                        className="w-full h-full object-cover rounded"
-                      />
+                  {emojiMemory.shown.map((emoji, idx) => (
+                    <div key={idx} className="text-4xl sm:text-6xl p-2 sm:p-4 bg-gray-100 rounded-lg">
+                      {emoji}
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
               <div>
-                <div className="text-lg sm:text-xl mb-4">Which cat was missing?</div>
+                <div className="text-lg sm:text-xl mb-4">Which emoji was missing?</div>
                 <div className="flex justify-center gap-2 sm:gap-4 flex-wrap max-w-sm mx-auto">
-                  {emojiMemory.options.map((cat, idx) => (
+                  {emojiMemory.options.map(option => (
                     <Button
-                      key={cat?.id || idx}
+                      key={option}
                       size="lg"
-                      onClick={() => submitResponse(cat, Date.now() - challengeStartTime)}
+                      onClick={() => submitResponse(option, Date.now() - challengeStartTime)}
                       disabled={hasResponded}
-                      className="h-14 w-14 sm:h-16 sm:w-16 bg-black text-white hover:bg-gray-800 p-1"
+                      className="text-3xl sm:text-4xl h-14 w-14 sm:h-16 sm:w-16 bg-black text-white hover:bg-gray-800"
                     >
-                      <img 
-                        src={getCatImageUrl(cat?.icon_url)} 
-                        alt={cat?.name || "Cat"}
-                        className="w-full h-full object-cover rounded"
-                      />
+                      {option}
                     </Button>
                   ))}
                 </div>
