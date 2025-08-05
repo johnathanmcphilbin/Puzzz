@@ -85,7 +85,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   
   // Challenge-specific state
   const [tapCount, setTapCount] = useState(0);
-  const [colorWords, setColorWords] = useState<{word: string, color: string, options: string[]}>();
+  const [colorWords, setColorWords] = useState<{word: string, color: string, options: string[], correctAnswer: string}>();
   const [isGreen, setIsGreen] = useState(false);
   const [greenStartTime, setGreenStartTime] = useState(0);
   const [swipeSequence, setSwipeSequence] = useState<string[]>([]);
@@ -153,14 +153,21 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       timerRef.current = setTimeout(() => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0 && gamePhase === "challenge" && !hasResponded) {
-      submitResponse(null, Date.now() - challengeStartTime);
+    } else if (timeLeft === 0 && gamePhase === "challenge") {
+      // When timer runs out, host should transition to break phase
+      if (currentPlayer.isHost) {
+        setTimeout(() => nextChallenge(), 1000);
+      }
+      // Submit null response if player hasn't responded
+      if (!hasResponded) {
+        submitResponse(null, Date.now() - challengeStartTime);
+      }
     }
     
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [timeLeft, gamePhase, hasResponded]);
+  }, [timeLeft, gamePhase, hasResponded, currentPlayer.isHost]);
 
   // Global timer sync - get timer start from room data
   useEffect(() => {
@@ -235,9 +242,18 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       case "color_word":
         const words = ["RED", "BLUE", "GREEN", "YELLOW"];
         const colors = ["text-red-500", "text-blue-500", "text-green-500", "text-yellow-500"];
+        const colorNames = ["RED", "BLUE", "GREEN", "YELLOW"];
         const word = words[Math.floor(Math.random() * words.length)] || "RED";
         const color = colors[Math.floor(Math.random() * colors.length)] || "text-red-500";
-        setColorWords({word, color, options: words});
+        
+        // Get the correct color name from the actual color class
+        let correctColorName = "RED";
+        if (color.includes("red")) correctColorName = "RED";
+        else if (color.includes("blue")) correctColorName = "BLUE";
+        else if (color.includes("green")) correctColorName = "GREEN";
+        else if (color.includes("yellow")) correctColorName = "YELLOW";
+        
+        setColorWords({word, color, options: colorNames, correctAnswer: correctColorName});
         break;
 
       case "reaction_time":
@@ -432,7 +448,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         baseScore = response === 10 ? 1000 : Math.max(0, 1000 - Math.abs(response - 10) * 100);
         break;
       case "color_word":
-        baseScore = response === colorWords?.word ? 1000 : 0;
+        baseScore = response === colorWords?.correctAnswer ? 1000 : 0;
         break;
       case "reaction_time":
         if (response && isGreen && greenStartTime > 0) {
@@ -703,20 +719,23 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "color_word":
         return (
-          <div className="text-center space-y-8">
-            <div className={`text-8xl font-bold ${colorWords?.color || 'text-red-500'}`}>
+          <div className="text-center space-y-8 px-4">
+            <div className="text-lg mb-4 text-white">
+              What COLOR is this word displayed in?
+            </div>
+            <div className={`text-6xl md:text-8xl font-bold ${colorWords?.color || 'text-red-500'} mb-8`}>
               {colorWords?.word || 'Loading...'}
             </div>
-            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-              {(colorWords?.options || []).map(word => (
+            <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+              {(colorWords?.options || []).map(colorName => (
                 <Button
-                  key={word}
+                  key={colorName}
                   size="lg"
-                  onClick={() => submitResponse(word, Date.now() - challengeStartTime)}
+                  onClick={() => submitResponse(colorName, Date.now() - challengeStartTime)}
                   disabled={hasResponded}
-                  className="text-xl h-16 bg-black text-white hover:bg-gray-800"
+                  className="text-lg h-14 bg-black text-white hover:bg-gray-800 border border-white/20"
                 >
-                  {word}
+                  {colorName}
                 </Button>
               ))}
             </div>
