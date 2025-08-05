@@ -577,7 +577,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
             <div className="text-8xl font-bold text-primary">{tapCount}/10</div>
             <Button
               size="lg"
-              className="w-64 h-32 text-3xl"
+              className="w-64 h-32 text-3xl bg-black text-white hover:bg-gray-800"
               onClick={() => {
                 if (!hasResponded && tapCount < 10) {
                   const newCount = tapCount + 1;
@@ -607,7 +607,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                   size="lg"
                   onClick={() => submitResponse(word, Date.now() - challengeStartTime)}
                   disabled={hasResponded}
-                  className="text-xl h-16"
+                  className="text-xl h-16 bg-black text-white hover:bg-gray-800"
                 >
                   {word}
                 </Button>
@@ -626,7 +626,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
             />
             <Button
               size="lg"
-              className="w-48 h-16 text-xl"
+              className="w-48 h-16 text-xl bg-black text-white hover:bg-gray-800"
               onClick={() => {
                 if (isGreen && !hasResponded) {
                   submitResponse(true, Date.now() - challengeStartTime);
@@ -670,7 +670,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                     size="lg"
                     onClick={() => handleSwipe(direction.swipe)}
                     disabled={hasResponded}
-                    className="h-16"
+                    className="h-16 bg-black text-white hover:bg-gray-800"
                   >
                     <Icon className="h-6 w-6" />
                   </Button>
@@ -699,7 +699,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                   size="lg"
                   onClick={() => submitResponse(option, Date.now() - challengeStartTime)}
                   disabled={hasResponded}
-                  className="text-4xl h-16 w-16"
+                  className="text-4xl h-16 w-16 bg-black text-white hover:bg-gray-800"
                 >
                   {option}
                 </Button>
@@ -732,7 +732,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                       size="lg"
                       onClick={() => submitResponse(option, Date.now() - challengeStartTime)}
                       disabled={hasResponded}
-                      className="text-4xl h-16 w-16"
+                      className="text-4xl h-16 w-16 bg-black text-white hover:bg-gray-800"
                     >
                       {option}
                     </Button>
@@ -774,7 +774,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                     size="lg"
                     onClick={() => submitResponse(true, Date.now() - challengeStartTime)}
                     disabled={hasResponded}
-                    className="text-xl h-16 px-8"
+                    className="text-xl h-16 px-8 bg-black text-white hover:bg-gray-800"
                   >
                     YES
                   </Button>
@@ -782,7 +782,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                     size="lg"
                     onClick={() => submitResponse(false, Date.now() - challengeStartTime)}
                     disabled={hasResponded}
-                    className="text-xl h-16 px-8"
+                    className="text-xl h-16 px-8 bg-black text-white hover:bg-gray-800"
                   >
                     NO
                   </Button>
@@ -803,7 +803,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                   size="lg"
                   onClick={() => submitResponse(option, Date.now() - challengeStartTime)}
                   disabled={hasResponded}
-                  className="text-2xl h-16"
+                  className="text-2xl h-16 bg-black text-white hover:bg-gray-800"
                 >
                   {option}
                 </Button>
@@ -823,7 +823,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                   size="lg"
                   onClick={() => handleColorShapeTap(shape.id)}
                   disabled={hasResponded || colorShapes.tapped.has(shape.id)}
-                  className={`text-4xl h-16 ${colorShapes.tapped.has(shape.id) ? 'opacity-50' : ''}`}
+                  className={`text-4xl h-16 bg-black text-white hover:bg-gray-800 ${colorShapes.tapped.has(shape.id) ? 'opacity-50' : ''}`}
                   variant={colorShapes.tapped.has(shape.id) ? "secondary" : "outline"}
                 >
                   <span className={shape.color}>{shape.emoji}</span>
@@ -844,7 +844,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                   size="lg"
                   onClick={() => submitResponse(icon.id, Date.now() - challengeStartTime)}
                   disabled={hasResponded}
-                  className="text-4xl h-16 w-16 relative overflow-hidden"
+                  className="text-4xl h-16 w-16 relative overflow-hidden bg-black text-white hover:bg-gray-800"
                 >
                   <div 
                     className="absolute inset-0 flex items-center justify-center animate-bounce"
@@ -893,7 +893,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                         size="lg"
                         onClick={() => submitResponse({row, col}, Date.now() - challengeStartTime)}
                         disabled={hasResponded}
-                        className="w-16 h-16 text-xl"
+                        className="w-16 h-16 text-xl bg-black text-white hover:bg-gray-800"
                       >
                         ?
                       </Button>
@@ -924,7 +924,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
             </div>
             <Button
               size="lg"
-              className="w-48 h-16 text-xl"
+              className="w-48 h-16 text-xl bg-black text-white hover:bg-gray-800"
               onClick={() => {
                 if (!hasResponded) {
                   if (animationRef.current) {
@@ -959,7 +959,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                     size="lg"
                     onClick={() => handleSwipe(direction.swipe)}
                     disabled={hasResponded}
-                    className="h-16"
+                    className="h-16 bg-black text-white hover:bg-gray-800"
                   >
                     <Icon className="h-6 w-6" />
                   </Button>
@@ -993,7 +993,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                       size="lg"
                       onClick={() => submitResponse(num, Date.now() - challengeStartTime)}
                       disabled={hasResponded}
-                      className="text-xl h-12"
+                      className="text-xl h-12 bg-black text-white hover:bg-gray-800"
                     >
                       {num}
                     </Button>
@@ -1013,7 +1013,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
             </div>
             <Button
               size="lg"
-              className="w-64 h-32 text-2xl"
+              className="w-64 h-32 text-2xl bg-black text-white hover:bg-gray-800"
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
               onMouseDown={handleTouchStart}
@@ -1075,7 +1075,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
           {currentPlayer.isHost && (
             <div className="text-center">
-              <Button onClick={startGame} size="lg" className="text-xl px-8 py-4">
+              <Button onClick={startGame} size="lg" className="text-xl px-8 py-4 bg-black text-white hover:bg-gray-800">
                 <Zap className="mr-2 h-5 w-5" />
                 Start Puzzz Panic!
               </Button>
@@ -1107,14 +1107,14 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                 🎮 Host Dashboard
               </h1>
               <div className="flex justify-center items-center gap-4 mb-4">
-                <div className="bg-white/10 px-4 py-2 rounded-lg text-white">
+                <div className="bg-white px-4 py-2 rounded-lg text-foreground border shadow-sm">
                   Challenge {currentChallengeIndex + 1}/10
                 </div>
-                <div className="bg-white/10 px-4 py-2 rounded-lg text-white font-bold text-xl">
+                <div className="bg-white px-4 py-2 rounded-lg text-foreground font-bold text-xl border shadow-sm">
                   {timeLeft}s
                 </div>
               </div>
-              <div className="w-full bg-white/20 rounded-full h-3">
+              <div className="w-full bg-white rounded-full h-3 border shadow-sm">
                 <div 
                   className="bg-gradient-to-r from-green-400 to-blue-400 h-3 rounded-full transition-all duration-1000"
                   style={{width: `${(timeLeft / challenge.timeLimit) * 100}%`}}
@@ -1122,14 +1122,14 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               </div>
             </div>
 
-            <div className="bg-white/10 rounded-lg p-8 backdrop-blur-sm flex-1">
-              <h2 className="text-3xl font-bold text-white mb-4">{challenge.name}</h2>
-              <p className="text-white/80 text-xl mb-6">{challenge.instructions}</p>
-              <p className="text-yellow-400 text-lg">Players are currently solving this challenge...</p>
+            <div className="bg-white rounded-lg p-8 shadow-lg flex-1">
+              <h2 className="text-3xl font-bold text-foreground mb-4">{challenge.name}</h2>
+              <p className="text-foreground/80 text-xl mb-6">{challenge.instructions}</p>
+              <p className="text-yellow-600 text-lg">Players are currently solving this challenge...</p>
               
               {/* Response Status */}
               <div className="mt-8">
-                <h3 className="text-xl font-bold text-white mb-4">Response Status</h3>
+                <h3 className="text-xl font-bold text-foreground mb-4">Response Status</h3>
                 <div className="flex flex-wrap gap-3">
                   {sortedPlayers.map(player => (
                     <div 
@@ -1149,31 +1149,31 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           </div>
 
           {/* Sidebar Leaderboard */}
-          <div className="w-80 bg-black/20 backdrop-blur-sm p-6 border-l border-white/10">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">🏆 Live Leaderboard</h2>
+          <div className="w-80 bg-white p-6 border-l border-gray-200 shadow-lg">
+            <h2 className="text-2xl font-bold text-foreground mb-6 text-center">🏆 Live Leaderboard</h2>
             <div className="space-y-3">
               {sortedPlayers.map((player, index) => (
                 <div
                   key={player.id}
-                  className={`flex items-center justify-between p-4 rounded-lg transition-all ${
-                    index === 0 ? "bg-yellow-500/20 border border-yellow-400" :
-                    index === 1 ? "bg-gray-300/20 border border-gray-400" :
-                    index === 2 ? "bg-orange-400/20 border border-orange-400" :
-                    "bg-white/10"
+                  className={`flex items-center justify-between p-4 rounded-lg transition-all border ${
+                    index === 0 ? "bg-yellow-100 border-yellow-400" :
+                    index === 1 ? "bg-gray-100 border-gray-400" :
+                    index === 2 ? "bg-orange-100 border-orange-400" :
+                    "bg-gray-50 border-gray-200"
                   } ${player.hasResponded ? "opacity-100" : "opacity-70"}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xl font-bold text-white">
+                    <span className="text-xl font-bold text-foreground">
                       {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
                     </span>
                     <div>
-                      <div className="text-white font-medium">{player.playerName}</div>
+                      <div className="text-foreground font-medium">{player.playerName}</div>
                       {player.hasResponded && (
-                        <div className="text-green-400 text-xs">Responded</div>
+                        <div className="text-green-600 text-xs">Responded</div>
                       )}
                     </div>
                   </div>
-                  <span className="text-white text-xl font-bold">{player.score}</span>
+                  <span className="text-foreground text-xl font-bold">{player.score}</span>
                 </div>
               ))}
             </div>
@@ -1200,14 +1200,14 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           <div className="flex-1 p-6 flex flex-col">
             <div className="text-center mb-6">
               <div className="flex justify-center items-center gap-4 mb-4">
-                <div className="bg-white/10 px-4 py-2 rounded-lg text-white">
+                <div className="bg-white px-4 py-2 rounded-lg text-foreground border shadow-sm">
                   Challenge {currentChallengeIndex + 1}/10
                 </div>
-                <div className="bg-white/10 px-4 py-2 rounded-lg text-white font-bold text-xl">
+                <div className="bg-white px-4 py-2 rounded-lg text-foreground font-bold text-xl border shadow-sm">
                   {timeLeft}s
                 </div>
               </div>
-              <div className="w-full bg-white/20 rounded-full h-3 mb-4">
+              <div className="w-full bg-white rounded-full h-3 mb-4 border shadow-sm">
                 <div 
                   className="bg-gradient-to-r from-green-400 to-blue-400 h-3 rounded-full transition-all duration-1000"
                   style={{width: `${(timeLeft / challenge.timeLimit) * 100}%`}}
@@ -1215,7 +1215,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
               </div>
             </div>
 
-            <div className="bg-white/10 rounded-lg p-8 backdrop-blur-sm flex-1">
+            <div className="bg-white rounded-lg p-8 shadow-lg flex-1">
               <h2 className="text-3xl font-bold text-foreground mb-4 text-center">{challenge.name}</h2>
               <p className="text-foreground/80 text-lg mb-8 text-center">{challenge.instructions}</p>
               
@@ -1235,34 +1235,34 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
           {/* Sidebar Leaderboard - Only show for host */}
           {currentPlayer.isHost && (
-            <div className="w-80 bg-black/20 backdrop-blur-sm p-6 border-l border-white/10">
-              <h2 className="text-2xl font-bold text-white mb-6 text-center">🏆 Leaderboard</h2>
+            <div className="w-80 bg-white p-6 border-l border-gray-200 shadow-lg">
+              <h2 className="text-2xl font-bold text-foreground mb-6 text-center">🏆 Leaderboard</h2>
               <div className="space-y-3">
                 {sortedPlayers.map((player, index) => (
                   <div
                     key={player.id}
-                    className={`flex items-center justify-between p-4 rounded-lg transition-all ${
-                      index === 0 ? "bg-yellow-500/20 border border-yellow-400" :
-                      index === 1 ? "bg-gray-300/20 border border-gray-400" :
-                      index === 2 ? "bg-orange-400/20 border border-orange-400" :
-                      "bg-white/10"
+                    className={`flex items-center justify-between p-4 rounded-lg transition-all border ${
+                      index === 0 ? "bg-yellow-100 border-yellow-400" :
+                      index === 1 ? "bg-gray-100 border-gray-400" :
+                      index === 2 ? "bg-orange-100 border-orange-400" :
+                      "bg-gray-50 border-gray-200"
                     } ${player.hasResponded ? "opacity-100" : "opacity-70"}`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-xl font-bold text-white">
+                      <span className="text-xl font-bold text-foreground">
                         {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
                       </span>
                       <div>
-                        <div className="text-white font-medium">{player.playerName}</div>
+                        <div className="text-foreground font-medium">{player.playerName}</div>
                         {player.hasResponded && (
-                          <div className="text-green-400 text-xs">✅ Done</div>
+                          <div className="text-green-600 text-xs">✅ Done</div>
                         )}
                         {!player.hasResponded && (
-                          <div className="text-yellow-400 text-xs">⏳ Playing...</div>
+                          <div className="text-yellow-600 text-xs">⏳ Playing...</div>
                         )}
                       </div>
                     </div>
-                    <span className="text-white text-xl font-bold">{player.score}</span>
+                    <span className="text-foreground text-xl font-bold">{player.score}</span>
                   </div>
                 ))}
               </div>
@@ -1316,7 +1316,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           </Card>
 
           {currentPlayer.isHost && (
-            <Button onClick={resetGame} size="lg" className="text-xl px-8 py-4">
+            <Button onClick={resetGame} size="lg" className="text-xl px-8 py-4 bg-black text-white hover:bg-gray-800">
               <Zap className="mr-2 h-5 w-5" />
               Play Again
             </Button>
