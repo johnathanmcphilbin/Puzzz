@@ -659,8 +659,12 @@ const Index = () => {
             >
               <div className="aspect-video bg-gradient-to-br from-red-500 to-yellow-500 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-6xl">⚡</div>
+                <div className="absolute inset-0 flex items-center justify-center bg-white">
+                  <img 
+                    src="/lovable-uploads/f3e4c1e6-0768-4256-bb63-274764483b98.png" 
+                    alt="Puzzz Panic - Fast-paced challenge game"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
