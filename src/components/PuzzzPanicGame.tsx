@@ -1369,26 +1369,26 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     }
     
     const roastComments = [
-      `${worstPlayer.playerName} is making this too easy for everyone else! 😴`,
-      `${worstPlayer.playerName} should stick to tic-tac-toe! ❌⭕`,
-      `${worstPlayer.playerName} needs to wake up! ☕`,
-      `${worstPlayer.playerName} is having a rough time! 😅`,
-      `${worstPlayer.playerName} might need some practice! 🎯`,
-      `${worstPlayer.playerName} is giving everyone else a chance! 🎁`,
-      `${worstPlayer.playerName} is keeping it interesting! 🎭`,
-      `${worstPlayer.playerName} is playing the long game! 🐌`,
-      `${worstPlayer.playerName} forgot to bring their A-game today! 💤`,
-      `${worstPlayer.playerName} is making everyone else look like pros! 🏆`,
-      `${worstPlayer.playerName} must be playing with their eyes closed! 👀`,
-      `${worstPlayer.playerName} is proof that participation trophies exist! 🥴`,
-      `${worstPlayer.playerName} is really testing everyone's patience! ⏰`,
-      `${worstPlayer.playerName} should consider switching to easier games! 🧩`,
-      `${worstPlayer.playerName} is bringing down the collective IQ! 🧠`,
-      `${worstPlayer.playerName} makes watching paint dry seem exciting! 🎨`,
-      `${worstPlayer.playerName} is the human equivalent of buffering! ⌛`,
-      `${worstPlayer.playerName} clearly skipped brain day at the gym! 💪`,
-      `${worstPlayer.playerName} is making rocks look intelligent! 🪨`,
-      `${worstPlayer.playerName} should come with a warning label: 'May cause secondhand embarrassment'! ⚠️`
+      `${worstPlayer.playerName} is an absolute disaster! Maybe try checkers next time! 🤡`,
+      `${worstPlayer.playerName} makes a brick wall look smart! 🧱`,
+      `${worstPlayer.playerName} is proof that participation trophies were a mistake! 🏆💸`,
+      `${worstPlayer.playerName} couldn't find their way out of a paper bag with GPS! 🗺️`,
+      `${worstPlayer.playerName} is the reason we can't have nice things! 💀`,
+      `${worstPlayer.playerName} makes sloths look like speed demons! 🦥`,
+      `${worstPlayer.playerName} is a walking advertisement for staying in school! 📚❌`,
+      `${worstPlayer.playerName} couldn't win if they were the only player! 😤`,
+      `${worstPlayer.playerName} is single-handedly ruining everyone's fun! 🚫`,
+      `${worstPlayer.playerName} makes watching grass grow seem thrilling! 🌱💤`,
+      `${worstPlayer.playerName} is the human equivalent of Internet Explorer! 🐌💻`,
+      `${worstPlayer.playerName} should stick to breathing - that seems to be their only skill! 💨`,
+      `${worstPlayer.playerName} is living proof that natural selection isn't working! 🧬❌`,
+      `${worstPlayer.playerName} makes rocks jealous of their intelligence! 🪨🧠`,
+      `${worstPlayer.playerName} couldn't pour water out of a boot with instructions on the heel! 👢💧`,
+      `${worstPlayer.playerName} is the reason shampoo has instructions! 🧴📖`,
+      `${worstPlayer.playerName} makes a broken clock look reliable! ⏰💥`,
+      `${worstPlayer.playerName} is about as useful as a chocolate teapot! 🍫🫖`,
+      `${worstPlayer.playerName} couldn't hit water if they fell out of a boat! 🚤💦`,
+      `${worstPlayer.playerName} is the human embodiment of a participation trophy! 🏆😭`
     ];
     
     const selectedRoast = roastComments[Math.floor(Math.random() * roastComments.length)] || null;
@@ -1677,20 +1677,27 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                       "bg-gray-50 border-gray-200"
                     } ${player.hasResponded ? "opacity-100" : "opacity-70"}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl font-bold text-foreground">
-                        {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
-                      </span>
-                      <div>
-                        <div className="text-foreground font-medium">{player.playerName}</div>
-                        {player.hasResponded && (
-                          <div className="text-green-600 text-xs">✅ Done</div>
-                        )}
-                        {!player.hasResponded && (
-                          <div className="text-yellow-600 text-xs">⏳ Playing...</div>
-                        )}
-                      </div>
-                    </div>
+                     <div className="flex items-center gap-3">
+                       <span className="text-xl font-bold text-foreground">
+                         {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+                       </span>
+                       {player.selectedCharacterId && (
+                         <img 
+                           src={getCatImageUrl(player.selectedCharacterId)} 
+                           alt="Player cat" 
+                           className="w-8 h-8 rounded-full object-cover"
+                         />
+                       )}
+                       <div>
+                         <div className="text-foreground font-medium">{player.playerName}</div>
+                         {player.hasResponded && (
+                           <div className="text-green-600 text-xs">✅ Done</div>
+                         )}
+                         {!player.hasResponded && (
+                           <div className="text-yellow-600 text-xs">⏳ Playing...</div>
+                         )}
+                       </div>
+                     </div>
                     <span className="text-foreground text-xl font-bold">{player.score}</span>
                   </div>
                 ))}
