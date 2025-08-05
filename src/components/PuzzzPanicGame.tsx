@@ -259,8 +259,21 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         const words = ["RED", "BLUE", "GREEN", "YELLOW"];
         const colors = ["text-red-500", "text-blue-500", "text-green-500", "text-yellow-500"];
         const colorNames = ["RED", "BLUE", "GREEN", "YELLOW"];
+        
+        // Ensure word and color are DIFFERENT to avoid confusion
         const word = words[Math.floor(Math.random() * words.length)] || "RED";
-        const color = colors[Math.floor(Math.random() * colors.length)] || "text-red-500";
+        let availableColors = colors.filter(color => {
+          if (word === "RED" && color.includes("red")) return false;
+          if (word === "BLUE" && color.includes("blue")) return false;
+          if (word === "GREEN" && color.includes("green")) return false;
+          if (word === "YELLOW" && color.includes("yellow")) return false;
+          return true;
+        });
+        
+        // If no available colors (shouldn't happen), use any color
+        if (availableColors.length === 0) availableColors = colors;
+        
+        const color = availableColors[Math.floor(Math.random() * availableColors.length)] || "text-red-500";
         
         // Get the correct color name from the actual color class
         let correctColorName = "RED";
@@ -289,10 +302,12 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
         });
         setSwipeSequence(sequence);
         setShowSwipeSequence(true);
-        // Show sequence for 5 seconds, then hide it
+        setCurrentSwipeIndex(0);
+        setUserSwipes([]);
+        // Show sequence for 3 seconds, then hide it for memory test
         setTimeout(() => {
           setShowSwipeSequence(false);
-        }, 5000);
+        }, 3000);
         break;
 
       case "pattern":
@@ -712,11 +727,11 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     switch (challenge.type) {
       case "tap_counter":
         return (
-          <div className="text-center space-y-6">
-            <div className="text-8xl font-bold text-primary">{tapCount}/10</div>
+          <div className="text-center space-y-6 px-4">
+            <div className="text-6xl sm:text-8xl font-bold text-primary">{tapCount}/10</div>
             <Button
               size="lg"
-              className="w-64 h-32 text-3xl bg-black text-white hover:bg-gray-800"
+              className="w-48 sm:w-64 h-24 sm:h-32 text-2xl sm:text-3xl bg-black text-white hover:bg-gray-800"
               onClick={() => {
                 if (!hasResponded && tapCount < 10) {
                   const newCount = tapCount + 1;
@@ -760,15 +775,15 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "reaction_time":
         return (
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-6 px-4">
             <div 
-              className={`w-64 h-64 mx-auto rounded-full transition-all duration-500 ${
+              className={`w-48 h-48 sm:w-64 sm:h-64 mx-auto rounded-full transition-all duration-500 ${
                 isGreen ? "bg-green-500" : "bg-red-500"
               }`}
             />
             <Button
               size="lg"
-              className="w-48 h-16 text-xl bg-black text-white hover:bg-gray-800"
+              className="w-40 sm:w-48 h-14 sm:h-16 text-lg sm:text-xl bg-black text-white hover:bg-gray-800"
               onClick={() => {
                 if (isGreen && !hasResponded) {
                   submitResponse(true, Date.now() - challengeStartTime);
@@ -786,46 +801,34 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
 
       case "swipe_sequence":
         return (
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-4 px-4">
             {showSwipeSequence ? (
               <div>
-                <div className="text-2xl mb-4">Remember this sequence:</div>
-                <div className="flex justify-center gap-4 mb-8">
+                <div className="text-lg sm:text-2xl mb-4">Remember this sequence:</div>
+                <div className="flex justify-center gap-2 sm:gap-4 mb-6">
                   {swipeSequence.map((direction, idx) => {
                     const Icon = ARROW_DIRECTIONS.find(d => d.swipe === direction)?.icon || ArrowUp;
                     return (
                       <div 
                         key={idx} 
-                        className="p-6 rounded-lg border-2 bg-blue-100 border-blue-500"
+                        className="p-3 sm:p-6 rounded-lg border-2 bg-blue-100 border-blue-500"
                       >
-                        <Icon className="h-12 w-12 text-blue-600" />
+                        <Icon className="h-8 w-8 sm:h-12 sm:w-12 text-blue-600" />
                       </div>
                     );
                   })}
                 </div>
-                <div className="text-lg text-yellow-600">
-                  Memorize the sequence... You'll need to swipe from memory!
+                <div className="text-sm sm:text-lg text-yellow-600">
+                  Memorize the sequence... You'll need to repeat it from memory!
                 </div>
               </div>
             ) : (
               <div>
-                <div className="text-2xl mb-4">Now swipe in the same order!</div>
-                <div className="flex justify-center gap-4 mb-8">
-                  {swipeSequence.map((direction, idx) => {
-                    const Icon = ARROW_DIRECTIONS.find(d => d.swipe === direction)?.icon || ArrowUp;
-                    return (
-                      <div 
-                        key={idx} 
-                        className={`p-4 rounded-lg border-2 ${
-                          idx < currentSwipeIndex ? "bg-green-200 border-green-500" : "bg-gray-100 border-gray-300"
-                        }`}
-                      >
-                        <Icon className="h-8 w-8" />
-                      </div>
-                    );
-                  })}
+                <div className="text-lg sm:text-2xl mb-4">Swipe in the same order!</div>
+                <div className="text-sm mb-4 text-muted-foreground">
+                  Progress: {currentSwipeIndex}/{swipeSequence.length}
                 </div>
-                <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+                <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
                   {ARROW_DIRECTIONS.map(direction => {
                     const Icon = direction.icon;
                     return (
@@ -834,9 +837,9 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
                         size="lg"
                         onClick={() => handleSwipe(direction.swipe)}
                         disabled={hasResponded}
-                        className="h-16 bg-black text-white hover:bg-gray-800"
+                        className="h-14 sm:h-16 bg-black text-white hover:bg-gray-800"
                       >
-                        <Icon className="h-6 w-6" />
+                        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                       </Button>
                     );
                   })}
