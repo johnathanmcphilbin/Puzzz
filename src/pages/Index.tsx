@@ -19,64 +19,54 @@ const Index = () => {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8 md:mb-12">
-          {/* Mobile-friendly join button */}
-          <div className="flex justify-center mb-4 md:hidden">
-            <Button 
-              onClick={() => {
-                setActiveTab("join");
-                setShowDialog(true);
-              }}
-              variant="outline"
-              size="sm"
-              className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
-            >
-              Join Room
-            </Button>
+      {/* Floating Join Button */}
+      <div className="fixed top-4 right-4 z-50">
+        <Button 
+          onClick={() => {
+            setActiveTab("join");
+            setShowDialog(true);
+          }}
+          className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+          size="lg"
+        >
+          🎮 Join Room
+        </Button>
+      </div>
+      
+      <div className="container mx-auto px-4 py-6 md:py-12">
+        {/* Hero Section */}
+        <div className="text-center mb-8 md:mb-16">
+          {/* Main Logo */}
+          <div className="mb-6 transform hover:scale-105 transition-transform duration-300">
+            <img 
+              src="/lovable-uploads/a66ddf8b-e796-4ae7-a019-a8e80b5f30ce.png" 
+              alt="PUZZZZ - Design Your Own Chaos"
+              className="max-w-full h-auto mx-auto max-w-3xl"
+            />
           </div>
           
-          {/* Desktop join button */}
-          <div className="hidden md:block relative">
-            <Button 
-              onClick={() => {
-                setActiveTab("join");
-                setShowDialog(true);
-              }}
-              className="absolute top-0 right-0 bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
-              variant="outline"
-            >
-              Join Room
-            </Button>
+          {/* Tagline */}
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 drop-shadow-lg">
+              🎉 Design Your Own Chaos 🎉
+            </h2>
+            <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto drop-shadow-md">
+              Jump into the madness! Pick a game, gather your crew, and let the fun begin!
+            </p>
           </div>
-          
-          {/* Title Card Widget */}
-          <Card className="mx-auto max-w-2xl mb-6 bg-background/80 md:bg-card border-2 shadow-lg backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <div className="flex justify-center">
-                <img 
-                  src="/lovable-uploads/a66ddf8b-e796-4ae7-a019-a8e80b5f30ce.png" 
-                  alt="PUZZZZ - Design Your Own Chaos"
-                  className="max-w-full h-auto"
-                />
-              </div>
-              <CardDescription className="text-base md:text-xl text-foreground/90 md:text-muted-foreground px-4">
-                The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
-              </CardDescription>
-            </CardHeader>
-          </Card>
         </div>
 
-        {/* Games Selection */}
-        <div className="max-w-7xl mx-auto">
-          <Card className="mx-auto max-w-md mb-8 bg-card border-2 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-3xl font-bold text-center text-foreground">
-                Choose Your Game
-              </CardTitle>
-            </CardHeader>
-          </Card>
+        {/* Games Grid */}
+        <div className="max-w-6xl mx-auto">
+          {/* Game Selection Header */}
+          <div className="text-center mb-8">
+            <h3 className="text-3xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-lg">
+              🎮 Pick Your Adventure! 🎮
+            </h3>
+            <p className="text-white/80 text-lg md:text-xl drop-shadow-md">
+              Each game is a new world of chaos and laughter
+            </p>
+          </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6 max-w-4xl mx-auto justify-items-center items-stretch">
             {/* Would You Rather Game */}
