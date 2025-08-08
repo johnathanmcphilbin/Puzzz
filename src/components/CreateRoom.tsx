@@ -67,7 +67,8 @@ export const CreateRoom = ({ selectedGame, onClose }: CreateRoomProps) => {
               onChange={(e) => setPlayerName(e.target.value)}
               maxLength={20}
               disabled={loading}
-              autoComplete="given-name"
+              autoComplete="nickname"
+              name="nickname"
             />
           </div>
 

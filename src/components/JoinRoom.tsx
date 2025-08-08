@@ -62,7 +62,8 @@ export const JoinRoom = ({ onClose }: JoinRoomProps) => {
               onChange={(e) => setPlayerName(e.target.value)}
               maxLength={20}
               disabled={loading}
-              autoComplete="given-name"
+              autoComplete="nickname"
+              name="nickname"
             />
           </div>
 
