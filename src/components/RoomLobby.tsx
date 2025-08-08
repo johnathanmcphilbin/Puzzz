@@ -11,6 +11,7 @@ import { getCatImageUrl } from "@/assets/catImages";
 import GameCustomizer from "./GameCustomizer";
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 import { supabase } from '@/integrations/supabase/client';
+import { FEATURES } from "@/config/featureFlags";
 
 interface Room {
   id: string;
@@ -459,7 +460,6 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                   </div>
                 </div>
 
-
                 {/* Paranoia Game */}
                 <div 
                   className={`relative p-4 border rounded-lg transition-all ${
@@ -500,25 +500,28 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                     </div>
                    </div>
 
-                   {/* Dramamatching Game */}
-                   <div 
-                     className={`relative p-4 border rounded-lg transition-all ${
-                       currentPlayer.is_host
-                         ? `cursor-pointer ${selectedGame === "dramamatching" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
-                         : "border-muted"
-                     }`}
-                     onClick={() => currentPlayer.is_host && setSelectedGame("dramamatching")}
-                   >
-                     <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold">🎭 Dramamatching</h4>
-                          <p className="text-sm text-muted-foreground">AI selfie drama analysis</p>
-                       </div>
-                       <div className="flex items-center gap-2">
-                         <div className="w-6 h-6 bg-pink-500 rounded text-xs flex items-center justify-center text-white font-bold">💕</div>
+                   {/* Dramamatching Game (feature-flagged) */}
+                   {FEATURES.dramamatching && (
+                     <div 
+                       className={`relative p-4 border rounded-lg transition-all ${
+                         currentPlayer.is_host
+                           ? `cursor-pointer ${selectedGame === "dramamatching" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`
+                           : "border-muted"
+                       }`}
+                       onClick={() => currentPlayer.is_host && setSelectedGame("dramamatching")}
+                     >
+                       <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold">🎭 Dramamatching</h4>
+                            <p className="text-sm text-muted-foreground">AI selfie drama analysis</p>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <div className="w-6 h-6 bg-pink-500 rounded text-xs flex items-center justify-center text-white font-bold">💕</div>
+                        </div>
                       </div>
-                    </div>
-                   </div>
+                     </div>
+                   )}
+
 
                    {/* Forms Game */}
                    <div 

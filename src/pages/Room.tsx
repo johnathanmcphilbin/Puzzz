@@ -7,6 +7,8 @@ import { OddOneOutGame } from "@/components/OddOneOutGame";
 import { DogpatchGame } from "@/components/DogpatchGame";
 import { NewFormsGame } from "@/components/NewFormsGame";
 import { DramamatchingGame } from "@/components/DramamatchingGame";
+import { FEATURES } from "@/config/featureFlags";
+
 import { SayItOrPayItGame } from "@/components/SayItOrPayItGame";
 import { PuzzzPanicGame } from "@/components/PuzzzPanicGame";
 import CoupGame from "@/components/CoupGame";
@@ -91,7 +93,7 @@ export const Room = () => {
           currentPlayer={currentPlayer as any}
           onUpdateRoom={updateRoom}
         />
-      ) : currentGame === "dramamatching" ? (
+      ) : currentGame === "dramamatching" && FEATURES.dramamatching ? (
         <DramamatchingGame 
           room={room as any} 
           players={players as any} 

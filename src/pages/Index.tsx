@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Info } from "lucide-react";
+import { FEATURES } from "@/config/featureFlags";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
@@ -290,76 +291,79 @@ const Index = () => {
               </div>
             </Card>
 
-            {/* Dramamatching Game */}
-            <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-pink-500/20 to-purple-600/20 overflow-hidden h-full"
-              onClick={() => handleGameClick("dramamatching")}
-            >
-              <div className="aspect-video bg-gradient-to-br from-pink-500 to-purple-600 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-6xl">🎭</div>
-                </div>
-                <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-                  <span className="bg-orange-500 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
-                    BETA
-                  </span>
-                </div>
-              </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Dramamatching</CardTitle>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>🎭 Dramamatching</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <p className="text-sm text-muted-foreground">
-                            Snap a selfie and let our AI Drama Engine analyze your romantic chemistry, friendship potential, and enemy rivalry with other players!
-                          </p>
-                          <div className="space-y-2">
-                            <h4 className="font-medium">How to Play:</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              <li>• Take a selfie using your camera</li>
-                              <li>• AI randomly matches you with another player</li>
-                              <li>• Get Romance, Friendship, and Enemy percentages</li>
-                              <li>• Read the dramatic AI commentary</li>
-                              <li>• Share the chaos with your friends!</li>
-                            </ul>
-                          </div>
-                          <div className="space-y-2">
-                            <h4 className="font-medium">Features:</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              <li>• AI-powered selfie analysis</li>
-                              <li>• Dramatic personality matching</li>
-                              <li>• Hilarious AI commentary</li>
-                              <li>• Perfect for parties and social gatherings</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+            {/* Dramamatching Game (feature-flagged) */}
+            {FEATURES.dramamatching && (
+              <Card 
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-pink-500/20 to-purple-600/20 overflow-hidden h-full"
+                onClick={() => handleGameClick("dramamatching")}
+              >
+                <div className="aspect-video bg-gradient-to-br from-pink-500 to-purple-600 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-6xl">🎭</div>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
-                    <span>AI Selfie Game</span>
-                    <span>•</span>
-                    <span>2+ Players</span>
+                  <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+                    <span className="bg-orange-500 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                      BETA
+                    </span>
                   </div>
-                </CardHeader>
-              </div>
-            </Card>
+                </div>
+                <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                  <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm sm:text-lg font-bold truncate">Dramamatching</CardTitle>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 hover:bg-background/20"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>🎭 Dramamatching</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <p className="text-sm text-muted-foreground">
+                              Snap a selfie and let our AI Drama Engine analyze your romantic chemistry, friendship potential, and enemy rivalry with other players!
+                            </p>
+                            <div className="space-y-2">
+                              <h4 className="font-medium">How to Play:</h4>
+                              <ul className="text-sm text-muted-foreground space-y-1">
+                                <li>• Take a selfie using your camera</li>
+                                <li>• AI randomly matches you with another player</li>
+                                <li>• Get Romance, Friendship, and Enemy percentages</li>
+                                <li>• Read the dramatic AI commentary</li>
+                                <li>• Share the chaos with your friends!</li>
+                              </ul>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="font-medium">Features:</h4>
+                              <ul className="text-sm text-muted-foreground space-y-1">
+                                <li>• AI-powered selfie analysis</li>
+                                <li>• Dramatic personality matching</li>
+                                <li>• Hilarious AI commentary</li>
+                                <li>• Perfect for parties and social gatherings</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                    <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                      <span>AI Selfie Game</span>
+                      <span>•</span>
+                      <span>2+ Players</span>
+                    </div>
+                  </CardHeader>
+                </div>
+              </Card>
+            )}
+
 
             {/* Forms Game */}
             <Card 
