@@ -147,7 +147,7 @@
   /* Room Code Display */
   .room-code {
     @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] 
-           text-white font-bold text-2xl tracking-wider px-6 py-3 rounded-lg;
+           text-white font-bold text-2xl tracking-wider px-6 py-3 rounded-lg font-slashed-zero;
     box-shadow: 0 8px 25px -5px hsl(217 91% 60% / 0.25);
   }
   
@@ -177,5 +177,13 @@
   /* Pulse Animation for Waiting States */
   .pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@layer utilities {
+  /* Utility to render slashed zero for clarity between O and 0 */
+  .font-slashed-zero {
+    font-variant-numeric: slashed-zero;
+    font-feature-settings: "zero" 1;
   }
 }

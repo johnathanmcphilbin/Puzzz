@@ -47,7 +47,7 @@ export const JoinRoom = ({ onClose }: JoinRoomProps) => {
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
               maxLength={6}
               disabled={loading}
-              className="text-center text-lg font-mono tracking-wider"
+              className="text-center text-lg font-mono tracking-wider font-slashed-zero"
               autoComplete="off"
             />
           </div>
