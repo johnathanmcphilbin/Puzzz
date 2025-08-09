@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { CreateRoom } from "@/components/CreateRoom";
 import { JoinRoom } from "@/components/JoinRoom";
+import { AuthDialog } from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Info } from "lucide-react";
+import { Info, User } from "lucide-react";
 import { FEATURES } from "@/config/featureFlags";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
   const [showDialog, setShowDialog] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [selectedGame, setSelectedGame] = useState<string>("would_you_rather");
 
   const handleGameClick = (gameType: string) => {
@@ -23,8 +25,17 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">
-          {/* Mobile-friendly join button */}
-          <div className="flex justify-center mb-4 md:hidden">
+          {/* Mobile-friendly buttons */}
+          <div className="flex justify-center gap-2 mb-4 md:hidden">
+            <Button 
+              onClick={() => setShowAuthDialog(true)}
+              variant="outline"
+              size="sm"
+              className="bg-background/80 hover:bg-background"
+            >
+              <User className="h-4 w-4 mr-2" />
+              Account
+            </Button>
             <Button 
               onClick={() => {
                 setActiveTab("join");
@@ -38,18 +49,29 @@ const Index = () => {
             </Button>
           </div>
           
-          {/* Desktop join button */}
+          {/* Desktop join button and auth button */}
           <div className="hidden md:block relative">
-            <Button 
-              onClick={() => {
-                setActiveTab("join");
-                setShowDialog(true);
-              }}
-              className="absolute top-0 right-0 bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
-              variant="outline"
-            >
-              Join Room
-            </Button>
+            <div className="absolute top-0 right-0 flex gap-2">
+              <Button 
+                onClick={() => setShowAuthDialog(true)}
+                variant="outline"
+                size="sm"
+                className="bg-background/80 hover:bg-background"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Account
+              </Button>
+              <Button 
+                onClick={() => {
+                  setActiveTab("join");
+                  setShowDialog(true);
+                }}
+                className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
+                variant="outline"
+              >
+                Join Room
+              </Button>
+            </div>
           </div>
           
           {/* Title Card Widget */}
@@ -760,6 +782,9 @@ const Index = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Auth Dialog */}
+      <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
     </div>
   );
 };
