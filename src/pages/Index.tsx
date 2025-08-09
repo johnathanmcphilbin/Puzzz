@@ -31,7 +31,7 @@ const Index = () => {
               onClick={() => setShowAuthDialog(true)}
               variant="outline"
               size="sm"
-              className="bg-background/80 hover:bg-background"
+              className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
             >
               <User className="h-4 w-4 mr-2" />
               Account
@@ -56,7 +56,7 @@ const Index = () => {
                 onClick={() => setShowAuthDialog(true)}
                 variant="outline"
                 size="sm"
-                className="bg-background/80 hover:bg-background"
+                className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
               >
                 <User className="h-4 w-4 mr-2" />
                 Account
