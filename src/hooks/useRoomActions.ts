@@ -31,7 +31,7 @@ export const useRoomActions = () => {
     try {
       // Call the rooms-service edge function
       const url = `${FUNCTIONS_BASE_URL}/rooms-service`;
-      if (FEATURES.debugLogs) console.log('Creating room with URL:', url);
+      console.log('Creating room with URL:', url);
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
@@ -94,7 +94,7 @@ export const useRoomActions = () => {
     setLoading(true);
     try {
       const url = `${FUNCTIONS_BASE_URL}/rooms-service`;
-      if (FEATURES.debugLogs) console.log('Joining room with URL:', url);
+      console.log('Joining room with URL:', url);
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },

@@ -4,6 +4,4 @@
 export const FEATURES = {
   // Hide Dramamatching on the frontend while keeping backend intact
   dramamatching: false,
-  // Gate verbose console logging in the client
-  debugLogs: false,
 } as const;

@@ -12,7 +12,6 @@ import { ChevronRight, Users, RotateCcw, Trophy, Clock, ArrowLeft, LogOut } from
 import { useNavigate } from "react-router-dom";
 import { getCatImageUrl } from "@/assets/catImages";
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
-import { FEATURES } from "@/config/featureFlags";
 
 interface Room {
   id: string;
@@ -158,68 +157,35 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   };
 
   const generateAIQuestions = async () => {
-    if (!currentPlayer.is_host) return [];
-    try {
-      setIsLoading(true);
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/room-questions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          roomCode: room.room_code,
-          customization: gameState.aiCustomization || 'general fun group theme',
-          crazynessLevel: gameState.crazynessLevel || 50,
-          gameType: 'would_you_rather',
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || 'AI generation failed');
-      }
-
-      toast({ title: 'AI questions generated!', description: 'Loaded a fresh set for this room.' });
-
-      // Reload questions into local queue
-      const qs = await loadQuestions();
-      setAiQuestions(qs);
-      setQuestionQueue(qs);
-      return qs;
-    } catch (e:any) {
-      toast({ title: 'Failed to generate questions', description: e.message, variant: 'destructive' });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
+    // AI question generation is no longer available - use default questions
+    return [];
   };
+
   const loadQuestions = async (): Promise<Question[]> => {
     // Debug: Log the entire gameState to see what's available
-    if (FEATURES.debugLogs) console.log('[WouldYouRatherGame] Full gameState for debugging:', JSON.stringify(gameState, null, 2));
+    console.log('[WouldYouRatherGame] Full gameState for debugging:', JSON.stringify(gameState, null, 2));
     
     // Check if AI-generated questions exist in the expected location first
     if (gameState.aiQuestions && gameState.aiQuestions.length > 0) {
-      if (FEATURES.debugLogs) console.log('[WouldYouRatherGame] Using AI-generated Would You Rather questions (gameState.aiQuestions):', gameState.aiQuestions.length);
-    // if (FEATURES.debugLogs) console.log('[WouldYouRatherGame] AI Questions content:', gameState.aiQuestions);
+      console.log('[WouldYouRatherGame] Using AI-generated Would You Rather questions (gameState.aiQuestions):', gameState.aiQuestions.length);
+      console.log('[WouldYouRatherGame] AI Questions content:', gameState.aiQuestions);
       return gameState.aiQuestions;
     }
 
     // Backwards-compatibility: handle older property names
     if (gameState.wouldYouRatherQuestions && gameState.wouldYouRatherQuestions.length > 0) {
-      if (FEATURES.debugLogs) console.log('[WouldYouRatherGame] Using legacy property gameState.wouldYouRatherQuestions:', gameState.wouldYouRatherQuestions.length);
+      console.log('[WouldYouRatherGame] Using legacy property gameState.wouldYouRatherQuestions:', gameState.wouldYouRatherQuestions.length);
       return gameState.wouldYouRatherQuestions;
     }
 
     // Handle customQuestions structure used by other game types
     if (gameState.customQuestions?.would_you_rather && gameState.customQuestions.would_you_rather.length > 0) {
-      if (FEATURES.debugLogs) console.log('[WouldYouRatherGame] Using customQuestions.would_you_rather from gameState.customQuestions:', gameState.customQuestions.would_you_rather.length);
+      console.log('[WouldYouRatherGame] Using customQuestions.would_you_rather from gameState.customQuestions:', gameState.customQuestions.would_you_rather.length);
       return gameState.customQuestions.would_you_rather;
     }
 
     // Fall back to database questions if no AI questions found
-    if (FEATURES.debugLogs) console.log('[WouldYouRatherGame] No AI questions found, falling back to database questions');
+    console.log('[WouldYouRatherGame] No AI questions found, falling back to database questions');
     const { data: questionsData, error: questionsError } = await supabase
       .from("would_you_rather_questions")
       .select("*");
@@ -231,6 +197,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       created_at: q.created_at || new Date().toISOString()
     }));
   };
+
   const [isLoadingNext, setIsLoadingNext] = useState(false);
 
   const loadNextQuestion = async () => {
@@ -419,16 +386,11 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
       const nextHost = otherPlayers[0];
 
       if (nextHost) {
-        // Build API-shaped players list (camelCase) and transfer host
-        const apiPlayers = players
-          .filter(p => p.player_id !== currentPlayer.player_id)
-          .map(p => ({
-            playerId: p.player_id,
-            playerName: p.player_name,
-            isHost: p.player_id === nextHost.player_id,
-            joinedAt: (p as any).joined_at || Date.now(),
-            selectedCharacterId: p.selected_character_id,
-          }));
+        // Update players list and host through Redis
+        const updatedPlayers = players.map(p => ({
+          ...p,
+          isHost: p.player_id === nextHost.player_id
+        })).filter(p => p.player_id !== currentPlayer.player_id);
 
         const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
           method: 'POST',
@@ -438,7 +400,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
             roomCode: room.room_code, 
             updates: { 
               hostId: nextHost.player_id,
-              players: apiPlayers
+              players: updatedPlayers
             } 
           }),
         });

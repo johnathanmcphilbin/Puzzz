@@ -7,7 +7,6 @@ import { Trophy, Clock, Zap, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "l
 import { toast } from "sonner";
 import { STATIC_CATS, getCatImageUrl } from "@/assets/catImages";
 import { supabase } from '@/integrations/supabase/client';
-import { FEATURES } from "@/config/featureFlags";
 
 interface Challenge {
   id: string;
@@ -144,7 +143,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   }
 
   // Determine if current player is host
-  const isHost = (currentPlayer as any)?.is_host ?? (currentPlayer as any)?.isHost ?? false;
+  const isHost = currentPlayer?.isHost || false;
   
   // Host view logic - host doesn't participate but can see leaderboard
   const showHostView = isHost && gamePhase === "challenge";
@@ -158,7 +157,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   }, [players]);
 
   const loadCharacterData = async () => {
-    const characterIds = players.map((p:any) => p.selected_character_id || p.selectedCharacterId).filter((id: any): id is string => Boolean(id));
+    const characterIds = players.map(p => p.selectedCharacterId).filter((id): id is string => Boolean(id));
     
     if (characterIds.length === 0) {
       return;

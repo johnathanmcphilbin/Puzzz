@@ -60,7 +60,7 @@ export const useAnalytics = () => {
         game_type: gameType,
         session_id: sessionId.current
       });
-      if (FEATURES.debugLogs) console.log('Event tracked:', eventType, { metadata, roomCode, gameType });
+      console.log('Event tracked:', eventType, { metadata, roomCode, gameType });
     } catch (error) {
       console.error('Event tracking error:', error);
     }
