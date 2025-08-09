@@ -150,7 +150,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
         return;
       }
 
-      console.log('Generated questions:', questions);
+      if (FEATURES.debugLogs) console.log('Generated questions:', questions);
 
       await onUpdateRoom({
         gameState: {
@@ -572,7 +572,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
             {allResults.map((result: any, index: number) => {
               // Add safety checks for result structure
               if (!result || !result.question) {
-                console.log('Invalid result structure:', result);
+                if (FEATURES.debugLogs) console.log('Invalid result structure:', result);
                 return null;
               }
               

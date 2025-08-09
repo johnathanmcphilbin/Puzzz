@@ -12,6 +12,7 @@ import { Users, Crown, Trophy, MessageSquare, Play, StopCircle, Clock, ArrowLeft
 import { useNavigate } from "react-router-dom";
 import { getCatImageUrl, STATIC_CATS } from "@/assets/catImages";
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from "@/utils/functions";
+import { FEATURES } from "@/config/featureFlags";
 
 interface Room {
   id: string;
@@ -134,7 +135,17 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
 
   const loadRandomQuestion = async () => {
     try {
-      // Use fallback questions since database structure doesn't match our interface
+      // Prefer AI/custom questions stored in room state
+      const aiPool = gameState.customQuestions?.odd_one_out || [];
+      if (aiPool.length > 0) {
+        const randomAi = aiPool[Math.floor(Math.random() * aiPool.length)];
+        if (randomAi) {
+          setCurrentQuestion(randomAi);
+          return;
+        }
+      }
+
+      // Fallback questions
       const fallbackQuestions = [
         {
           id: 'fallback-1',

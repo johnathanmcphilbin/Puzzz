@@ -79,7 +79,7 @@ export const Room = () => {
           currentPlayer={currentPlayer as any}
           onUpdateRoom={updateRoom}
         />
-      ) : (currentGame === "odd_one_out" || currentGame === "odd-one-out") ? (
+      ) : currentGame === "odd_one_out" ? (
         <OddOneOutGame 
           room={room as any} 
           players={players as any} 
