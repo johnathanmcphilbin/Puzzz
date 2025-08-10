@@ -125,30 +125,8 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
     }
   });
 
-  // Real-time subscription for game state changes
-  useEffect(() => {
-    const channel = supabase
-      .channel('paranoia-game-v2-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'rooms',
-          filter: `id=eq.${room.id}`
-        },
-        (payload) => {
-          if (payload.new) {
-            onUpdateRoom(payload.new as Room);
-          }
-        }
-      )
-      .subscribe();
+// Removed stale DB subscription; live updates come via useRoom broadcast
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [room.id]);
 
   const handleCustomQuestion = async () => {
     if (!customQuestion.trim()) {
@@ -188,7 +166,7 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
           throw new Error(errorData.error || 'Failed to update game state');
         }
 
-        onUpdateRoom({ ...room, game_state: newGameState });
+        onUpdateRoom({ gameState: newGameState } as any);
     } catch (err) {
       toast({
         title: "Error",

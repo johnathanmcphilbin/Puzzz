@@ -102,7 +102,8 @@ export const useParanoiaGame = (room: Room, players: Player[], currentPlayer: Pl
         body: JSON.stringify({ 
           action: 'update', 
           roomCode: room.room_code, 
-          updates: { gameState: updatedState } 
+          updates: { gameState: updatedState },
+          requestingPlayerId: currentPlayer.player_id,
         }),
       });
 

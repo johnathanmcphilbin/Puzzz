@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY, safeDeepMerge } from '@/utils/functions';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -97,14 +97,15 @@ export const useRoom = (roomCode: string) => {
     }
   }, [roomCode]);
 
-  const updateRoom = useCallback(async (updates: Partial<Room>) => {
+const updateRoom = useCallback(async (updates: Partial<Room>) => {
     if (!room) return;
 
     try {
+      const requesterId = currentPlayer?.playerId || localStorage.getItem('puzzz_player_id');
       const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ action: 'update', roomCode: room.roomCode, updates }),
+        body: JSON.stringify({ action: 'update', roomCode: room.roomCode, updates, requestingPlayerId: requesterId }),
       });
 
       if (!response.ok) {
@@ -112,7 +113,14 @@ export const useRoom = (roomCode: string) => {
         throw new Error(data.error || 'Update failed');
       }
 
-      setRoom(prevRoom => prevRoom ? { ...prevRoom, ...updates } : null);
+      setRoom(prevRoom => {
+        if (!prevRoom) return prevRoom;
+        const mergedGameState = updates.gameState
+          ? safeDeepMerge(prevRoom.gameState || {}, updates.gameState as any)
+          : prevRoom.gameState;
+        const { gameState: _ignored, ...other } = updates as any;
+        return { ...prevRoom, ...other, gameState: mergedGameState } as Room;
+      });
     } catch (err) {
       toast({
         title: 'Error',
@@ -120,7 +128,7 @@ export const useRoom = (roomCode: string) => {
         variant: 'destructive',
       });
     }
-  }, [room, toast]);
+  }, [room, currentPlayer, toast]);
 
   const kickPlayer = useCallback(async (playerIdToKick: string) => {
     if (!room || !currentPlayer?.isHost) return;

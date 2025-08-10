@@ -26,6 +26,24 @@ function safeParse(raw: string | null): any | null {
   }
 }
 
+// Deep merge helper: merges nested objects (arrays are replaced)
+function deepMerge(target: any, source: any) {
+  if (!source || typeof source !== 'object') return target;
+  const out: any = Array.isArray(target) ? [...source] : { ...target };
+  for (const key of Object.keys(source)) {
+    const sVal: any = source[key];
+    const tVal: any = (target ?? {})[key];
+    if (Array.isArray(sVal)) {
+      out[key] = [...sVal];
+    } else if (sVal && typeof sVal === 'object') {
+      out[key] = deepMerge(tVal && typeof tVal === 'object' ? tVal : {}, sVal);
+    } else {
+      out[key] = sVal;
+    }
+  }
+  return out;
+}
+
 interface CreateRoomBody {
   action: "create";
   playerName: string;
@@ -329,24 +347,35 @@ serve(async (req) => {
 
         const roomData: Room = JSON.parse(getData.result);
         
-        console.log('🔵 [ROOMS-SERVICE] Before update - roomData.gameState:', JSON.stringify(roomData.gameState, null, 2));
-        console.log('🔵 [ROOMS-SERVICE] Updates to apply:', JSON.stringify(updates, null, 2));
-        
-        // Apply updates with proper deep merge for gameState
-        if (updates.gameState && roomData.gameState) {
-          // Merge gameState instead of replacing it
-          roomData.gameState = { ...roomData.gameState, ...updates.gameState };
-          console.log('🟢 [ROOMS-SERVICE] After gameState merge:', JSON.stringify(roomData.gameState, null, 2));
-          
-          // Remove gameState from updates to avoid double assignment
-          const { gameState, ...otherUpdates } = updates;
-          Object.assign(roomData, otherUpdates);
-        } else {
-          // No gameState to merge, use regular assignment
-          Object.assign(roomData, updates);
-        }
-        
-        console.log('🟢 [ROOMS-SERVICE] Final roomData.gameState:', JSON.stringify(roomData.gameState, null, 2));
+console.log('🔵 [ROOMS-SERVICE] Before update - roomData.gameState:', JSON.stringify(roomData.gameState, null, 2));
+console.log('🔵 [ROOMS-SERVICE] Updates to apply:', JSON.stringify(updates, null, 2));
+
+// Determine requester and host status for protected updates
+const requesterId = (body && body.requestingPlayerId) ? String(body.requestingPlayerId) : undefined;
+const requester = requesterId ? roomData.players.find(p => p.playerId === requesterId) : undefined;
+const isHost = requesterId ? !!requester?.isHost : true;
+
+// Guard: only host can change critical phase/turn fields
+const attemptingPhaseChange = !!(updates?.gameState && typeof updates.gameState === 'object' && 'phase' in updates.gameState);
+const attemptingTurnChange = !!(updates?.gameState && typeof updates.gameState === 'object' && 'currentTurnIndex' in updates.gameState);
+if ((attemptingPhaseChange || attemptingTurnChange) && !isHost) {
+  return new Response(
+    JSON.stringify({ error: 'Only host can change phase/turn' }),
+    { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+// Apply updates with deep merge for gameState
+if (updates?.gameState) {
+  roomData.gameState = deepMerge(roomData.gameState || {}, updates.gameState);
+  // Remove gameState from updates to avoid double assignment
+  const { gameState, ...otherUpdates } = updates;
+  Object.assign(roomData, otherUpdates);
+} else {
+  Object.assign(roomData, updates);
+}
+
+console.log('🟢 [ROOMS-SERVICE] Final roomData.gameState:', JSON.stringify(roomData.gameState, null, 2));
 
         // Update room in Redis
         const setResponse = await fetch(`${REDIS_URL}/setex/room:${roomCode}/28800`, {

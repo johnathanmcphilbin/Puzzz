@@ -26,6 +26,10 @@ interface DramamatchResult {
   friendship: number;
   enemies: number;
   commentary: string;
+  matchId?: string;
+  timestamp?: number;
+  player1Id?: string;
+  player2Id?: string;
 }
 
 export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
@@ -159,12 +163,14 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
 
       if (error) throw error;
 
-      // Create a unique match ID and store the result in room state
+// Create a unique match ID and store the result in room state
       const matchId = `${currentPlayer.playerId}-${randomPlayerId}-${Date.now()}`;
       const matchResult = {
         ...data,
         matchId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        player1Id: currentPlayer.playerId,
+        player2Id: randomPlayerId,
       };
 
       // Store the match result in room state so all players see the same result
@@ -201,17 +207,20 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
   const currentPlayerHasSelfie = currentSelfies[currentPlayer.playerId] !== undefined;
 
   // Check if there's a recent match involving this player
-  React.useEffect(() => {
+React.useEffect(() => {
     const matches = room.gameState?.matches || [];
     const latestMatch = matches.find((match: any) => 
-      match.player1.name === currentPlayer.playerName || 
-      match.player2.name === currentPlayer.playerName
+      match.player1Id === currentPlayer.playerId || 
+      match.player2Id === currentPlayer.playerId ||
+      // Fallback for older entries stored by name
+      match.player1?.name === currentPlayer.playerName || 
+      match.player2?.name === currentPlayer.playerName
     );
     
     if (latestMatch && !matchResult) {
       setMatchResult(latestMatch);
     }
-  }, [room.gameState?.matches, currentPlayer.playerName, matchResult]);
+  }, [room.gameState?.matches, currentPlayer.playerId, currentPlayer.playerName, matchResult]);
 
   return (
     <div className="min-h-screen gradient-bg p-4">
