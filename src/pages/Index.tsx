@@ -22,32 +22,41 @@ const Index = () => {
 
   return (
     <div className="min-h-screen gradient-bg">
-      {/* Navigation Header */}
-      <header className="border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo/Title */}
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">P</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">PUZZZZ</h1>
-            </div>
-            
-            {/* Navigation Items */}
-            <nav className="hidden md:flex items-center space-x-6">
-              <span className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors">Games</span>
-              <span className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors">Create</span>
-              <span className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors">Join</span>
-            </nav>
-            
-            {/* Action Buttons */}
-            <div className="flex items-center space-x-3">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-8 md:mb-12">
+          {/* Mobile-friendly buttons */}
+          <div className="flex justify-center gap-2 mb-4 md:hidden">
+            <Button 
+              onClick={() => setShowAuthDialog(true)}
+              variant="outline"
+              size="sm"
+              className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
+            >
+              <User className="h-4 w-4 mr-2" />
+              Account
+            </Button>
+            <Button 
+              onClick={() => {
+                setActiveTab("join");
+                setShowDialog(true);
+              }}
+              variant="outline"
+              size="sm"
+              className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
+            >
+              Join Room
+            </Button>
+          </div>
+          
+          {/* Desktop join button and auth button */}
+          <div className="hidden md:block relative">
+            <div className="absolute top-0 right-0 flex gap-2">
               <Button 
                 onClick={() => setShowAuthDialog(true)}
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground"
+                className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
               >
                 <User className="h-4 w-4 mr-2" />
                 Account
@@ -57,46 +66,49 @@ const Index = () => {
                   setActiveTab("join");
                   setShowDialog(true);
                 }}
-                className="bg-[hsl(var(--join-game))] text-white hover:bg-[hsl(var(--join-game)/0.9)] shadow-sm"
-                size="sm"
+                className="bg-[hsl(var(--join-game))] text-white border-[hsl(var(--join-game))] hover:bg-[hsl(var(--join-game)/0.9)]"
+                variant="outline"
               >
                 Join Room
               </Button>
             </div>
           </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="max-w-3xl mx-auto">
-            <img 
-              src="/lovable-uploads/a66ddf8b-e796-4ae7-a019-a8e80b5f30ce.png" 
-              alt="PUZZZZ - Design Your Own Chaos"
-              className="mx-auto mb-6 max-w-sm h-auto"
-            />
-            <p className="text-lg text-muted-foreground mb-8">
-              The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
-            </p>
-          </div>
-        </div>
-
-        {/* Games Section */}
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Choose Your Game</h2>
-            <p className="text-muted-foreground">Pick a game to start the fun with your friends</p>
-          </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
+          {/* Title Card Widget */}
+          <Card className="mx-auto max-w-2xl mb-6 bg-background/80 md:bg-card border-2 shadow-lg backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <div className="flex justify-center">
+                <img 
+                  src="/lovable-uploads/a66ddf8b-e796-4ae7-a019-a8e80b5f30ce.png" 
+                  alt="PUZZZZ - Design Your Own Chaos"
+                  className="max-w-full h-auto"
+                />
+              </div>
+              <CardDescription className="text-base md:text-xl text-foreground/90 md:text-muted-foreground px-4">
+                The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* Games Selection */}
+        <div className="max-w-7xl mx-auto">
+          <Card className="mx-auto max-w-md mb-8 bg-card border-2 shadow-lg">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-3xl font-bold text-center text-foreground">
+                Choose Your Game
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6 max-w-4xl mx-auto justify-items-center items-stretch">
             {/* Would You Rather Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm h-80"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-full"
               onClick={() => handleGameClick("would_you_rather")}
             >
-              <div className="aspect-[4/3] bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden flex-shrink-0">
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-all duration-300" />
+              <div className="aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
                     src="/lovable-uploads/e1223d72-4579-4d9b-a783-c817eb336925.png" 
@@ -105,24 +117,20 @@ const Index = () => {
                     style={{ objectPosition: 'center 68%' }}
                   />
                 </div>
-                <div className="absolute top-3 left-3">
-                  <span className="bg-white/90 text-foreground px-2 py-1 rounded-md text-xs font-medium">
-                    Party Game
-                  </span>
-                </div>
               </div>
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <CardTitle className="text-lg font-bold">Would You Rather</CardTitle>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Would You Rather</CardTitle>
                   <Dialog>
                     <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-8 w-8 p-0 hover:bg-accent/20"
+                          className="h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Info className="h-4 w-4" />
+                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
@@ -155,25 +163,23 @@ const Index = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Choose between tough decisions and see how your friends vote
-                </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>2+ Players</span>
-                  <span>•</span>
-                  <span>5 min</span>
-                </div>
+                  </div>
+                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                     <span>Party Game</span>
+                     <span>•</span>
+                     <span>2+ Players</span>
+                   </div>
+                </CardHeader>
               </div>
             </Card>
 
             {/* Paranoia Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm h-80"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden h-full"
               onClick={() => handleGameClick("paranoia")}
             >
-              <div className="aspect-[4/3] bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden flex-shrink-0">
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-all duration-300" />
+              <div className="aspect-video bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
                     src="/lovable-uploads/25019112-f839-4cf5-9cee-9a7d609be518.png" 
@@ -182,75 +188,69 @@ const Index = () => {
                     style={{ objectPosition: 'center 65%' }}
                   />
                 </div>
-                <div className="absolute top-3 left-3">
-                  <span className="bg-white/90 text-foreground px-2 py-1 rounded-md text-xs font-medium">
-                    Whisper Game
-                  </span>
-                </div>
               </div>
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <CardTitle className="text-lg font-bold">Paranoia</CardTitle>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 hover:bg-accent/20"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Info className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Paranoia</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                          Read a secret question, whisper someone's name as your answer, then flip a coin to see if the question gets revealed to everyone! Creates hilarious paranoia moments.
-                        </p>
-                        <div className="space-y-2">
-                          <h4 className="font-medium">How to Play:</h4>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            <li>• Player reads a secret question to themselves</li>
-                            <li>• Whisper your answer (someone's name) to one player</li>
-                            <li>• Everyone sees who you chose, but not the question</li>
-                            <li>• Flip a coin to decide if the question is revealed</li>
-                            <li>• If revealed, everyone learns what the question was!</li>
-                          </ul>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Paranoia</CardTitle>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Paranoia</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            Read a secret question, whisper someone's name as your answer, then flip a coin to see if the question gets revealed to everyone! Creates hilarious paranoia moments.
+                          </p>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">How to Play:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Player reads a secret question to themselves</li>
+                              <li>• Whisper your answer (someone's name) to one player</li>
+                              <li>• Everyone sees who you chose, but not the question</li>
+                              <li>• Flip a coin to decide if the question is revealed</li>
+                              <li>• If revealed, everyone learns what the question was!</li>
+                            </ul>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Features:</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              <li>• Mysterious and suspenseful gameplay</li>
+                              <li>• 30-second timers for each phase</li>
+                              <li>• Perfect for groups of 3+ players</li>
+                              <li>• Creates memorable moments and inside jokes</li>
+                            </ul>
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Features:</h4>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            <li>• Mysterious and suspenseful gameplay</li>
-                            <li>• 30-second timers for each phase</li>
-                            <li>• Perfect for groups of 3+ players</li>
-                            <li>• Creates memorable moments and inside jokes</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Secret questions and whispered answers create paranoia and fun
-                </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>3+ Players</span>
-                  <span>•</span>
-                  <span>10 min</span>
-                </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <span>Whisper Game</span>
+                    <span>•</span>
+                    <span>3+ Players</span>
+                  </div>
+                </CardHeader>
               </div>
             </Card>
 
             {/* Odd One Out Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm h-80"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20 overflow-hidden h-full"
               onClick={() => handleGameClick("odd-one-out")}
             >
-              <div className="aspect-[4/3] bg-gradient-to-br from-amber-500 to-orange-600 relative overflow-hidden flex-shrink-0">
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-all duration-300" />
+              <div className="aspect-video bg-gradient-to-br from-amber-500 to-orange-600 relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center bg-white">
                   <img 
                     src="/lovable-uploads/4e6b1f5d-d7f0-40a7-bf86-96b9457c20f8.png" 
@@ -258,143 +258,133 @@ const Index = () => {
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <div className="absolute top-3 left-3">
-                  <span className="bg-white/90 text-foreground px-2 py-1 rounded-md text-xs font-medium">
-                    Detective Game
-                  </span>
-                </div>
               </div>
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <CardTitle className="text-lg font-bold">Odd One Out</CardTitle>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 hover:bg-accent/20"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Info className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Odd One Out - Puzzz Edition</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                          Everyone gets the same prompt except one secret Imposter who gets a twist! Answer, defend your choice, then vote to find the Imposter.
-                        </p>
-                        <div className="space-y-2">
-                          <h4 className="font-medium">How to Play:</h4>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            <li>• Everyone gets a prompt (except the Imposter gets a different one)</li>
-                            <li>• Pick any word or phrase that fits your prompt</li>
-                            <li>• Defend your answer (30 seconds max)</li>
-                            <li>• Discuss and vote for the suspected Imposter (2 min)</li>
-                            <li>• Reveal results and score points</li>
-                          </ul>
-                        </div>
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Scoring:</h4>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            <li>• Right guess: players get +1 ★ each</li>
-                            <li>• Wrong guess: Imposter gets +2 ★</li>
-                            <li>• Perfect for 3+ players</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Find the imposter among your group through clever deduction
-                </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>3+ Players</span>
-                  <span>•</span>
-                  <span>8 min</span>
-                </div>
-              </div>
-            </Card>
-
-            {/* Dramamatching Game (feature-flagged) */}
-            {FEATURES.dramamatching && (
-              <Card 
-                className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm h-80"
-                onClick={() => handleGameClick("dramamatching")}
-              >
-                <div className="aspect-[4/3] bg-gradient-to-br from-pink-500 to-purple-600 relative overflow-hidden flex-shrink-0">
-                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-all duration-300" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-6xl">🎭</div>
-                  </div>
-                  <div className="absolute top-3 left-3">
-                    <span className="bg-white/90 text-foreground px-2 py-1 rounded-md text-xs font-medium">
-                      AI Match
-                    </span>
-                  </div>
-                  <div className="absolute top-3 right-3">
-                    <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      BETA
-                    </span>
-                  </div>
-                </div>
-                <div className="p-4 flex-1 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-2">
-                    <CardTitle className="text-lg font-bold">Dramamatching</CardTitle>
+              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Odd One Out</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-8 w-8 p-0 hover:bg-accent/20"
+                          className="h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Info className="h-4 w-4" />
+                          <Info className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                          <DialogTitle>🎭 Dramamatching</DialogTitle>
+                          <DialogTitle>Odd One Out - Puzzz Edition</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
                           <p className="text-sm text-muted-foreground">
-                            Snap a selfie and let our AI Drama Engine analyze your romantic chemistry, friendship potential, and enemy rivalry with other players!
+                            Everyone gets the same prompt except one secret Imposter who gets a twist! Answer, defend your choice, then vote to find the Imposter.
                           </p>
                           <div className="space-y-2">
                             <h4 className="font-medium">How to Play:</h4>
                             <ul className="text-sm text-muted-foreground space-y-1">
-                              <li>• Take a selfie using your camera</li>
-                              <li>• AI randomly matches you with another player</li>
-                              <li>• Get Romance, Friendship, and Enemy percentages</li>
-                              <li>• Read the dramatic AI commentary</li>
-                              <li>• Share the chaos with your friends!</li>
+                              <li>• Everyone gets a prompt (except the Imposter gets a different one)</li>
+                              <li>• Pick any word or phrase that fits your prompt</li>
+                              <li>• Defend your answer (30 seconds max)</li>
+                              <li>• Discuss and vote for the suspected Imposter (2 min)</li>
+                              <li>• Reveal results and score points</li>
                             </ul>
                           </div>
                           <div className="space-y-2">
-                            <h4 className="font-medium">Features:</h4>
+                            <h4 className="font-medium">Scoring:</h4>
                             <ul className="text-sm text-muted-foreground space-y-1">
-                              <li>• AI-powered selfie analysis</li>
-                              <li>• Dramatic personality matching</li>
-                              <li>• Hilarious AI commentary</li>
-                              <li>• Perfect for parties and social gatherings</li>
+                              <li>• Right guess: players get +1 ★ each</li>
+                              <li>• Wrong guess: Imposter gets +2 ★</li>
+                              <li>• Perfect for 3+ players</li>
                             </ul>
                           </div>
                         </div>
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>2+ Players</span>
+                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <span>Detective Game</span>
                     <span>•</span>
-                    <span>5 min</span>
+                    <span>3+ Players</span>
                   </div>
+                </CardHeader>
+              </div>
+            </Card>
+
+            {/* Dramamatching Game (feature-flagged) */}
+            {FEATURES.dramamatching && (
+              <Card 
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-pink-500/20 to-purple-600/20 overflow-hidden h-full"
+                onClick={() => handleGameClick("dramamatching")}
+              >
+                <div className="aspect-video bg-gradient-to-br from-pink-500 to-purple-600 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-6xl">🎭</div>
+                  </div>
+                  <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+                    <span className="bg-orange-500 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
+                      BETA
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
+                  <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm sm:text-lg font-bold truncate">Dramamatching</CardTitle>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 hover:bg-background/20"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>🎭 Dramamatching</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <p className="text-sm text-muted-foreground">
+                              Snap a selfie and let our AI Drama Engine analyze your romantic chemistry, friendship potential, and enemy rivalry with other players!
+                            </p>
+                            <div className="space-y-2">
+                              <h4 className="font-medium">How to Play:</h4>
+                              <ul className="text-sm text-muted-foreground space-y-1">
+                                <li>• Take a selfie using your camera</li>
+                                <li>• AI randomly matches you with another player</li>
+                                <li>• Get Romance, Friendship, and Enemy percentages</li>
+                                <li>• Read the dramatic AI commentary</li>
+                                <li>• Share the chaos with your friends!</li>
+                              </ul>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="font-medium">Features:</h4>
+                              <ul className="text-sm text-muted-foreground space-y-1">
+                                <li>• AI-powered selfie analysis</li>
+                                <li>• Dramatic personality matching</li>
+                                <li>• Hilarious AI commentary</li>
+                                <li>• Perfect for parties and social gatherings</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                    <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                      <span>AI Selfie Game</span>
+                      <span>•</span>
+                      <span>2+ Players</span>
+                    </div>
+                  </CardHeader>
                 </div>
               </Card>
             )}
-
 
 
             {/* Forms Game */}
