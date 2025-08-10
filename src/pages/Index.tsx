@@ -21,7 +21,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+    <div className="min-h-screen gradient-bg">
       {/* Navigation Header */}
       <header className="border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="container mx-auto px-4 py-4">
@@ -89,13 +89,13 @@ const Index = () => {
             <p className="text-muted-foreground">Pick a game to start the fun with your friends</p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {/* Would You Rather Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm"
+              className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm h-80"
               onClick={() => handleGameClick("would_you_rather")}
             >
-              <div className="aspect-[4/3] bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
+              <div className="aspect-[4/3] bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden flex-shrink-0">
                 <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -111,7 +111,7 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="p-4">
+              <div className="p-4 flex-1 flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-2">
                   <CardTitle className="text-lg font-bold">Would You Rather</CardTitle>
                   <Dialog>
@@ -169,10 +169,10 @@ const Index = () => {
 
             {/* Paranoia Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm"
+              className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm h-80"
               onClick={() => handleGameClick("paranoia")}
             >
-              <div className="aspect-[4/3] bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden">
+              <div className="aspect-[4/3] bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden flex-shrink-0">
                 <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -188,7 +188,7 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="p-4">
+              <div className="p-4 flex-1 flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-2">
                   <CardTitle className="text-lg font-bold">Paranoia</CardTitle>
                   <Dialog>
@@ -246,10 +246,10 @@ const Index = () => {
 
             {/* Odd One Out Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm"
+              className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-border/50 bg-card overflow-hidden w-full max-w-sm h-80"
               onClick={() => handleGameClick("odd-one-out")}
             >
-              <div className="aspect-[4/3] bg-gradient-to-br from-amber-500 to-orange-600 relative overflow-hidden">
+              <div className="aspect-[4/3] bg-gradient-to-br from-amber-500 to-orange-600 relative overflow-hidden flex-shrink-0">
                 <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center bg-white">
                   <img 
@@ -264,7 +264,7 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="p-4">
+              <div className="p-4 flex-1 flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-2">
                   <CardTitle className="text-lg font-bold">Odd One Out</CardTitle>
                   <Dialog>
