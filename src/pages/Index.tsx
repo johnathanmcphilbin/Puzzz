@@ -463,7 +463,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-orange-600/20 overflow-hidden h-full"
               onClick={() => handleGameClick("say_it_or_pay_it")}
             >
-              <div className="aspect-video relative overflow-hidden bg-background">
+              <div className="aspect-video relative overflow-hidden" style={{ backgroundColor: '#ff69b4' }}>
                 <img
                   src="/lovable-uploads/5bd080a5-1ea5-405f-b40e-961faf9e36eb.png"
                   alt="Say It or Pay It game thumbnail"
