@@ -463,11 +463,14 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-orange-600/20 overflow-hidden h-full"
               onClick={() => handleGameClick("say_it_or_pay_it")}
             >
-              <div className="aspect-video bg-gradient-to-br from-red-500 to-orange-600 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-6xl">🔥</div>
-                </div>
+              <div className="aspect-video relative overflow-hidden bg-background">
+                <img
+                  src="/lovable-uploads/5bd080a5-1ea5-405f-b40e-961faf9e36eb.png"
+                  alt="Say It or Pay It game thumbnail"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
                   <span className="bg-orange-500 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded-full text-[8px] sm:text-xs font-medium">
                     BETA
