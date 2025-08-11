@@ -529,8 +529,7 @@ const Index = () => {
               </div>
             </Card>
 
-            {/* Dogpatch Game - TEMPORARILY HIDDEN */}
-            {/* 
+            {/* Demo Day Game */}
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 overflow-hidden h-full"
               onClick={() => handleGameClick("dogpatch")}
@@ -540,7 +539,7 @@ const Index = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
                     src="/lovable-uploads/8ccd92fd-4776-432c-98c6-8098017d1b36.png" 
-                    alt="Dogpatch Game - Dog silhouette"
+                    alt="Demo Day - Team photo quiz"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -553,7 +552,7 @@ const Index = () => {
               <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
                 <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Dogpatch game</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Demo Day</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -567,11 +566,11 @@ const Index = () => {
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                          <DialogTitle>Dogpatch game</DialogTitle>
+                          <DialogTitle>Demo Day</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
                           <p className="text-sm text-muted-foreground">
-                            Kahoot-style Guess Who game featuring team members! Look at photos and identify who's who with multiple choice answers.
+                            Guess Who-style photo game featuring team members! Look at photos and identify who's who with multiple choice answers.
                           </p>
                           <div className="space-y-2">
                             <h4 className="font-medium">How to Play:</h4>
@@ -604,7 +603,6 @@ const Index = () => {
                 </CardHeader>
               </div>
             </Card>
-            */}
 
             {/* Cat Conspiracy Game */}
             <Card 
