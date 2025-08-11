@@ -51,7 +51,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         // Since ai_chat_customizations and room_questions tables are deleted,
         // we'll start fresh and let users generate new questions
         setHasGeneratedQuestions(false);
-        addMessage("Describe your group and I'll generate custom questions instantly!");
+        addMessage("Hi! I'm your AI assistant. Ask me anything or tell me about your group to generate custom questions!");
       }
     };
     
@@ -74,69 +74,78 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     setMessages(prev => [...prev, newMessage]);
   };
 
-  const generateQuestionsFromInput = async () => {
+  const sendChatMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
     // Check if user is host for chat functionality
     if (!currentPlayer?.is_host) {
       toast({
         title: "Host Only Feature",
-        description: "Only the room host can generate custom questions.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if questions already generated
-    if (hasGeneratedQuestions) {
-      toast({
-        title: "Questions Already Generated",
-        description: "This room already has custom questions. Only one set per room is allowed.",
+        description: "Only the room host can use the AI chatbot.",
         variant: "destructive",
       });
       return;
     }
 
     const userMessage = inputMessage.trim();
+    addMessage(userMessage, true);
     setInputMessage('');
     setIsLoading(true);
 
     try {
-      // Set customization
-      const sanitizedCustomization = userMessage;
-      setCustomization(sanitizedCustomization);
-      
-      // Save customization to Redis room state
-      if (roomCode) {
-        const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-          body: JSON.stringify({ 
-            action: 'update', 
-            roomCode: roomCode, 
-            updates: { 
-              gameState: { 
-                aiCustomization: sanitizedCustomization 
+      // Check if this is a request to generate questions (contains keywords)
+      const isQuestionRequest = userMessage.toLowerCase().includes('generate') || 
+                               userMessage.toLowerCase().includes('questions') ||
+                               userMessage.toLowerCase().includes('customize');
+
+      if (isQuestionRequest && !hasGeneratedQuestions) {
+        // Set customization and generate questions
+        setCustomization(userMessage);
+        
+        // Save customization to Redis room state
+        if (roomCode) {
+          const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+            body: JSON.stringify({ 
+              action: 'update', 
+              roomCode: roomCode, 
+              updates: { 
+                gameState: { 
+                  aiCustomization: userMessage 
+                } 
               } 
-            } 
-          }),
+            }),
+          });
+
+          if (!response.ok) {
+            console.warn('Failed to save AI customization to room state');
+          }
+        }
+
+        await generateAllCustomQuestions(userMessage);
+      } else {
+        // General chat response
+        const { data, error } = await supabase.functions.invoke('ai-chat', {
+          body: {
+            message: userMessage,
+            action: 'chat',
+            customization: customization,
+            crazynessLevel: crazynessLevel[0] ?? 50
+          }
         });
 
-        if (!response.ok) {
-          console.warn('Failed to save AI customization to room state');
+        if (error || !data?.response) {
+          throw new Error(error?.message || 'Failed to get AI response');
         }
-      }
 
-      // Immediately generate questions
-      await generateAllCustomQuestions(sanitizedCustomization);
+        addMessage(data.response);
+      }
       
+      setIsLoading(false);
     } catch (error) {
-      console.error('Generation error:', error);
-      toast({
-        title: "Generation Error",
-        description: "Failed to generate questions. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Chat error:', error);
+      addMessage("❌ Sorry, I couldn't process that. Please try again.");
       setIsLoading(false);
     }
   };
@@ -202,7 +211,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      generateQuestionsFromInput();
+      sendChatMessage();
     }
   };
 
@@ -229,8 +238,8 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           <CardHeader className="p-4 border-b flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">Game Customizer</h3>
+                <MessageCircle className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold">AI Assistant</h3>
               </div>
               <Button
                 variant="ghost"
@@ -306,7 +315,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                 value={crazynessLevel}
                 onValueChange={setCrazynessLevel}
                 className="mb-2"
-                disabled={isLoading || hasGeneratedQuestions}
+                disabled={isLoading}
               />
               <div className="text-xs text-muted-foreground text-center">
                 {(crazynessLevel[0] ?? 50) <= 15 ? "Extremely safe & family-friendly questions" :
@@ -326,20 +335,20 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                   ref={inputRef}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="e.g. 'nerdy group of friends who love gaming'"
+                  placeholder="Ask me anything or describe your group..."
                   onKeyPress={handleKeyPress}
-                  disabled={isLoading || hasGeneratedQuestions}
+                  disabled={isLoading}
                   className="flex-grow"
                 />
                 <Button
                   size="icon"
-                  onClick={generateQuestionsFromInput}
-                  disabled={!inputMessage.trim() || isLoading || hasGeneratedQuestions}
+                  onClick={sendChatMessage}
+                  disabled={!inputMessage.trim() || isLoading}
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Sparkles className="h-4 w-4" />
+                    <Send className="h-4 w-4" />
                   )}
                 </Button>
               </div>
