@@ -47,101 +47,17 @@ interface DogpatchGameProps {
   onUpdateRoom: (updates: Partial<Room>) => Promise<void>;
 }
 
-// Hardcoded questions with correct answers matching the PDF
+// Single question with Tim
 const questionsData: Omit<Question, 'options'>[] = [
-  {
-    id: "1",
-    image: '/1.png',
-    correctAnswer: 'Deirbhile Gorman'
-  },
-  {
-    id: "2",
-    image: '/2.png',
-    correctAnswer: 'Joe Gorman'
-  },
-  {
-    id: "3",
-    image: '/3.png',
-    correctAnswer: 'Ruairi Forde'
-  },
-  {
-    id: "4",
-    image: '/4.png',
-    correctAnswer: 'Menno Axt'
-  },
-  {
-    id: "5",
-    image: '/5.png',
-    correctAnswer: 'Paige Haaroff'
-  },
   {
     id: "6",
     image: '/6.png',
     correctAnswer: 'Tim'
-  },
-  {
-    id: "7",
-    image: '/7.png',
-    correctAnswer: 'Aisling Conlon'
-  },
-  {
-    id: "8",
-    image: '/8.png',
-    correctAnswer: 'Malaika Judd'
-  },
-  {
-    id: "9",
-    image: '/9.png',
-    correctAnswer: 'Gleb Sapunenko'
-  },
-  {
-    id: "10",
-    image: '/10.png',
-    correctAnswer: 'Elizabeth Fingleton'
-  },
-  {
-    id: "11",
-    image: '/11.png',
-    correctAnswer: 'Raquel Nogueira da Silva'
-  },
-  {
-    id: "12",
-    image: '/12.png',
-    correctAnswer: 'Ben Beattie'
-  },
-  {
-    id: "13",
-    image: '/13.png',
-    correctAnswer: 'Mark Farrelly'
-  },
-  {
-    id: "14",
-    image: '/14.png',
-    correctAnswer: 'Maria Reyes'
-  },
-  {
-    id: "15",
-    image: '/15.png',
-    correctAnswer: 'Conor Burke'
-  },
-  {
-    id: "16",
-    image: '/16.png',
-    correctAnswer: 'Andrew McCann'
   }
 ];
 
-// All possible names for wrong answers
-const allNames = [
-  'Patrick Walsh', 'Andrew McCann', 'Cristina Bob', 'Ben Beattie', 'Patrick Curran', 
-  'Gleb Sapunenko', 'Jill Drennan', 'Jennifer Breathnach', 'Joe Lanzillotta', 
-  'Conor Burke', 'Marcos Escobar', 'Lucy Daly', 'Ruairi Forde', 'Maria Reyes',
-  'Dave Power', 'Elizabeth Fingleton', 'Tamara Leigh', 'Raquel Nogueira da Silva', 
-  'Roisin Murphy', 'Alexander O\'Sullivan', 'Emma Heaton-Esposito', 'Paige Haaroff', 
-  'Aisling Conlon', 'Ciaran Kelly', 'Mark Farrelly', 'Niamh Sterling', 'Madison Roche', 
-  'Menno Axt', 'Malaika Judd', 'Ian Browne', 'Lorraine Curham', 'Reta Octania', 
-  'Joe Gorman', 'Lizzy Hayashida', 'Deirbhile Gorman', 'Tim'
-];
+// Specific options for the Tim question
+const timQuestionOptions = ['Tim', 'Patrick Walsh', 'Lucy Daly', 'Lynetta Wang'];
 
 // Function to shuffle array
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -155,18 +71,11 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
-// Generate questions with randomized options
+// Generate questions with specific options for Tim
 const generateQuestions = (): Question[] => {
   return questionsData.map(questionData => {
-    // Get 3 random wrong answers (excluding the correct answer)
-    const wrongAnswers = allNames
-      .filter(name => name !== questionData.correctAnswer)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-    
-    // Combine correct answer with wrong answers and shuffle
-    const allOptions = [questionData.correctAnswer, ...wrongAnswers];
-    const shuffledOptions = shuffleArray(allOptions);
+    // Use the specific options and shuffle them
+    const shuffledOptions = shuffleArray([...timQuestionOptions]);
     
     return {
       ...questionData,
