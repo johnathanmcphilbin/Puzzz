@@ -629,7 +629,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                 {currentPlayer.is_host ? (
                    <Button 
                      onClick={startGame} 
-                     disabled={isStarting || players.length < 2 || ((selectedGame === "paranoia" || selectedGame === "odd_one_out" || selectedGame === "odd-one-out") && players.length < 3)}
+                     disabled={isStarting || (selectedGame !== "dogpatch" && players.length < 2) || ((selectedGame === "paranoia" || selectedGame === "odd_one_out" || selectedGame === "odd-one-out") && players.length < 3)}
                      className="flex-1 gap-2"
                    >
                     {isStarting ? (
