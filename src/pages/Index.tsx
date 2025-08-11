@@ -467,7 +467,7 @@ const Index = () => {
                 <img
                   src="/lovable-uploads/5bd080a5-1ea5-405f-b40e-961faf9e36eb.png"
                   alt="Say It or Pay It game thumbnail"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-contain p-2"
                   loading="lazy"
                   decoding="async"
                 />
