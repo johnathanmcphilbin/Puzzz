@@ -92,7 +92,7 @@ const Index = () => {
         </div>
 
         {/* Games Selection */}
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <Card className="mx-auto max-w-md mb-8 bg-card border-2 shadow-lg">
             <CardHeader className="pb-4">
               <CardTitle className="text-3xl font-bold text-center text-foreground">
@@ -101,13 +101,13 @@ const Index = () => {
             </CardHeader>
           </Card>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6 max-w-4xl mx-auto justify-items-center items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 items-stretch">
             {/* Would You Rather Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("would_you_rather")}
             >
-              <div className="aspect-video bg-gradient-to-br from-game-option-a to-game-option-b relative overflow-hidden">
+              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-game-option-a to-game-option-b">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -118,10 +118,10 @@ const Index = () => {
                   />
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+              <div className="flex-1">
+                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Would You Rather</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Would You Rather</CardTitle>
                   <Dialog>
                     <DialogTrigger asChild>
                         <Button 
@@ -175,10 +175,10 @@ const Index = () => {
 
             {/* Paranoia Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("paranoia")}
             >
-              <div className="aspect-video bg-gradient-to-br from-violet-500 to-purple-600 relative overflow-hidden">
+              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-violet-500 to-purple-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -189,10 +189,10 @@ const Index = () => {
                   />
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+              <div className="flex-1">
+                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Paranoia</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Paranoia</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -246,23 +246,23 @@ const Index = () => {
 
             {/* Odd One Out Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("odd-one-out")}
             >
-              <div className="aspect-video bg-gradient-to-br from-amber-500 to-orange-600 relative overflow-hidden">
+              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center bg-white">
+                <div className="absolute inset-0 flex items-center justify-center">
                   <img 
                     src="/lovable-uploads/4e6b1f5d-d7f0-40a7-bf86-96b9457c20f8.png" 
                     alt="Odd One Out - Detective puzzle game"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+              <div className="flex-1">
+                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Odd One Out</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Odd One Out</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -316,10 +316,10 @@ const Index = () => {
             {/* Dramamatching Game (feature-flagged) */}
             {FEATURES.dramamatching && (
               <Card 
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-pink-500/20 to-purple-600/20 overflow-hidden h-full"
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-pink-500/20 to-purple-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
                 onClick={() => handleGameClick("dramamatching")}
               >
-                <div className="aspect-video bg-gradient-to-br from-pink-500 to-purple-600 relative overflow-hidden">
+                <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-pink-500 to-purple-600">
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-6xl">🎭</div>
@@ -330,10 +330,10 @@ const Index = () => {
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                  <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+                <div className="flex-1">
+                  <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm sm:text-lg font-bold truncate">Dramamatching</CardTitle>
+                      <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Dramamatching</CardTitle>
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button 
@@ -389,10 +389,10 @@ const Index = () => {
 
             {/* Forms Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-indigo-500/20 to-blue-600/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-indigo-500/20 to-blue-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("forms")}
             >
-              <div className="aspect-video bg-gradient-to-br from-indigo-500 to-blue-600 relative overflow-hidden">
+              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-indigo-500 to-blue-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-6xl">📋</div>
@@ -403,10 +403,10 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+              <div className="flex-1">
+                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Forms Game</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Forms Game</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -460,14 +460,14 @@ const Index = () => {
 
             {/* Say it or pay it Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-orange-600/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-orange-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("say_it_or_pay_it")}
             >
-              <div className="aspect-video relative overflow-hidden" style={{ backgroundColor: '#ff69b4' }}>
+              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-red-500 to-orange-600">
                 <img
                   src="/lovable-uploads/5bd080a5-1ea5-405f-b40e-961faf9e36eb.png"
                   alt="Say It or Pay It game thumbnail"
-                  className="absolute inset-0 h-full w-full object-contain p-2"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
                   loading="lazy"
                   decoding="async"
                 />
@@ -477,10 +477,10 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+              <div className="flex-1">
+                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Say it or pay it</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Say it or pay it</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -534,10 +534,10 @@ const Index = () => {
 
             {/* Demo Day Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("dogpatch")}
             >
-              <div className="aspect-video bg-gradient-to-br from-blue-500 to-indigo-600 relative overflow-hidden">
+              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -552,10 +552,10 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+              <div className="flex-1">
+                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Demo Day</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Demo Day</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -609,10 +609,10 @@ const Index = () => {
 
             {/* Cat Conspiracy Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-purple-500/20 to-blue-500/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-purple-500/20 to-blue-500/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick('coup')}
             >
-              <div className="aspect-video bg-gradient-to-br from-purple-500 to-blue-500 relative overflow-hidden">
+              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-purple-500 to-blue-500">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-6xl">👑</div>
@@ -623,10 +623,10 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+              <div className="flex-1">
+                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Cat Conspiracy</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Cat Conspiracy</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -681,23 +681,23 @@ const Index = () => {
 
             {/* Puzzz Panic Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-yellow-500/20 overflow-hidden h-full"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-yellow-500/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("puzzz_panic")}
             >
-              <div className="aspect-video bg-gradient-to-br from-red-500 to-yellow-500 relative overflow-hidden">
+              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-red-500 to-yellow-500">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center" style={{backgroundColor: '#4c5bd4'}}>
-                  <img 
-                    src="/lovable-uploads/f3e4c1e6-0768-4256-bb63-274764483b98.png" 
-                    alt="Puzzz Panic - Fast-paced challenge game"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/f3e4c1e6-0768-4256-bb63-274764483b98.png" 
+                  alt="Puzzz Panic - Fast-paced challenge game"
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="flex flex-col h-[calc(100%-theme(aspectRatio.video)*100vw)]">
-                <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-6 flex-shrink-0">
+              </div>
+              <div className="flex-1">
+                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold truncate">Puzzz Panic</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Puzzz Panic</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
