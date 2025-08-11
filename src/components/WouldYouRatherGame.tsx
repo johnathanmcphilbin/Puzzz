@@ -78,14 +78,22 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
     }
   });
 
-  // Timer management effects
+  // Timer management effects (local) and sync from host
   useEffect(() => {
     if (currentQuestion && !hasVoted && !showResults) {
-      votingTimer.restart();
+      // If host provided a synchronized start time, align timer
+      if (gameState.votingStartTime) {
+        const elapsed = Math.floor((Date.now() - gameState.votingStartTime) / 1000);
+        const remaining = Math.max(0, 30 - elapsed);
+        if (remaining > 0) votingTimer.restart(remaining);
+        else votingTimer.stop();
+      } else {
+        votingTimer.restart();
+      }
     } else {
       votingTimer.stop();
     }
-  }, [currentQuestion, hasVoted, showResults]);
+  }, [currentQuestion, hasVoted, showResults, gameState.votingStartTime]);
 
   useEffect(() => {
     loadCurrentQuestion();
@@ -275,7 +283,6 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         className: "bg-success text-success-foreground",
       });
 
-      // Auto-show results after a delay if host
       if (currentPlayer.is_host) {
         setTimeout(async () => {
           const finalVotes = { ...newVotes };
@@ -284,6 +291,7 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
             votes: finalVotes, 
             showResults: true 
           };
+          console.log('[WouldYouRather] host reveal triggered');
 
           await onUpdateRoom({
             gameState: resultsGameState
@@ -304,46 +312,19 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
   const showResultsHandler = async () => {
     if (!currentPlayer.is_host) return;
 
-    const updatedGameState = {
-      ...gameState,
-      showResults: true
-    };
-
-    // Update room state via Redis-based rooms-service
-    const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-      body: JSON.stringify({ 
-        action: 'update', 
-        roomCode: room.room_code, 
-        updates: { gameState: updatedGameState } 
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("Failed to show results");
-    }
+    await onUpdateRoom({
+      gameState: {
+        showResults: true
+      }
+    } as any);
   };
 
   const backToLobby = async () => {
-    const newGameState = {
-      phase: "lobby"
-    };
-
-    // Update room state via Redis-based rooms-service
-    const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-      body: JSON.stringify({ 
-        action: 'update', 
-        roomCode: room.room_code, 
-        updates: { gameState: newGameState } 
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("Failed to return to lobby");
-    }
+    await onUpdateRoom({
+      gameState: {
+        phase: "lobby"
+      }
+    } as any);
   };
 
   const transferHostAndLeave = async () => {

@@ -135,6 +135,19 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   const countingTimeoutRef = useRef<NodeJS.Timeout>();
   const holdIntervalRef = useRef<NodeJS.Timeout>();
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current as any);
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (greenTimeoutRef.current) clearTimeout(greenTimeoutRef.current);
+      if (emojiTimeoutRef.current) clearTimeout(emojiTimeoutRef.current);
+      if (sequenceTimeoutRef.current) clearTimeout(sequenceTimeoutRef.current);
+      if (gridTimeoutRef.current) clearTimeout(gridTimeoutRef.current);
+      if (countingTimeoutRef.current) clearTimeout(countingTimeoutRef.current);
+      if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    };
+  }, []);
+
   const challengeIndex = challengeOrder[currentChallengeIndex] ?? currentChallengeIndex;
   const challenge = CHALLENGES[challengeIndex % CHALLENGES.length];
   
@@ -191,6 +204,9 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     if (room.gameState) {
       const newPhase = room.gameState.phase || "waiting";
       const oldPhase = gamePhase;
+      if (newPhase !== oldPhase) {
+        console.log('[PuzzzPanic] Phase change:', oldPhase, '->', newPhase);
+      }
       
       setGamePhase(newPhase);
       setCurrentChallengeIndex(room.gameState.currentChallenge || 0);
@@ -515,6 +531,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
   };
 
   const submitResponse = (response: any, responseTime: number) => {
+    if (gamePhase !== "challenge") return;
     if (hasResponded) return;
     
     setHasResponded(true);

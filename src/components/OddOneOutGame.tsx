@@ -12,6 +12,7 @@ import { Users, Crown, Trophy, MessageSquare, Play, StopCircle, Clock, ArrowLeft
 import { useNavigate } from "react-router-dom";
 import { getCatImageUrl, STATIC_CATS } from "@/assets/catImages";
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from "@/utils/functions";
+import { getActivePlayers } from "@/utils/roomState";
 
 interface Room {
   id: string;
@@ -265,9 +266,9 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       // Update answers first
       await updateGameState({ player_answers: updatedAnswers });
       
-      // Check if all players have answered - be more careful about the timing
       const totalAnswers = Object.keys(updatedAnswers).length;
-      if (totalAnswers >= players.length) {
+      const activeCount = getActivePlayers(players as any, gameState).length;
+      if (totalAnswers >= activeCount) {
         // Small delay to ensure all answer updates are processed
         setTimeout(async () => {
           try {
@@ -318,8 +319,9 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
       
       await updateGameState({ votes: updatedVotes });
       
-      // Check if all players have voted
-      if (Object.keys(updatedVotes).length === players.length) {
+      // Check if all active players have voted
+      const activeCount = getActivePlayers(players as any, gameState).length;
+      if (Object.keys(updatedVotes).length === activeCount) {
         await revealResults(updatedVotes);
       }
       
@@ -341,21 +343,21 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
   };
 
   const revealResults = async (finalVotes: { [playerId: string]: string }) => {
+    console.log('[OddOneOut] reveal results with votes:', finalVotes);
     // Count votes
     const voteCounts: { [playerId: string]: number } = {};
     Object.values(finalVotes).forEach(votedFor => {
       voteCounts[votedFor] = (voteCounts[votedFor] || 0) + 1;
     });
     
-    // Find player with most votes
-    const voteCountKeys = Object.keys(voteCounts);
-    if (voteCountKeys.length === 0) return;
-    
-    const suspectedImposter = voteCountKeys.reduce((a, b) => 
-      (voteCounts[a] || 0) > (voteCounts[b] || 0) ? a : b
-    );
-    
-    const wasImposterCaught = suspectedImposter === imposterPlayerId;
+    // Determine top votes and handle ties deterministically
+    const entries = Object.entries(voteCounts);
+    const maxVotes = Math.max(...entries.map(([, c]) => c));
+    const topPlayers = entries.filter(([, c]) => c === maxVotes).map(([id]) => id);
+
+    const tie = topPlayers.length > 1;
+    const suspectedImposter = topPlayers[0]; // deterministic: first by key order
+    const wasImposterCaught = !tie && suspectedImposter === imposterPlayerId;
     
     // Update scores
     const newScores = { ...gameState.scores };
@@ -367,15 +369,16 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
         }
       });
     } else {
-      // Imposter wins - imposter gets +2
+      // Imposter wins or tie - imposter gets +2
       newScores[imposterPlayerId] = (newScores[imposterPlayerId] || 0) + 2;
     }
     
     await updateGameState({ 
       phase: "reveal",
       vote_counts: voteCounts,
-      suspected_imposter: suspectedImposter,
+      suspected_imposter: tie ? null : suspectedImposter,
       was_imposter_caught: wasImposterCaught,
+      tie: tie,
       scores: newScores
     });
   };
@@ -579,9 +582,9 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
                 🕵️ Find the odd one out
               </Badge>
             </div>
-            <Progress value={(answeredCount / players.length) * 100} className="w-full" />
+            <Progress value={(answeredCount / getActivePlayers(players as any, gameState).length) * 100} className="w-full" />
             <p className="text-xs sm:text-sm text-muted-foreground">
-              {answeredCount} of {players.length} players have answered
+              {answeredCount} of {getActivePlayers(players as any, gameState).length} active players have answered
             </p>
           </div>
 
@@ -693,9 +696,9 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
                 <span className="font-mono text-lg">{timeLeft}s</span>
               </div>
             </div>
-            <Progress value={(voteCount / players.length) * 100} className="w-full max-w-md mx-auto" />
+            <Progress value={(voteCount / getActivePlayers(players as any, gameState).length) * 100} className="w-full max-w-md mx-auto" />
             <p className="text-xs sm:text-sm text-muted-foreground">
-              {voteCount} of {players.length} players have voted
+              {voteCount} of {getActivePlayers(players as any, gameState).length} active players have voted
             </p>
           </div>
 

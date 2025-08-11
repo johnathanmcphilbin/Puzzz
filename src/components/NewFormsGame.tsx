@@ -464,7 +464,8 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
 
   if (phase === 'playing') {
     const hasAnswered = answers.some(a => a.playerId === currentPlayer.playerId);
-    const allAnswered = answers.length === players.length;
+    const activePlayers = players.filter(p => !p.eliminated).length || players.length;
+    const allAnswered = answers.length === activePlayers;
 
     return (
       <div className="min-h-screen gradient-bg p-4">
@@ -476,7 +477,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                   Question {currentQuestionIndex + 1}/{selectedQuestions.length}
                 </Badge>
                 <Badge variant="secondary" className="bg-purple-500/20 text-purple-300">
-                  {answers.length}/{players.length} answered
+                  {answers.length}/{players.filter(p => !p.eliminated).length || players.length} answered
                 </Badge>
               </div>
               <CardTitle className="text-2xl font-bold text-white mb-4">

@@ -212,6 +212,7 @@ const updateRoom = useCallback(async (updates: Partial<Room>) => {
 
     return () => {
       supabase.removeChannel(channel);
+      console.log('[Room] unsubscribed channel room_'+roomCode);
     };
   }, [roomCode, room?.roomCode]); // Only depend on roomCode to avoid re-subscriptions
 

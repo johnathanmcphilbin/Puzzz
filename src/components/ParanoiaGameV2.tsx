@@ -138,7 +138,22 @@ export function ParanoiaGameV2({ room, players, currentPlayer, onUpdateRoom }: P
       return;
     }
 
-    await selectQuestion();
+    // Persist custom question and move to answering with deterministic target
+    const askerId = gameState.playerOrder?.[gameState.currentTurnIndex];
+    const eligibleTargets = players.filter(p => p.player_id !== askerId);
+    const target = eligibleTargets[Math.floor(Math.random() * eligibleTargets.length)];
+
+    const newCustom = { id: `custom-${Date.now()}`, question: customQuestion.trim(), category: 'custom' };
+
+    await onUpdateRoom({
+      gameState: {
+        customQuestions: [...(((gameState as any).customQuestions) || []), newCustom],
+        currentQuestion: customQuestion.trim(),
+        targetPlayerId: target?.player_id || null,
+        phase: 'answering'
+      }
+    } as any);
+
     setCustomQuestion("");
   };
 

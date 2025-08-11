@@ -142,7 +142,7 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
         spiceLevel: randomSpiceLevel,
         source: 'player',
         submittedBy: currentPlayer.playerName
-      };
+      }; // spiceLevel persisted
 
       const updatedQuestions = [...questions, newQuestion];
 
@@ -199,12 +199,15 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
   };
 
   const chooseForfeit = async () => {
-    const randomForfeit = forfeits[Math.floor(Math.random() * forfeits.length)];
+    const used = ((gameState as any).usedForfeits || []) as string[];
+    const available = forfeits.filter(f => !used.includes(f));
+    const pool = available.length > 0 ? available : forfeits;
+    const randomForfeit = pool[Math.floor(Math.random() * pool.length)];
     
     await onUpdateRoom({
       gameState: {
-        ...gameState,
         chosenForfeit: randomForfeit,
+        usedForfeits: [...used, randomForfeit],
         phase: 'answered'
       }
     });
@@ -236,7 +239,8 @@ export const SayItOrPayItGame: React.FC<SayItOrPayItGameProps> = ({
         hotSeatPlayerIndex: 0,
         currentQuestion: null,
         playerAnswered: false,
-        chosenForfeit: false
+        chosenForfeit: false,
+        usedForfeits: []
       }
     });
   };
