@@ -187,89 +187,16 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
       gamePhase: 'results',
       scores: newScores,
       showResults: true
-    });
+     });
 
-    // Auto-advance to AI chat after 3 seconds
+    // Auto-advance to finished after 3 seconds
     setTimeout(() => {
       if (isHost) {
         updateGameState({
-          gamePhase: 'ai-chat'
+          gamePhase: 'finished'
         });
       }
     }, 3000);
-  };
-
-  const generateAIResponse = async () => {
-    if (!aiPrompt.trim() || isGeneratingAI) return;
-
-    setIsGeneratingAI(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('ai-demo-response', {
-        body: { 
-          prompt: aiPrompt.trim(),
-          playerName: currentPlayer.player_name,
-          wasCorrect: selectedAnswer === timQuestion.correctAnswer
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        let aiMessage = data.response;
-        
-        // If player got the answer wrong, add the harsh response
-        if (selectedAnswer !== timQuestion.correctAnswer) {
-          aiMessage = "There are droids smarter than this Eejit! " + aiMessage;
-        }
-
-        const response: AIResponse = {
-          response: aiMessage,
-          playerName: currentPlayer.player_name,
-          timestamp: data.timestamp
-        };
-
-        await updateGameState({
-          aiResponse: response
-        });
-
-        setAiPrompt('');
-        toast({
-          title: "AI Response Generated!",
-          description: selectedAnswer === timQuestion.correctAnswer 
-            ? "Tim has responded to your message"
-            : "The AI has some harsh words for you!",
-          className: selectedAnswer === timQuestion.correctAnswer 
-            ? "bg-success text-success-foreground"
-            : "bg-destructive text-destructive-foreground",
-        });
-      } else {
-        throw new Error(data.error || 'Failed to generate AI response');
-      }
-    } catch (error) {
-      console.error('Error generating AI response:', error);
-      // Fallback response
-      const fallbackMessage = selectedAnswer === timQuestion.correctAnswer 
-        ? "Great job identifying me! Thanks for playing!"
-        : "There are droids smarter than this Eejit! Better luck next time!";
-        
-      const response: AIResponse = {
-        response: fallbackMessage,
-        playerName: currentPlayer.player_name,
-        timestamp: new Date().toISOString()
-      };
-
-      await updateGameState({
-        aiResponse: response
-      });
-
-      toast({
-        title: "Error",
-        description: "Used fallback response due to AI error.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingAI(false);
-    }
   };
 
   const resetGame = async () => {
@@ -280,12 +207,6 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
       playerAnswers: {},
       showResults: false,
       aiResponse: null
-    });
-  };
-
-  const finishGame = async () => {
-    await updateGameState({
-      gamePhase: 'finished'
     });
   };
 
@@ -377,78 +298,6 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
     );
   }
 
-  if (gamePhase === 'ai-chat') {
-    return (
-      <div className="min-h-screen gradient-bg p-6">
-        <div className="max-w-4xl mx-auto animate-fade-in">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 text-primary">Chat with Tim! 🤖</h1>
-            <p className="text-lg text-muted-foreground">
-              Ask Tim anything or make a comment about the demo day experience
-            </p>
-          </div>
-
-          <Card className="mb-6 border-2">
-            <CardContent className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xl font-bold">
-                  T
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold">Tim</h3>
-                  <p className="text-muted-foreground">AI-powered team member</p>
-                </div>
-              </div>
-
-              {aiResponse && (
-                <div className="mb-6 p-4 bg-muted rounded-lg animate-scale-in">
-                  <div className="flex items-start gap-3">
-                    <MessageSquare className="h-5 w-5 text-primary mt-1" />
-                    <div>
-                      <p className="font-medium text-sm text-muted-foreground mb-1">
-                        Tim responded to {aiResponse.playerName}:
-                      </p>
-                      <p className="text-lg">{aiResponse.response}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <Input
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="Type your message to Tim..."
-                  onKeyPress={(e) => e.key === 'Enter' && generateAIResponse()}
-                  disabled={isGeneratingAI}
-                  className="text-lg"
-                />
-                <Button 
-                  onClick={generateAIResponse} 
-                  disabled={!aiPrompt.trim() || isGeneratingAI}
-                  size="lg"
-                >
-                  {isGeneratingAI ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Send className="h-5 w-5" />
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="text-center">
-            {isHost && (
-              <Button onClick={finishGame} size="lg" variant="outline">
-                Finish Demo Day
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen gradient-bg p-6">
@@ -545,11 +394,16 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
                       <p className="text-2xl font-semibold text-foreground">
                         It was Tim!
                       </p>
+                      <div className="mt-6 p-6 bg-red-50 border-2 border-red-200 rounded-lg">
+                        <p className="text-2xl font-bold text-red-800">
+                          There are droids smarter than this Eejit
+                        </p>
+                      </div>
                     </div>
                   )}
                   <div className="mt-6 flex items-center justify-center gap-3 text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-lg">Moving to AI chat experience...</span>
+                    <span className="text-lg">Results will be shown shortly...</span>
                   </div>
                 </div>
               </div>
