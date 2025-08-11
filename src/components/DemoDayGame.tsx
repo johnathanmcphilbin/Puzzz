@@ -189,14 +189,18 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
       showResults: true
      });
 
-    // Auto-advance to finished after 3 seconds
-    setTimeout(() => {
-      if (isHost) {
-        updateGameState({
-          gamePhase: 'finished'
-        });
-      }
-    }, 3000);
+    // Don't auto-advance anymore - let host manually end the demo
+  };
+
+  const endDemo = async () => {
+    await updateGameState({
+      phase: 'lobby',
+      gamePhase: 'waiting',
+      scores: {},
+      playerAnswers: {},
+      showResults: false,
+      aiResponse: null
+    });
   };
 
   const resetGame = async () => {
@@ -401,9 +405,21 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
                       </div>
                     </div>
                   )}
-                  <div className="mt-6 flex items-center justify-center gap-3 text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-lg">Results will be shown shortly...</span>
+                  <div className="mt-6 flex flex-col items-center gap-4">
+                    {isHost ? (
+                      <Button 
+                        onClick={endDemo} 
+                        size="lg" 
+                        className="text-xl px-8 py-4"
+                        variant="default"
+                      >
+                        End Demo & Return to Lobby
+                      </Button>
+                    ) : (
+                      <div className="flex items-center gap-3 text-muted-foreground">
+                        <span className="text-lg">Waiting for host to end the demo...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
