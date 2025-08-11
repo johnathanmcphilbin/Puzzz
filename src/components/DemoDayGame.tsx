@@ -207,15 +207,23 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
       const { data, error } = await supabase.functions.invoke('ai-demo-response', {
         body: { 
           prompt: aiPrompt.trim(),
-          playerName: currentPlayer.player_name
+          playerName: currentPlayer.player_name,
+          wasCorrect: selectedAnswer === timQuestion.correctAnswer
         }
       });
 
       if (error) throw error;
 
       if (data.success) {
+        let aiMessage = data.response;
+        
+        // If player got the answer wrong, add the harsh response
+        if (selectedAnswer !== timQuestion.correctAnswer) {
+          aiMessage = "There are droids smarter than this Eejit! " + aiMessage;
+        }
+
         const response: AIResponse = {
-          response: data.response,
+          response: aiMessage,
           playerName: currentPlayer.player_name,
           timestamp: data.timestamp
         };
@@ -227,17 +235,36 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
         setAiPrompt('');
         toast({
           title: "AI Response Generated!",
-          description: "Tim has responded to your message",
-          className: "bg-success text-success-foreground",
+          description: selectedAnswer === timQuestion.correctAnswer 
+            ? "Tim has responded to your message"
+            : "The AI has some harsh words for you!",
+          className: selectedAnswer === timQuestion.correctAnswer 
+            ? "bg-success text-success-foreground"
+            : "bg-destructive text-destructive-foreground",
         });
       } else {
         throw new Error(data.error || 'Failed to generate AI response');
       }
     } catch (error) {
       console.error('Error generating AI response:', error);
+      // Fallback response
+      const fallbackMessage = selectedAnswer === timQuestion.correctAnswer 
+        ? "Great job identifying me! Thanks for playing!"
+        : "There are droids smarter than this Eejit! Better luck next time!";
+        
+      const response: AIResponse = {
+        response: fallbackMessage,
+        playerName: currentPlayer.player_name,
+        timestamp: new Date().toISOString()
+      };
+
+      await updateGameState({
+        aiResponse: response
+      });
+
       toast({
         title: "Error",
-        description: "Failed to generate AI response. Please try again.",
+        description: "Used fallback response due to AI error.",
         variant: "destructive",
       });
     } finally {

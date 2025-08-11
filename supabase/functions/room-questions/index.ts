@@ -298,7 +298,28 @@ serve(async (req) => {
       
       You MUST return ONLY valid JSON with this exact structure: ${responseStructure}`;
       
-      userPrompt = `Generate ${questionCount} Odd One Out questions themed around: ${customization}. Craziness level: ${crazynessLevel}%.`;
+       userPrompt = `Generate ${questionCount} Odd One Out questions themed around: ${customization}. Craziness level: ${crazynessLevel}%.`;
+    } else if (gameType === 'dogpatch' || gameType === 'demo_day') {
+      // For dogpatch/demo day game, generate general party questions
+      questionCount = 10;
+      responseStructure = `{
+        "questions": [
+          {"option_a": "...", "option_b": "..."}
+        ]
+      }`;
+      
+      systemPrompt = `Generate general Would You Rather questions that could be used for party games. Use the customization "${customization}" as guidance for tone and style.
+
+      CRAZINESS LEVEL: ${crazynessLevel}% - ${crazynessConfig.description}
+      
+      CONTENT CONSTRAINTS FOR THIS LEVEL:
+      ${crazynessConfig.constraints.map(c => `• ${c}`).join('\n')}
+      
+      Generate ${questionCount} Would You Rather questions.
+      
+      You MUST return ONLY valid JSON with this exact structure: ${responseStructure}`;
+      
+      userPrompt = `Generate ${questionCount} general party game questions with style: ${customization}. Craziness level: ${crazynessLevel}%.`;
     } else {
       throw new Error(`Unsupported game type: ${gameType}`);
     }

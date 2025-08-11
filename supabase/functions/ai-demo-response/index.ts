@@ -19,13 +19,13 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    const { prompt, playerName } = await req.json();
+    const { prompt, playerName, wasCorrect } = await req.json();
 
     if (!prompt) {
       throw new Error('Prompt is required');
     }
 
-    console.log(`Generating AI response for player: ${playerName}, prompt: ${prompt}`);
+    console.log(`Generating AI response for player: ${playerName}, prompt: ${prompt}, was correct: ${wasCorrect}`);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -38,11 +38,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are Tim, a friendly team member in a Demo Day presentation game. You've just been correctly identified in a photo quiz. Respond to the player's prompt in a fun, engaging way. Keep responses under 100 words and maintain a positive, energetic tone fitting for a team demo day event.`
+            content: `You are Tim, a friendly team member in a Demo Day presentation game. You've just been ${wasCorrect ? 'correctly' : 'incorrectly'} identified in a photo quiz. Respond to the player's prompt in a fun, engaging way. Keep responses under 80 words and maintain a positive, energetic tone fitting for a team demo day event. ${wasCorrect ? 'Thank them for getting it right!' : 'Be encouraging even though they got it wrong.'}`
           },
           {
             role: 'user',
-            content: `Player ${playerName} said: "${prompt}". Respond as Tim who was just identified correctly in the photo.`
+            content: `Player ${playerName} said: "${prompt}". They ${wasCorrect ? 'correctly identified you' : 'got the answer wrong'}. Respond as Tim.`
           }
         ],
         max_tokens: 150,
@@ -63,7 +63,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true, 
       response: aiResponse,
-      playerName,
+      wasCorrect,
       timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
