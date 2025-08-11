@@ -107,7 +107,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("would_you_rather")}
             >
-              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-game-option-a to-game-option-b">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] bg-gradient-to-br from-game-option-a to-game-option-b">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -118,16 +118,15 @@ const Index = () => {
                   />
                 </div>
               </div>
-              <div className="flex-1">
-                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Would You Rather</CardTitle>
+                <CardHeader className="shrink-0 p-3 sm:p-4 flex flex-col gap-1 space-y-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg sm:text-xl font-semibold leading-tight line-clamp-1">Would You Rather</CardTitle>
                   <Dialog>
                     <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          className="ml-auto h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -164,13 +163,12 @@ const Index = () => {
                     </DialogContent>
                   </Dialog>
                   </div>
-                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                   <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                      <span>Party Game</span>
                      <span>•</span>
                      <span>2+ Players</span>
                    </div>
                 </CardHeader>
-              </div>
             </Card>
 
             {/* Paranoia Game */}
@@ -178,7 +176,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("paranoia")}
             >
-              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-violet-500 to-purple-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] bg-gradient-to-br from-violet-500 to-purple-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -189,16 +187,15 @@ const Index = () => {
                   />
                 </div>
               </div>
-              <div className="flex-1">
-                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Paranoia</CardTitle>
+                <CardHeader className="shrink-0 p-3 sm:p-4 flex flex-col gap-1 space-y-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg sm:text-xl font-semibold leading-tight line-clamp-1">Paranoia</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          className="ml-auto h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -235,13 +232,12 @@ const Index = () => {
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                   <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                     <span>Whisper Game</span>
                     <span>•</span>
                     <span>3+ Players</span>
                   </div>
                 </CardHeader>
-              </div>
             </Card>
 
             {/* Odd One Out Game */}
@@ -249,7 +245,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("odd-one-out")}
             >
-              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] bg-gradient-to-br from-amber-500 to-orange-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -259,16 +255,15 @@ const Index = () => {
                   />
                 </div>
               </div>
-              <div className="flex-1">
-                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Odd One Out</CardTitle>
+                <CardHeader className="shrink-0 p-3 sm:p-4 flex flex-col gap-1 space-y-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg sm:text-xl font-semibold leading-tight line-clamp-1">Odd One Out</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          className="ml-auto h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -304,13 +299,12 @@ const Index = () => {
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                   <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                     <span>Detective Game</span>
                     <span>•</span>
                     <span>3+ Players</span>
                   </div>
                 </CardHeader>
-              </div>
             </Card>
 
             {/* Dramamatching Game (feature-flagged) */}
@@ -319,7 +313,7 @@ const Index = () => {
                 className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-pink-500/20 to-purple-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
                 onClick={() => handleGameClick("dramamatching")}
               >
-                <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-pink-500 to-purple-600">
+                <div className="relative overflow-hidden flex-1 min-h-[9rem] bg-gradient-to-br from-pink-500 to-purple-600">
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-6xl">🎭</div>
@@ -330,16 +324,15 @@ const Index = () => {
                     </span>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Dramamatching</CardTitle>
+                  <CardHeader className="shrink-0 p-3 sm:p-4 flex flex-col gap-1 space-y-0">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg sm:text-xl font-semibold leading-tight line-clamp-1">Dramamatching</CardTitle>
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="h-6 w-6 p-0 hover:bg-background/20"
+                              className="ml-auto h-6 w-6 p-0 hover:bg-background/20"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -376,13 +369,12 @@ const Index = () => {
                         </DialogContent>
                       </Dialog>
                     </div>
-                    <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                     <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                       <span>AI Selfie Game</span>
                       <span>•</span>
                       <span>2+ Players</span>
                     </div>
                   </CardHeader>
-                </div>
               </Card>
             )}
 
@@ -392,7 +384,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-indigo-500/20 to-blue-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("forms")}
             >
-              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-indigo-500 to-blue-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] bg-gradient-to-br from-indigo-500 to-blue-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-6xl">📋</div>
@@ -403,16 +395,15 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex-1">
-                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Forms Game</CardTitle>
+                <CardHeader className="shrink-0 p-3 sm:p-4 flex flex-col gap-1 space-y-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg sm:text-xl font-semibold leading-tight line-clamp-1">Forms Game</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
+                           className="ml-auto h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -449,13 +440,12 @@ const Index = () => {
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                   <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                     <span>AI Poll Game</span>
                     <span>•</span>
                     <span>2+ Players</span>
                   </div>
                 </CardHeader>
-              </div>
             </Card>
 
             {/* Say it or pay it Game */}
@@ -463,7 +453,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-orange-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("say_it_or_pay_it")}
             >
-              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-red-500 to-orange-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] bg-gradient-to-br from-red-500 to-orange-600">
                 <img
                   src="/lovable-uploads/5bd080a5-1ea5-405f-b40e-961faf9e36eb.png"
                   alt="Say It or Pay It game thumbnail"
@@ -477,16 +467,15 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex-1">
-                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Say it or pay it</CardTitle>
+                <CardHeader className="shrink-0 p-3 sm:p-4 flex flex-col gap-1 space-y-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg sm:text-xl font-semibold leading-tight line-clamp-1">Say it or pay it</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
+                           className="ml-auto h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -523,13 +512,12 @@ const Index = () => {
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                   <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                     <span>Truth or Dare</span>
                     <span>•</span>
                     <span>2-6 Players</span>
                   </div>
                 </CardHeader>
-              </div>
             </Card>
 
             {/* Demo Day Game */}
@@ -537,7 +525,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("dogpatch")}
             >
-              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] bg-gradient-to-br from-blue-500 to-indigo-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -552,16 +540,15 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex-1">
-                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Demo Day</CardTitle>
+                <CardHeader className="shrink-0 p-3 sm:p-4 flex flex-col gap-1 space-y-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg sm:text-xl font-semibold leading-tight line-clamp-1">Demo Day</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
+                           className="ml-auto h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -598,13 +585,12 @@ const Index = () => {
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                   <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                     <span>Quiz Game</span>
                     <span>•</span>
                     <span>2+ Players</span>
                   </div>
                 </CardHeader>
-              </div>
             </Card>
 
             {/* Cat Conspiracy Game */}
@@ -612,7 +598,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-purple-500/20 to-blue-500/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick('coup')}
             >
-              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-purple-500 to-blue-500">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] bg-gradient-to-br from-purple-500 to-blue-500">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-6xl">👑</div>
@@ -623,16 +609,15 @@ const Index = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex-1">
-                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Cat Conspiracy</CardTitle>
+                <CardHeader className="shrink-0 p-3 sm:p-4 flex flex-col gap-1 space-y-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg sm:text-xl font-semibold leading-tight line-clamp-1">Cat Conspiracy</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
+                           className="ml-auto h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -670,13 +655,12 @@ const Index = () => {
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                   <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                     <span>Bluffing & Strategy</span>
                     <span>•</span>
                     <span>2-10 players</span>
                   </div>
                 </CardHeader>
-              </div>
             </Card>
 
             {/* Puzzz Panic Game */}
@@ -684,7 +668,7 @@ const Index = () => {
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-yellow-500/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("puzzz_panic")}
             >
-              <div className="h-1/2 min-h-[9rem] relative overflow-hidden bg-gradient-to-br from-red-500 to-yellow-500">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] bg-gradient-to-br from-red-500 to-yellow-500">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <img 
@@ -694,16 +678,16 @@ const Index = () => {
                 />
               </div>
               </div>
-              <div className="flex-1">
-                <CardHeader className="p-3 sm:p-6 min-h-[9rem]">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm sm:text-lg font-bold line-clamp-2">Puzzz Panic</CardTitle>
+              
+                <CardHeader className="shrink-0 p-3 sm:p-4 flex flex-col gap-1 space-y-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg sm:text-xl font-semibold leading-tight line-clamp-1">Puzzz Panic</CardTitle>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-6 w-6 p-0 hover:bg-background/20"
+                          className="ml-auto h-6 w-6 p-0 hover:bg-background/20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -741,13 +725,12 @@ const Index = () => {
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                     <span>Fast Action</span>
                     <span>•</span>
                     <span>1-250 Players</span>
                   </div>
                 </CardHeader>
-              </div>
             </Card>
 
           </div>
