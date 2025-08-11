@@ -4,7 +4,7 @@ import { RoomLobby } from "@/components/RoomLobby";
 import { WouldYouRatherGame } from "@/components/WouldYouRatherGame";
 import { ParanoiaGameV2 } from "@/components/ParanoiaGameV2";
 import { OddOneOutGame } from "@/components/OddOneOutGame";
-import { DogpatchGame } from "@/components/DogpatchGame";
+import { DemoDayGame } from "@/components/DemoDayGame";
 import { NewFormsGame } from "@/components/NewFormsGame";
 import { DramamatchingGame } from "@/components/DramamatchingGame";
 import { FEATURES } from "@/config/featureFlags";
@@ -87,10 +87,10 @@ export const Room = () => {
           onUpdateRoom={updateRoom}
         />
       ) : currentGame === "dogpatch" ? (
-        <DogpatchGame 
+        <DemoDayGame 
           room={room as any} 
           players={players as any} 
-          currentPlayer={currentPlayer as any}
+          currentPlayer={currentPlayer as any} 
           onUpdateRoom={updateRoom}
         />
       ) : currentGame === "dramamatching" && FEATURES.dramamatching ? (
