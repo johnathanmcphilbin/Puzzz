@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Crown, Users, SkipForward } from 'lucide-react';
+import { Crown, Users, SkipForward, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getCatImageUrl } from '@/assets/catImages';
 
@@ -162,7 +162,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   // Check if all players have answered (only host handles this)
   useEffect(() => {
     if (isHost && gamePhase === 'question' && allPlayersAnswered && Object.keys(playerAnswers).length > 0) {
-      setTimeout(() => showQuestionResults(), 1000);
+      setTimeout(() => showQuestionResults(), 300);
     }
   }, [playerAnswers, gamePhase, allPlayersAnswered, isHost]);
 
@@ -224,7 +224,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
       
       setTimeout(() => {
         nextQuestion(newScores, newQuestionResults);
-      }, 3000);
+      }, 2000);
     }
   };
 
@@ -431,7 +431,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     <div className="min-h-screen gradient-bg p-6">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4 text-primary">Guess Who</h1>
+          <h1 className="text-4xl font-bold mb-4 text-primary">Demo Day</h1>
           
           <div className="flex items-center justify-center gap-6 mb-6">
             <div className="text-lg">
@@ -463,8 +463,8 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
               <>
                 <img 
                   src={currentQuestion.image} 
-                  alt="Guess who this is" 
-                  className="w-80 h-80 object-contain rounded-lg mx-auto mb-6 bg-white/10"
+                  alt="Demo Day question image - who is this person?" 
+                  className="w-80 h-80 object-contain rounded-lg mx-auto mb-6 bg-white/10 animate-fade-in"
                 />
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
@@ -491,13 +491,24 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                 </div>
 
                 {showResults && (
-                  <div className="mt-6 p-4 bg-muted rounded-lg">
-                    <p className="text-lg font-semibold">
-                      Correct Answer: {currentQuestion.correctAnswer}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Next question in 3 seconds...
-                    </p>
+                  <div className="mt-6 p-6 rounded-lg border bg-background/80 backdrop-blur animate-enter">
+                    <div className="flex items-center justify-center gap-3">
+                      {selectedAnswer === currentQuestion.correctAnswer ? (
+                        <>
+                          <CheckCircle className="h-6 w-6 text-green-600" />
+                          <p className="text-lg font-semibold">Correct! The answer is {currentQuestion.correctAnswer}.</p>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-6 w-6 text-red-600" />
+                          <p className="text-lg font-semibold">Incorrect. Correct answer: {currentQuestion.correctAnswer}</p>
+                        </>
+                      )}
+                    </div>
+                    <div className="mt-3 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Continuing...</span>
+                    </div>
                   </div>
                 )}
               </>
