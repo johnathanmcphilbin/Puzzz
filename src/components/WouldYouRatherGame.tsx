@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -223,28 +223,14 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
 
       const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
 
-      const newGameState = {
-        ...gameState,
+      const newGameStatePatch = {
         currentQuestion: randomQuestion,
         votes: newVotes,
-        showResults: false
+        showResults: false,
+        votingStartTime: Date.now(),
       };
 
-      // Update room state via Redis-based rooms-service
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ 
-          action: 'update', 
-          roomCode: room.room_code, 
-          updates: { gameState: newGameState } 
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to update game state');
-      }
+      await onUpdateRoom({ gameState: newGameStatePatch } as any);
 
       if (randomQuestion) setCurrentQuestion(randomQuestion);
       setHasVoted(false);
@@ -275,21 +261,13 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
         currentQuestion: currentQuestion
       };
 
-      // Update room state via Redis-based rooms-service
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ 
-          action: 'update', 
-          roomCode: room.room_code, 
-          updates: { gameState: updatedGameState } 
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to save vote');
-      }
+      await onUpdateRoom({ 
+        gameState: {
+          votes: newVotes,
+          currentQuestion: currentQuestion
+        }
+      } as any);
+      // no-op error handling here; onUpdateRoom shows toast on failure via useRoom
 
       toast({
         title: "Vote Recorded!",
@@ -307,16 +285,9 @@ export const WouldYouRatherGame = ({ room, players, currentPlayer, onUpdateRoom 
             showResults: true 
           };
 
-          // Update room state to show results
-          const resultsResponse = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-            body: JSON.stringify({ 
-              action: 'update', 
-              roomCode: room.room_code, 
-              updates: { gameState: resultsGameState } 
-            }),
-          });
+          await onUpdateRoom({
+            gameState: resultsGameState
+          } as any);
 
         }, 3000);
       }
