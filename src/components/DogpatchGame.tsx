@@ -468,46 +468,88 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                 />
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                  {currentQuestion.options.map((option: string, index: number) => (
-                    <Button
-                      key={index}
-                      variant={
-                        gamePhase === 'results' && option === currentQuestion.correctAnswer
-                          ? "default"
-                          : gamePhase === 'results' && selectedAnswer === option && option !== currentQuestion.correctAnswer
-                          ? "destructive"
-                          : selectedAnswer === option
-                          ? "default"
-                          : "outline"
+                  {currentQuestion.options.map((option: string, index: number) => {
+                    const isCorrect = option === currentQuestion.correctAnswer;
+                    const isSelected = selectedAnswer === option;
+                    const showResults = gamePhase === 'results';
+                    
+                    let buttonVariant: "default" | "destructive" | "outline" | "secondary" = "outline";
+                    let buttonClassName = "p-4 text-left h-auto transition-all duration-300";
+                    
+                    if (showResults) {
+                      if (isCorrect) {
+                        buttonVariant = "default";
+                        buttonClassName += " bg-green-600 hover:bg-green-600 text-white border-green-600 animate-pulse";
+                      } else if (isSelected) {
+                        buttonVariant = "destructive";
+                        buttonClassName += " bg-red-600 hover:bg-red-600 text-white border-red-600";
+                      } else {
+                        buttonClassName += " opacity-50";
                       }
-                      size="lg"
-                      onClick={() => handleAnswerSelect(option)}
-                      disabled={selectedAnswer !== null || gamePhase === 'results'}
-                      className="p-4 text-left h-auto"
-                    >
-                      {option}
-                    </Button>
-                  ))}
+                    } else if (isSelected) {
+                      buttonVariant = "default";
+                      buttonClassName += " bg-primary text-primary-foreground";
+                    }
+
+                    return (
+                      <Button
+                        key={index}
+                        variant={buttonVariant}
+                        size="lg"
+                        onClick={() => handleAnswerSelect(option)}
+                        disabled={selectedAnswer !== null || showResults}
+                        className={buttonClassName}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="font-medium">{option}</span>
+                          {showResults && isCorrect && (
+                            <CheckCircle className="h-5 w-5 ml-2" />
+                          )}
+                          {showResults && isSelected && !isCorrect && (
+                            <XCircle className="h-5 w-5 ml-2" />
+                          )}
+                        </div>
+                      </Button>
+                    );
+                  })}
                 </div>
 
                 {showResults && (
-                  <div className="mt-6 p-6 rounded-lg border bg-background/80 backdrop-blur animate-enter">
-                    <div className="flex items-center justify-center gap-3">
+                  <div className="mt-8 p-6 rounded-xl border-2 bg-gradient-to-r from-background/90 to-background/95 backdrop-blur-sm animate-scale-in shadow-lg">
+                    <div className="text-center">
                       {selectedAnswer === currentQuestion.correctAnswer ? (
-                        <>
-                          <CheckCircle className="h-6 w-6 text-green-600" />
-                          <p className="text-lg font-semibold">Correct! The answer is {currentQuestion.correctAnswer}.</p>
-                        </>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="p-2 rounded-full bg-green-100">
+                              <CheckCircle className="h-8 w-8 text-green-600" />
+                            </div>
+                          </div>
+                          <p className="text-2xl font-bold text-green-600">
+                            Correct! It is {currentQuestion.correctAnswer}! 🎉
+                          </p>
+                          <p className="text-lg text-muted-foreground">
+                            You got it right!
+                          </p>
+                        </div>
                       ) : (
-                        <>
-                          <XCircle className="h-6 w-6 text-red-600" />
-                          <p className="text-lg font-semibold">Incorrect. Correct answer: {currentQuestion.correctAnswer}</p>
-                        </>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="p-2 rounded-full bg-red-100">
+                              <XCircle className="h-8 w-8 text-red-600" />
+                            </div>
+                          </div>
+                          <p className="text-2xl font-bold text-red-600">
+                            No! It's not {selectedAnswer}
+                          </p>
+                          <p className="text-xl font-semibold text-foreground">
+                            It was {currentQuestion.correctAnswer}!
+                          </p>
+                        </div>
                       )}
-                    </div>
-                    <div className="mt-3 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Continuing...</span>
+                      <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Moving to next question...</span>
+                      </div>
                     </div>
                   </div>
                 )}
