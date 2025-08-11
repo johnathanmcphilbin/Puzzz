@@ -376,8 +376,8 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
       <div className="min-h-screen gradient-bg p-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 text-primary">Guess Who</h1>
-            <h2 className="text-2xl mb-6 text-muted-foreground">Dogpatch Game</h2>
+            <h1 className="text-4xl font-bold mb-4 text-primary">Demo Day</h1>
+            <h2 className="text-2xl mb-6 text-muted-foreground">Guess Who Game</h2>
             
             <Card className="mb-6">
               <CardContent className="p-6">

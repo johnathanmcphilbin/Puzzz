@@ -222,7 +222,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
         throw new Error(errorData.error || 'Failed to start game');
       }
 
-      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Dogpatch game" : selectedGame === "dramamatching" ? "Dramamatching" : selectedGame === "forms" ? "Forms Game" : selectedGame === "say_it_or_pay_it" ? "Say it or pay it" : selectedGame === "coup" ? "Cat Conspiracy" : selectedGame === "puzzz_panic" ? "Puzzz Panic" : "Would You Rather";
+      const gameTitle = selectedGame === "paranoia" ? "Paranoia" : (selectedGame === "odd_one_out" || selectedGame === "odd-one-out") ? "Odd One Out" : selectedGame === "dogpatch" ? "Demo Day" : selectedGame === "dramamatching" ? "Dramamatching" : selectedGame === "forms" ? "Forms Game" : selectedGame === "say_it_or_pay_it" ? "Say it or pay it" : selectedGame === "coup" ? "Cat Conspiracy" : selectedGame === "puzzz_panic" ? "Puzzz Panic" : "Would You Rather";
       
       toast({
         title: "Game Started!",
@@ -603,8 +603,7 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                      </div>
                     </div>
 
-                   {/* Dogpatch Game - Hidden for now, can be easily restored */}
-                  {/*
+                   {/* Demo Day Game */}
                   <div 
                     className={`relative p-4 border rounded-lg transition-all ${
                       currentPlayer.is_host
@@ -615,15 +614,14 @@ export const RoomLobby = ({ room, players, currentPlayer, onUpdateRoom }: RoomLo
                   >
                     <div className="flex items-center justify-between">
                        <div>
-                         <h4 className="font-semibold">Dogpatch game</h4>
-                         <p className="text-sm text-muted-foreground">Kahoot-style Guess Who game</p>
+                         <h4 className="font-semibold">Demo Day</h4>
+                         <p className="text-sm text-muted-foreground">Guess Who-style photo game</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-blue-500 rounded text-xs flex items-center justify-center text-white font-bold">❓</div>
                      </div>
                    </div>
                  </div>
-                 */}
                 </div>
 
               {/* Action Buttons */}
