@@ -115,7 +115,7 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
         </CardHeader>
         <CardContent className="text-center text-muted-foreground">
           <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p>Only the host can customize game questions</p>
+          <p>Only the host can customise the game questions</p>
         </CardContent>
       </Card>
     );
