@@ -101,13 +101,13 @@ const Index = () => {
             </CardHeader>
           </Card>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 items-stretch max-w-[85%] mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 items-stretch max-w-[85%] mx-auto">
             {/* Would You Rather Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-[14rem] sm:h-[15rem] md:h-[16rem] flex flex-col items-stretch"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("would_you_rather")}
             >
-              <div className="relative overflow-hidden flex-1 min-h-[7rem] sm:min-h-[8rem] bg-gradient-to-br from-game-option-a to-game-option-b">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-game-option-a to-game-option-b">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -172,10 +172,10 @@ const Index = () => {
 
             {/* Paranoia Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden h-[14rem] sm:h-[15rem] md:h-[16rem] flex flex-col items-stretch"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-violet-500/20 to-purple-600/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("paranoia")}
             >
-              <div className="relative overflow-hidden flex-1 min-h-[7rem] sm:min-h-[8rem] bg-gradient-to-br from-violet-500 to-purple-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-violet-500 to-purple-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -240,10 +240,10 @@ const Index = () => {
 
             {/* Odd One Out Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20 overflow-hidden h-[14rem] sm:h-[15rem] md:h-[16rem] flex flex-col items-stretch"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("odd-one-out")}
             >
-              <div className="relative overflow-hidden flex-1 min-h-[7rem] sm:min-h-[8rem] bg-gradient-to-br from-amber-500 to-orange-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-amber-500 to-orange-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -308,10 +308,10 @@ const Index = () => {
             {/* Dramamatching Game (feature-flagged) */}
             {FEATURES.dramamatching && (
               <Card 
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-pink-500/20 to-purple-600/20 overflow-hidden h-[14rem] sm:h-[15rem] md:h-[16rem] flex flex-col items-stretch"
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-pink-500/20 to-purple-600/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
                 onClick={() => handleGameClick("dramamatching")}
               >
-                <div className="relative overflow-hidden flex-1 min-h-[7rem] sm:min-h-[8rem] bg-gradient-to-br from-pink-500 to-purple-600">
+                <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-pink-500 to-purple-600">
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-6xl">🎭</div>
@@ -379,10 +379,10 @@ const Index = () => {
 
             {/* Forms Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-indigo-500/20 to-blue-600/20 overflow-hidden h-[14rem] sm:h-[15rem] md:h-[16rem] flex flex-col items-stretch"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-indigo-500/20 to-blue-600/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("forms")}
             >
-              <div className="relative overflow-hidden flex-1 min-h-[7rem] sm:min-h-[8rem] bg-gradient-to-br from-indigo-500 to-blue-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-indigo-500 to-blue-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-6xl">📋</div>
@@ -448,10 +448,10 @@ const Index = () => {
 
             {/* Say it or pay it Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-orange-600/20 overflow-hidden h-[14rem] sm:h-[15rem] md:h-[16rem] flex flex-col items-stretch"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-orange-600/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("say_it_or_pay_it")}
             >
-              <div className="relative overflow-hidden flex-1 min-h-[7rem] sm:min-h-[8rem] bg-gradient-to-br from-red-500 to-orange-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-red-500 to-orange-600">
                 <img
                   src="/lovable-uploads/5bd080a5-1ea5-405f-b40e-961faf9e36eb.png"
                   alt="Say It or Pay It game thumbnail"
@@ -520,10 +520,10 @@ const Index = () => {
 
             {/* Demo Day Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 overflow-hidden h-[14rem] sm:h-[15rem] md:h-[16rem] flex flex-col items-stretch"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("dogpatch")}
             >
-              <div className="relative overflow-hidden flex-1 min-h-[7rem] sm:min-h-[8rem] bg-gradient-to-br from-blue-500 to-indigo-600">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-blue-500 to-indigo-600">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
@@ -593,10 +593,10 @@ const Index = () => {
 
             {/* Cat Conspiracy Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-purple-500/20 to-blue-500/20 overflow-hidden h-[14rem] sm:h-[15rem] md:h-[16rem] flex flex-col items-stretch"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-purple-500/20 to-blue-500/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
               onClick={() => handleGameClick('coup')}
             >
-              <div className="relative overflow-hidden flex-1 min-h-[7rem] sm:min-h-[8rem] bg-gradient-to-br from-purple-500 to-blue-500">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-purple-500 to-blue-500">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-6xl">👑</div>
@@ -663,10 +663,10 @@ const Index = () => {
 
             {/* Puzzz Panic Game */}
             <Card 
-              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-yellow-500/20 overflow-hidden h-[14rem] sm:h-[15rem] md:h-[16rem] flex flex-col items-stretch"
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-red-500/20 to-yellow-500/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
               onClick={() => handleGameClick("puzzz_panic")}
             >
-              <div className="relative overflow-hidden flex-1 min-h-[7rem] sm:min-h-[8rem] bg-gradient-to-br from-red-500 to-yellow-500">
+              <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-red-500 to-yellow-500">
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <img 
