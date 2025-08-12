@@ -101,7 +101,7 @@ const Index = () => {
             </CardHeader>
           </Card>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 items-stretch">
             {/* Would You Rather Game */}
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-[20rem] sm:h-[22rem] md:h-[24rem] flex flex-col items-stretch"
