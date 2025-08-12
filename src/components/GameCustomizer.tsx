@@ -157,9 +157,6 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
                 onKeyPress={handleKeyPress}
                 disabled={isLoading}
               />
-              <p className="text-xs text-muted-foreground">
-                Tell the AI about your group's interests to get personalized questions
-              </p>
             </div>
 
             <div className="space-y-3">
