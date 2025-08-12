@@ -110,7 +110,7 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-primary" />
-            AI Game Customizer
+            Game Customiser
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center text-muted-foreground">
@@ -126,7 +126,7 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({ roomCode, roomId, isHos
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Wand2 className="h-5 w-5 text-primary" />
-          AI Game Customizer
+          Game Customiser
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
