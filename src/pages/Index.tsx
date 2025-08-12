@@ -101,7 +101,7 @@ const Index = () => {
             </CardHeader>
           </Card>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 items-stretch max-w-[85%] mx-auto">
             {/* Would You Rather Game */}
             <Card 
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0 bg-gradient-to-br from-game-option-a/20 to-game-option-b/20 overflow-hidden h-[16rem] sm:h-[18rem] md:h-[20rem] flex flex-col items-stretch"
@@ -113,7 +113,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/e1223d72-4579-4d9b-a783-c817eb336925.png" 
                     alt="Would You Rather - Character vs Character"
-                    className="w-full h-full object-contain object-center"
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
               </div>
@@ -181,7 +181,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/25019112-f839-4cf5-9cee-9a7d609be518.png" 
                     alt="Paranoia - Mysterious character with swirling eyes"
-                    className="w-full h-full object-contain object-center"
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
               </div>
@@ -249,7 +249,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/4e6b1f5d-d7f0-40a7-bf86-96b9457c20f8.png" 
                     alt="Odd One Out - Detective puzzle game"
-                    className="w-full h-full object-contain object-center"
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
               </div>
@@ -455,7 +455,7 @@ const Index = () => {
                 <img
                   src="/lovable-uploads/5bd080a5-1ea5-405f-b40e-961faf9e36eb.png"
                   alt="Say It or Pay It game thumbnail"
-                  className="absolute inset-0 h-full w-full object-contain object-center"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
                   loading="lazy"
                   decoding="async"
                 />
@@ -529,7 +529,7 @@ const Index = () => {
                   <img 
                     src="/lovable-uploads/8ccd92fd-4776-432c-98c6-8098017d1b36.png" 
                     alt="Demo Day - Team photo quiz"
-                     className="w-full h-full object-contain"
+                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
@@ -672,7 +672,7 @@ const Index = () => {
                 <img 
                   src="/lovable-uploads/f3e4c1e6-0768-4256-bb63-274764483b98.png" 
                   alt="Puzzz Panic - Fast-paced challenge game"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
               </div>
