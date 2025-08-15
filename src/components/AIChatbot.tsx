@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { aiChatbotImg } from '@/assets/gameImages';
 import { MessageCircle, X, Send, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -229,7 +228,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           className="cursor-pointer group"
         >
           <img 
-            src={aiChatbotImg}
+            src="/src/assets/ai-chatbot-icon.png"
             alt="AI Chat Cat"
             className="w-20 h-20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
           />

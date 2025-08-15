@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { paranoiaGameImg, wouldYouRatherImg, sayItOrPayItImg, oddOneOutImg, catConspiracyImg, formsGameImg, puzzlePanicImg } from "@/assets/gameImages";
 import { CreateRoom } from "@/components/CreateRoom";
 import { JoinRoom } from "@/components/JoinRoom";
 import { AuthDialog } from "@/components/AuthDialog";
@@ -80,7 +79,7 @@ const Index = () => {
             <CardHeader className="pb-4">
               <div className="flex justify-center">
                 <img 
-                  src={paranoiaGameImg}
+                  src="/src/assets/paranoia-game.png"
                   alt="PUZZZZ - Design Your Own Chaos"
                   className="max-w-full h-auto"
                 />
@@ -112,7 +111,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src={wouldYouRatherImg} 
+                    src="/src/assets/would-you-rather.png" 
                     alt="Would You Rather - Character vs Character"
                     className="w-full h-full object-cover object-center"
                   />
@@ -180,7 +179,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img
-                    src={paranoiaGameImg} 
+                    src="/src/assets/say-it-or-pay-it.png" 
                     alt="Paranoia - Mysterious character with swirling eyes"
                     className="w-full h-full object-cover object-center"
                   />
@@ -248,7 +247,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img
-                    src={oddOneOutImg} 
+                    src="/src/assets/odd-one-out.png" 
                     alt="Odd One Out - Detective puzzle game"
                     className="w-full h-full object-cover object-center"
                   />
@@ -387,7 +386,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src={formsGameImg} 
+                    src="/src/assets/forms-game.png" 
                     alt="Forms Game - Survey questions"
                     className="w-full h-full object-cover"
                   />
@@ -458,7 +457,7 @@ const Index = () => {
             >
               <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-red-500 to-orange-600">
                 <img
-                  src={sayItOrPayItImg}
+                  src="/src/assets/cat-conspiracy.png"
                   alt="Say It or Pay It game thumbnail"
                   className="absolute inset-0 h-full w-full object-cover object-center"
                   loading="lazy"
@@ -533,7 +532,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src={catConspiracyImg} 
+                    src="/src/assets/coup-game.png" 
                     alt="Cat Conspiracy - Strategy game"
                     className="w-full h-full object-cover"
                   />
@@ -607,7 +606,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <img 
-                  src={puzzlePanicImg} 
+                  src="/src/assets/puzzle-panic.png" 
                   alt="Puzzz Panic - Fast-paced challenge game"
                   className="w-full h-full object-cover"
                 />
