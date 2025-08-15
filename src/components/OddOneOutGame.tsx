@@ -483,7 +483,7 @@ export function OddOneOutGame({ room, players, currentPlayer, onUpdateRoom }: Od
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="text-center sm:text-left">
               <img 
-                src="/src/assets/odd-one-out.png" 
+                src={oddOneOutImg} 
                 alt="Odd One Out"
                 className="h-16 sm:h-20 mx-auto sm:mx-0"
               />
