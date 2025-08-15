@@ -79,7 +79,7 @@ const Index = () => {
             <CardHeader className="pb-4">
               <div className="flex justify-center">
                 <img 
-                  src="/lovable-uploads/a66ddf8b-e796-4ae7-a019-a8e80b5f30ce.png" 
+                  src="/src/assets/paranoia-game.png" 
                   alt="PUZZZZ - Design Your Own Chaos"
                   className="max-w-full h-auto"
                 />
@@ -111,7 +111,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src="/lovable-uploads/e1223d72-4579-4d9b-a783-c817eb336925.png" 
+                    src="/src/assets/would-you-rather.png" 
                     alt="Would You Rather - Character vs Character"
                     className="w-full h-full object-cover object-center"
                   />
@@ -179,7 +179,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src="/lovable-uploads/25019112-f839-4cf5-9cee-9a7d609be518.png" 
+                    src="/src/assets/say-it-or-pay-it.png" 
                     alt="Paranoia - Mysterious character with swirling eyes"
                     className="w-full h-full object-cover object-center"
                   />
@@ -247,7 +247,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src="/lovable-uploads/4e6b1f5d-d7f0-40a7-bf86-96b9457c20f8.png" 
+                    src="/src/assets/coup-game.png" 
                     alt="Odd One Out - Detective puzzle game"
                     className="w-full h-full object-cover object-center"
                   />
@@ -453,7 +453,7 @@ const Index = () => {
             >
               <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-red-500 to-orange-600">
                 <img
-                  src="/lovable-uploads/5bd080a5-1ea5-405f-b40e-961faf9e36eb.png"
+                  src="/src/assets/cat-conspiracy.png"
                   alt="Say It or Pay It game thumbnail"
                   className="absolute inset-0 h-full w-full object-cover object-center"
                   loading="lazy"
@@ -598,7 +598,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <img 
-                  src="/lovable-uploads/f3e4c1e6-0768-4256-bb63-274764483b98.png" 
+                  src="/src/assets/puzzle-panic.png" 
                   alt="Puzzz Panic - Fast-paced challenge game"
                   className="w-full h-full object-cover"
                 />

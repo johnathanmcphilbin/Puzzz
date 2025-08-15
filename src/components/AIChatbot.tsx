@@ -228,7 +228,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
           className="cursor-pointer group"
         >
           <img 
-            src="/lovable-uploads/a9cf8a42-6daa-41e9-96e2-a268aa5bc15f.png"
+            src="/src/assets/ai-chatbot-icon.png"
             alt="AI Chat Cat"
             className="w-20 h-20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
           />

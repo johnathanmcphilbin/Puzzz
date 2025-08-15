@@ -1491,7 +1491,7 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
           <div className="text-center mb-8">
             <div className="mb-6">
               <img 
-                src="/lovable-uploads/f3e4c1e6-0768-4256-bb63-274764483b98.png" 
+                src="/src/assets/puzzle-panic.png" 
                 alt="Puzzz Panic Logo"
                 className="mx-auto max-w-md w-full h-auto"
               />

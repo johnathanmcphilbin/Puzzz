@@ -157,7 +157,7 @@
   }
   
   .gradient-bg::before {
-    background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('/lovable-uploads/97e3edcc-c426-4315-8b63-294a6edaf30b.png') no-repeat center center / cover;
+    background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('/src/assets/party-games-header.png') no-repeat center center / cover;
     content: '';
     position: absolute;
     inset: 0;
