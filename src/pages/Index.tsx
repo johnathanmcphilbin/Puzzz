@@ -74,12 +74,22 @@ const Index = () => {
             </div>
           </div>
           
+          {/* Hero Banner */}
+          <div className="relative mb-6">
+            <img 
+              src="/src/assets/hero-banner.png"
+              alt="PUZZZZ - Cute cats playing party games"
+              className="w-full max-w-4xl mx-auto rounded-2xl shadow-2xl"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+          </div>
+          
           {/* Title Card Widget */}
           <Card className="mx-auto max-w-2xl mb-6 bg-background/80 md:bg-card border-2 shadow-lg backdrop-blur-sm">
             <CardHeader className="pb-4">
               <div className="flex justify-center">
                 <img 
-                  src="/src/assets/paranoia-game.png"
+                  src="/src/assets/party-games-header.png"
                   alt="PUZZZZ - Design Your Own Chaos"
                   className="max-w-full h-auto"
                 />
@@ -93,8 +103,22 @@ const Index = () => {
 
         {/* Games Selection */}
         <div className="max-w-6xl mx-auto">
-          <Card className="mx-auto max-w-md mb-8 bg-card border-2 shadow-lg">
-            <CardHeader className="pb-4">
+          <Card className="mx-auto max-w-2xl mb-8 bg-card border-2 shadow-lg relative overflow-hidden">
+            <div className="absolute top-2 right-2">
+              <img 
+                src="/src/assets/decorative-accent.png"
+                alt="Decorative cat accent"
+                className="w-12 h-12 opacity-20"
+              />
+            </div>
+            <CardHeader className="pb-4 relative">
+              <div className="flex justify-center mb-4">
+                <img 
+                  src="/src/assets/choose-game-header.png"
+                  alt="Choose Your Game - Cats with controllers"
+                  className="max-w-full h-auto rounded-lg"
+                />
+              </div>
               <CardTitle className="text-3xl font-bold text-center text-foreground">
                 Choose Your Game
               </CardTitle>
