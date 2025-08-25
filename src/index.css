@@ -120,23 +120,6 @@
   body {
     @apply text-foreground font-sans;
     background-color: white;
-    position: relative;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: url('/src/assets/cat-doodle-background.png');
-    background-repeat: repeat;
-    background-size: 800px;
-    background-attachment: fixed;
-    opacity: 0.08;
-    pointer-events: none;
-    z-index: -1;
   }
 }
 
