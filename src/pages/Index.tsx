@@ -74,70 +74,22 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Hero Banner */}
-          <div className="relative mb-6">
-            <img 
-              src="/src/assets/cat-party-header.png"
-              alt="PUZZZZ - Cute cats playing party games"
-              className="w-full max-w-4xl mx-auto rounded-2xl shadow-2xl"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent rounded-2xl"></div>
-          </div>
+          {/* Large Text Logo */}
+          <h1 className="text-6xl md:text-8xl font-bold text-primary mb-4 tracking-wider">
+            PUZZZZ
+          </h1>
           
-          {/* Title Card Widget */}
-          <Card className="mx-auto max-w-2xl mb-6 bg-background/80 md:bg-card border-2 shadow-lg backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <div className="flex justify-center">
-                <img 
-                  src="/src/assets/party-games-header.png"
-                  alt="PUZZZZ - Design Your Own Chaos"
-                  className="max-w-full h-auto"
-                />
-              </div>
-              <CardDescription className="text-base md:text-xl text-foreground/90 md:text-muted-foreground px-4">
-                The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          {/* Blurb */}
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
+          </p>
         </div>
 
         {/* Games Selection */}
         <div className="max-w-6xl mx-auto">
-          <Card className="mx-auto max-w-2xl mb-8 bg-card/95 border-2 shadow-lg relative overflow-hidden backdrop-blur-sm">
-            <div className="absolute top-2 right-2 opacity-30">
-              <img 
-                src="/src/assets/cat-decorative-elements.png"
-                alt="Decorative cat accent"
-                className="w-16 h-16"
-              />
-            </div>
-            <div className="absolute top-2 left-2 opacity-25">
-              <img 
-                src="/src/assets/cat-decorative-elements.png"
-                alt="Decorative cat accent"
-                className="w-12 h-12 transform -rotate-12"
-              />
-            </div>
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 opacity-20">
-              <img 
-                src="/src/assets/cat-decorative-elements.png"
-                alt="Decorative cat accent"
-                className="w-10 h-10"
-              />
-            </div>
-            <CardHeader className="pb-4 relative z-10">
-              <div className="flex justify-center mb-4">
-                <img 
-                  src="/src/assets/cat-game-characters.png"
-                  alt="Choose Your Game - Cats with controllers"
-                  className="max-w-full h-auto rounded-lg shadow-md"
-                />
-              </div>
-              <CardTitle className="text-3xl font-bold text-center text-foreground">
-                🐾 Choose Your Game 🎮
-              </CardTitle>
-            </CardHeader>
-          </Card>
+          <h2 className="text-3xl font-bold text-center text-foreground mb-8">
+            Choose Your Game
+          </h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 items-stretch max-w-[85%] mx-auto">
             {/* Would You Rather Game */}
