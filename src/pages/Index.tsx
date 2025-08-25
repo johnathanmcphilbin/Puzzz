@@ -74,22 +74,24 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Large Text Logo */}
-          <h1 className="text-6xl md:text-8xl font-bold text-primary mb-4 tracking-wider">
-            PUZZZZ
-          </h1>
-          
-          {/* Blurb */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
-          </p>
+          {/* Title and Blurb Container */}
+          <div className="bg-white rounded-2xl p-8 mb-8 shadow-sm border border-gray-100 max-w-3xl mx-auto">
+            <h1 className="text-6xl md:text-8xl font-bold text-black mb-4 tracking-wider">
+              PUZZZZ
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+              The ultimate party game platform. Create rooms, join friends, and enjoy endless entertainment together.
+            </p>
+          </div>
         </div>
 
         {/* Games Selection */}
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-foreground mb-8">
-            Choose Your Game
-          </h2>
+          <div className="bg-white rounded-2xl p-6 mb-8 shadow-sm border border-gray-100 max-w-md mx-auto">
+            <h2 className="text-3xl font-bold text-center text-black">
+              Choose Your Game
+            </h2>
+          </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 items-stretch max-w-[85%] mx-auto">
             {/* Would You Rather Game */}

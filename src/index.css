@@ -119,10 +119,7 @@
 
   body {
     @apply text-foreground font-sans;
-    background-image: url('/src/assets/cat-doodle-background.png');
-    background-repeat: repeat;
-    background-size: 800px;
-    background-attachment: fixed;
+    background-color: white;
     position: relative;
   }
 
@@ -133,11 +130,11 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, 
-      hsla(var(--background), 0.85) 0%,
-      hsla(var(--background), 0.9) 50%,
-      hsla(var(--background), 0.85) 100%
-    );
+    background-image: url('/src/assets/cat-doodle-background.png');
+    background-repeat: repeat;
+    background-size: 800px;
+    background-attachment: fixed;
+    opacity: 0.08;
     pointer-events: none;
     z-index: -1;
   }
