@@ -77,11 +77,11 @@ const Index = () => {
           {/* Hero Banner */}
           <div className="relative mb-6">
             <img 
-              src="/src/assets/hero-banner.png"
+              src="/src/assets/cat-party-header.png"
               alt="PUZZZZ - Cute cats playing party games"
               className="w-full max-w-4xl mx-auto rounded-2xl shadow-2xl"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent rounded-2xl"></div>
           </div>
           
           {/* Title Card Widget */}
@@ -103,24 +103,38 @@ const Index = () => {
 
         {/* Games Selection */}
         <div className="max-w-6xl mx-auto">
-          <Card className="mx-auto max-w-2xl mb-8 bg-card border-2 shadow-lg relative overflow-hidden">
-            <div className="absolute top-2 right-2">
+          <Card className="mx-auto max-w-2xl mb-8 bg-card/95 border-2 shadow-lg relative overflow-hidden backdrop-blur-sm">
+            <div className="absolute top-2 right-2 opacity-30">
               <img 
-                src="/src/assets/decorative-accent.png"
+                src="/src/assets/cat-decorative-elements.png"
                 alt="Decorative cat accent"
-                className="w-12 h-12 opacity-20"
+                className="w-16 h-16"
               />
             </div>
-            <CardHeader className="pb-4 relative">
+            <div className="absolute top-2 left-2 opacity-25">
+              <img 
+                src="/src/assets/cat-decorative-elements.png"
+                alt="Decorative cat accent"
+                className="w-12 h-12 transform -rotate-12"
+              />
+            </div>
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 opacity-20">
+              <img 
+                src="/src/assets/cat-decorative-elements.png"
+                alt="Decorative cat accent"
+                className="w-10 h-10"
+              />
+            </div>
+            <CardHeader className="pb-4 relative z-10">
               <div className="flex justify-center mb-4">
                 <img 
-                  src="/src/assets/choose-game-header.png"
+                  src="/src/assets/cat-game-characters.png"
                   alt="Choose Your Game - Cats with controllers"
-                  className="max-w-full h-auto rounded-lg"
+                  className="max-w-full h-auto rounded-lg shadow-md"
                 />
               </div>
               <CardTitle className="text-3xl font-bold text-center text-foreground">
-                Choose Your Game
+                🐾 Choose Your Game 🎮
               </CardTitle>
             </CardHeader>
           </Card>

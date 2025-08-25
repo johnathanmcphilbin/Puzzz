@@ -9,17 +9,17 @@
     --background: 0 0% 98%;
     --foreground: 220 13% 18%;
     
-    /* Primary - Modern Blue for Actions */
-    --primary: 217 91% 60%;
+    /* Primary - Soft Cat Pink for Actions */
+    --primary: 340 60% 70%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 217 91% 55%;
+    --primary-hover: 340 60% 65%;
     
-    /* Secondary - Soft Gray for Balance */
-    --secondary: 220 13% 96%;
+    /* Secondary - Warm Cream for Balance */
+    --secondary: 40 30% 95%;
     --secondary-foreground: 220 13% 18%;
     
-    /* Accent - Vibrant Purple for Highlights */
-    --accent: 262 52% 47%;
+    /* Accent - Playful Cat Blue for Highlights */
+    --accent: 200 60% 70%;
     --accent-foreground: 0 0% 100%;
     
     /* Success - Fresh Green for Positive Actions */
@@ -119,6 +119,27 @@
 
   body {
     @apply text-foreground font-sans;
+    background-image: url('/src/assets/cat-doodle-background.png');
+    background-repeat: repeat;
+    background-size: 800px;
+    background-attachment: fixed;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      hsla(var(--background), 0.85) 0%,
+      hsla(var(--background), 0.9) 50%,
+      hsla(var(--background), 0.85) 100%
+    );
+    pointer-events: none;
+    z-index: -1;
   }
 }
 
@@ -168,10 +189,30 @@
   
   /* Interactive Card Hover */
   .card-interactive {
-    @apply transition-all duration-300 hover:shadow-lg cursor-pointer;
+    @apply transition-all duration-300 hover:shadow-lg cursor-pointer relative overflow-hidden;
   }
+  
+  .card-interactive::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 40px;
+    height: 40px;
+    background-image: url('/src/assets/cat-decorative-elements.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+  }
+  
   .card-interactive:hover {
-    background-color: hsl(220 13% 91%);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+  
+  .card-interactive:hover::before {
+    opacity: 0.6;
   }
   
   /* Pulse Animation for Waiting States */
