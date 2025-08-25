@@ -7,6 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Info, User } from "lucide-react";
 import { FEATURES } from "@/config/featureFlags";
+import { 
+  wouldYouRatherImg, 
+  paranoiaGameImg, 
+  oddOneOutImg, 
+  coupGameImg, 
+  sayItOrPayItImg, 
+  catConspiracyImg, 
+  formsGameImg, 
+  puzzlePanicImg 
+} from "@/assets/gameImages";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
@@ -103,7 +113,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src="/src/assets/would-you-rather.png" 
+                    src={wouldYouRatherImg} 
                     alt="Would You Rather - Character vs Character"
                     className="w-full h-full object-cover object-center"
                   />
@@ -171,7 +181,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img
-                    src="/src/assets/say-it-or-pay-it.png" 
+                    src={paranoiaGameImg} 
                     alt="Paranoia - Mysterious character with swirling eyes"
                     className="w-full h-full object-cover object-center"
                   />
@@ -239,7 +249,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img
-                    src="/src/assets/odd-one-out.png" 
+                    src={oddOneOutImg} 
                     alt="Odd One Out - Detective puzzle game"
                     className="w-full h-full object-cover object-center"
                   />
@@ -378,7 +388,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src="/src/assets/forms-game.png" 
+                    src={formsGameImg} 
                     alt="Forms Game - Survey questions"
                     className="w-full h-full object-cover"
                   />
@@ -449,7 +459,7 @@ const Index = () => {
             >
               <div className="relative overflow-hidden flex-1 min-h-[9rem] sm:min-h-[10rem] bg-gradient-to-br from-red-500 to-orange-600">
                 <img
-                  src="/src/assets/cat-conspiracy.png"
+                  src={sayItOrPayItImg}
                   alt="Say It or Pay It game thumbnail"
                   className="absolute inset-0 h-full w-full object-cover object-center"
                   loading="lazy"
@@ -524,7 +534,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src="/src/assets/coup-game.png" 
+                    src={catConspiracyImg} 
                     alt="Cat Conspiracy - Strategy game"
                     className="w-full h-full object-cover"
                   />
@@ -598,7 +608,7 @@ const Index = () => {
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <img 
-                  src="/src/assets/puzzle-panic.png" 
+                  src={puzzlePanicImg} 
                   alt="Puzzz Panic - Fast-paced challenge game"
                   className="w-full h-full object-cover"
                 />
