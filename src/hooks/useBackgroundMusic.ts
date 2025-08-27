@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 
 export const useBackgroundMusic = (audioSrc: string, volume: number = 0.3) => {
@@ -12,7 +11,7 @@ export const useBackgroundMusic = (audioSrc: string, volume: number = 0.3) => {
     audioRef.current = new Audio(audioSrc);
     audioRef.current.loop = true;
     audioRef.current.volume = volume;
-    
+
     // Auto-play when component mounts (with user interaction)
     const playAudio = async () => {
       try {
@@ -70,7 +69,7 @@ export const useBackgroundMusic = (audioSrc: string, volume: number = 0.3) => {
 
   const setVolume = (newVolume: number) => {
     if (!audioRef.current) return;
-    
+
     audioRef.current.volume = Math.max(0, Math.min(1, newVolume));
   };
 
@@ -79,6 +78,6 @@ export const useBackgroundMusic = (audioSrc: string, volume: number = 0.3) => {
     isMuted,
     togglePlay,
     toggleMute,
-    setVolume
+    setVolume,
   };
 };

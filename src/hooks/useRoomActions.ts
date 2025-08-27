@@ -9,8 +9,8 @@ export const useRoomActions = () => {
   const navigate = useNavigate();
 
   const generateRoomCode = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
     for (let i = 0; i < 6; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -34,8 +34,16 @@ export const useRoomActions = () => {
       console.log('Creating room with URL:', url);
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ action: 'create', playerName: playerName.trim(), selectedGame }),
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          action: 'create',
+          playerName: playerName.trim(),
+          selectedGame,
+        }),
       });
 
       if (!response.ok) {
@@ -57,7 +65,6 @@ export const useRoomActions = () => {
 
       navigate(`/room/${room.roomCode}`);
       return room.roomCode;
-
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -81,7 +88,7 @@ export const useRoomActions = () => {
     }
 
     const cleanedRoomCode = roomCode.trim().toUpperCase();
-    
+
     if (cleanedRoomCode.length !== 6) {
       toast({
         title: 'Invalid Room Code',
@@ -97,8 +104,16 @@ export const useRoomActions = () => {
       console.log('Joining room with URL:', url);
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ action: 'join', roomCode: cleanedRoomCode, playerName: playerName.trim() }),
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          action: 'join',
+          roomCode: cleanedRoomCode,
+          playerName: playerName.trim(),
+        }),
       });
 
       const json = await response.json();
@@ -125,7 +140,6 @@ export const useRoomActions = () => {
 
       navigate(`/room/${cleanedRoomCode}`);
       return true;
-
     } catch (error: any) {
       toast({
         title: 'Error',

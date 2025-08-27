@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import "regenerator-runtime/runtime";
+import 'regenerator-runtime/runtime';
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface Message {
@@ -21,10 +21,19 @@ interface Message {
 interface AIChatbotProps {
   roomCode?: string;
   currentGame?: string;
-  currentPlayer?: { id: string; player_name: string; player_id: string; is_host: boolean; } | null;
+  currentPlayer?: {
+    id: string;
+    player_name: string;
+    player_id: string;
+    is_host: boolean;
+  } | null;
 }
 
-const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPlayer }) => {
+const AIChatbot: React.FC<AIChatbotProps> = ({
+  roomCode,
+  currentGame,
+  currentPlayer,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -51,10 +60,12 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
         // Since ai_chat_customizations and room_questions tables are deleted,
         // we'll start fresh and let users generate new questions
         setHasGeneratedQuestions(false);
-        addMessage("Hi! I'm your AI assistant. Ask me anything or tell me about your group to generate custom questions!");
+        addMessage(
+          "Hi! I'm your AI assistant. Ask me anything or tell me about your group to generate custom questions!"
+        );
       }
     };
-    
+
     loadRoomState();
   }, [roomCode]);
 
@@ -80,9 +91,9 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
     // Check if user is host for chat functionality
     if (!currentPlayer?.is_host) {
       toast({
-        title: "Host Only Feature",
-        description: "Only the room host can use the AI chatbot.",
-        variant: "destructive",
+        title: 'Host Only Feature',
+        description: 'Only the room host can use the AI chatbot.',
+        variant: 'destructive',
       });
       return;
     }
@@ -94,27 +105,32 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
 
     try {
       // Check if this is a request to generate questions (contains keywords)
-      const isQuestionRequest = userMessage.toLowerCase().includes('generate') || 
-                               userMessage.toLowerCase().includes('questions') ||
-                               userMessage.toLowerCase().includes('customize');
+      const isQuestionRequest =
+        userMessage.toLowerCase().includes('generate') ||
+        userMessage.toLowerCase().includes('questions') ||
+        userMessage.toLowerCase().includes('customize');
 
       if (isQuestionRequest && !hasGeneratedQuestions) {
         // Set customization and generate questions
         setCustomization(userMessage);
-        
+
         // Save customization to Redis room state
         if (roomCode) {
           const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-            body: JSON.stringify({ 
-              action: 'update', 
-              roomCode: roomCode, 
-              updates: { 
-                gameState: { 
-                  aiCustomization: userMessage 
-                } 
-              } 
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({
+              action: 'update',
+              roomCode: roomCode,
+              updates: {
+                gameState: {
+                  aiCustomization: userMessage,
+                },
+              },
             }),
           });
 
@@ -131,8 +147,8 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
             message: userMessage,
             action: 'chat',
             customization: customization,
-            crazynessLevel: crazynessLevel[0] ?? 50
-          }
+            crazynessLevel: crazynessLevel[0] ?? 50,
+          },
         });
 
         if (error || !data?.response) {
@@ -141,7 +157,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
 
         addMessage(data.response);
       }
-      
+
       setIsLoading(false);
     } catch (error) {
       console.error('Chat error:', error);
@@ -152,58 +168,74 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
 
   const generateAllCustomQuestions = async (customizationText?: string) => {
     const effectiveCustomization = customizationText || customization;
-    
+
     if (!effectiveCustomization.trim()) {
       toast({
-        title: "Customization Needed",
-        description: "Please tell me about your group first (e.g., 'we are nerdy', 'we love sci-fi')",
-        variant: "destructive",
+        title: 'Customization Needed',
+        description:
+          "Please tell me about your group first (e.g., 'we are nerdy', 'we love sci-fi')",
+        variant: 'destructive',
       });
       return;
     }
 
     if (!roomCode) {
       toast({
-        title: "Room Error",
-        description: "No room code found. Please refresh and try again.",
-        variant: "destructive",
+        title: 'Room Error',
+        description: 'No room code found. Please refresh and try again.',
+        variant: 'destructive',
       });
       return;
     }
 
     setIsLoading(true);
-    addMessage(`Generating custom questions for: "${effectiveCustomization}"`, false);
+    addMessage(
+      `Generating custom questions for: "${effectiveCustomization}"`,
+      false
+    );
 
     try {
       // Call the room-questions edge function to generate and store custom questions
-      const { data, error } = await supabase.functions.invoke('room-questions', {
-        body: {
-          roomCode,
-          customization: effectiveCustomization,
-          crazynessLevel: crazynessLevel[0] ?? 50,
-          // Pass the current game so the edge function knows what to generate
-          gameType: (currentGame === 'would_you_rather' || currentGame === 'paranoia' || currentGame === 'odd_one_out')
-            ? currentGame
-            : 'would_you_rather'
+      const { data, error } = await supabase.functions.invoke(
+        'room-questions',
+        {
+          body: {
+            roomCode,
+            customization: effectiveCustomization,
+            crazynessLevel: crazynessLevel[0] ?? 50,
+            // Pass the current game so the edge function knows what to generate
+            gameType:
+              currentGame === 'would_you_rather' ||
+              currentGame === 'paranoia' ||
+              currentGame === 'odd_one_out'
+                ? currentGame
+                : 'would_you_rather',
+          },
         }
-      });
+      );
 
       if (error || !data?.success) {
-        throw new Error(error?.message || data?.error || 'Failed to generate questions');
+        throw new Error(
+          error?.message || data?.error || 'Failed to generate questions'
+        );
       }
 
       setHasGeneratedQuestions(true);
-      addMessage(`✅ Generated ${data.counts?.would_you_rather || 0} Would You Rather, ${data.counts?.paranoia || 0} Paranoia, and ${data.counts?.odd_one_out || 0} Odd One Out questions!`);
-      
+      addMessage(
+        `✅ Generated ${data.counts?.would_you_rather || 0} Would You Rather, ${data.counts?.paranoia || 0} Paranoia, and ${data.counts?.odd_one_out || 0} Odd One Out questions!`
+      );
+
       toast({
-        title: "Questions Generated!",
-        description: data.message || "Custom questions have been created for all your games",
+        title: 'Questions Generated!',
+        description:
+          data.message ||
+          'Custom questions have been created for all your games',
       });
-        
+
       setIsLoading(false);
     } catch (error) {
-      console.error("Error generating questions:", error);
-      addMessage("❌ Failed to generate questions. Please try again.");
+      console.error('Error generating questions:', error);
+      addMessage('❌ Failed to generate questions. Please try again.');
       setIsLoading(false);
     }
   };
@@ -221,21 +253,18 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]">
+    <div className="fixed bottom-4 right-4 z-50 max-h-[calc(100vh-2rem)] max-w-[calc(100vw-2rem)]">
       {!isOpen ? (
-        <div 
-          onClick={() => setIsOpen(true)}
-          className="cursor-pointer group"
-        >
-          <img 
+        <div onClick={() => setIsOpen(true)} className="group cursor-pointer">
+          <img
             src="/src/assets/ai-chatbot-icon.png"
             alt="AI Chat Cat"
-            className="w-20 h-20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+            className="h-20 w-20 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
           />
         </div>
       ) : (
-        <Card className="w-80 sm:w-96 h-[32rem] sm:h-[36rem] flex flex-col shadow-2xl border-primary/20 animate-scale-in">
-          <CardHeader className="p-4 border-b flex-shrink-0">
+        <Card className="animate-scale-in flex h-[32rem] w-80 flex-col border-primary/20 shadow-2xl sm:h-[36rem] sm:w-96">
+          <CardHeader className="flex-shrink-0 border-b p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <MessageCircle className="h-5 w-5 text-primary" />
@@ -251,11 +280,11 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
               </Button>
             </div>
           </CardHeader>
-          
-          <CardContent className="p-0 flex-grow overflow-hidden flex flex-col">
+
+          <CardContent className="flex flex-grow flex-col overflow-hidden p-0">
             {/* Messages area */}
-            <div className="flex-grow overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
+            <div className="flex-grow space-y-4 overflow-y-auto p-4">
+              {messages.map(message => (
                 <div
                   key={message.id}
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'} mb-4`}
@@ -263,21 +292,21 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                   <div className="relative max-w-[80%]">
                     {/* Speech bubble */}
                     <div
-                      className={`p-3 rounded-2xl shadow-sm ${
+                      className={`rounded-2xl p-3 shadow-sm ${
                         message.isUser
-                          ? 'bg-blue-500 text-white rounded-br-sm'
-                          : 'bg-gray-200 text-gray-800 rounded-bl-sm'
+                          ? 'rounded-br-sm bg-blue-500 text-white'
+                          : 'rounded-bl-sm bg-gray-200 text-gray-800'
                       }`}
                     >
                       <p className="text-sm leading-relaxed">{message.text}</p>
                     </div>
-                    
+
                     {/* Speech bubble tail */}
                     <div
                       className={`absolute bottom-0 ${
                         message.isUser
-                          ? 'right-0 w-0 h-0 border-l-[12px] border-t-[8px] border-l-blue-500 border-t-transparent'
-                          : 'left-0 w-0 h-0 border-r-[12px] border-t-[8px] border-r-gray-200 border-t-transparent'
+                          ? 'right-0 h-0 w-0 border-l-[12px] border-t-[8px] border-l-blue-500 border-t-transparent'
+                          : 'left-0 h-0 w-0 border-r-[12px] border-t-[8px] border-r-gray-200 border-t-transparent'
                       }`}
                     ></div>
                   </div>
@@ -285,27 +314,43 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
               ))}
               <div ref={messagesEndRef} />
             </div>
-            
+
             {/* Craziness level slider */}
-            <div className="px-4 py-2 border-t">
-              <div className="flex items-center justify-between mb-2">
+            <div className="border-t px-4 py-2">
+              <div className="mb-2 flex items-center justify-between">
                 <Label htmlFor="craziness" className="text-sm font-medium">
                   Craziness Level: {crazynessLevel[0] ?? 50}%
                 </Label>
-                <Badge variant={
-                  (crazynessLevel[0] ?? 50) <= 15 ? "secondary" :
-                  (crazynessLevel[0] ?? 50) <= 30 ? "outline" :
-                  (crazynessLevel[0] ?? 50) <= 45 ? "default" :
-                  (crazynessLevel[0] ?? 50) <= 60 ? "default" :
-                  (crazynessLevel[0] ?? 50) <= 75 ? "destructive" :
-                  (crazynessLevel[0] ?? 50) <= 90 ? "destructive" : "destructive"
-                }>
-                  {(crazynessLevel[0] ?? 50) <= 15 ? "😇 SAFE" :
-                   (crazynessLevel[0] ?? 50) <= 30 ? "😊 MILD" :
-                   (crazynessLevel[0] ?? 50) <= 45 ? "😄 PLAYFUL" :
-                   (crazynessLevel[0] ?? 50) <= 60 ? "😈 SPICY" :
-                   (crazynessLevel[0] ?? 50) <= 75 ? "🔥 BOLD" :
-                   (crazynessLevel[0] ?? 50) <= 90 ? "💀 WILD" : "🌋 UNHINGED"}
+                <Badge
+                  variant={
+                    (crazynessLevel[0] ?? 50) <= 15
+                      ? 'secondary'
+                      : (crazynessLevel[0] ?? 50) <= 30
+                        ? 'outline'
+                        : (crazynessLevel[0] ?? 50) <= 45
+                          ? 'default'
+                          : (crazynessLevel[0] ?? 50) <= 60
+                            ? 'default'
+                            : (crazynessLevel[0] ?? 50) <= 75
+                              ? 'destructive'
+                              : (crazynessLevel[0] ?? 50) <= 90
+                                ? 'destructive'
+                                : 'destructive'
+                  }
+                >
+                  {(crazynessLevel[0] ?? 50) <= 15
+                    ? '😇 SAFE'
+                    : (crazynessLevel[0] ?? 50) <= 30
+                      ? '😊 MILD'
+                      : (crazynessLevel[0] ?? 50) <= 45
+                        ? '😄 PLAYFUL'
+                        : (crazynessLevel[0] ?? 50) <= 60
+                          ? '😈 SPICY'
+                          : (crazynessLevel[0] ?? 50) <= 75
+                            ? '🔥 BOLD'
+                            : (crazynessLevel[0] ?? 50) <= 90
+                              ? '💀 WILD'
+                              : '🌋 UNHINGED'}
                 </Badge>
               </div>
               <Slider
@@ -317,24 +362,30 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ roomCode, currentGame, currentPla
                 className="mb-2"
                 disabled={isLoading}
               />
-              <div className="text-xs text-muted-foreground text-center">
-                {(crazynessLevel[0] ?? 50) <= 15 ? "Extremely safe & family-friendly questions" :
-                 (crazynessLevel[0] ?? 50) <= 30 ? "Mild & safe with gentle humor" :
-                 (crazynessLevel[0] ?? 50) <= 45 ? "Moderately playful with mild awkwardness" :
-                 (crazynessLevel[0] ?? 50) <= 60 ? "Spicy & entertaining with social drama" :
-                 (crazynessLevel[0] ?? 50) <= 75 ? "Bold & dramatic with adult themes" :
-                 (crazynessLevel[0] ?? 50) <= 90 ? "Extremely wild & outrageous scenarios" : "Absolutely unhinged & chaotic content"}
+              <div className="text-center text-xs text-muted-foreground">
+                {(crazynessLevel[0] ?? 50) <= 15
+                  ? 'Extremely safe & family-friendly questions'
+                  : (crazynessLevel[0] ?? 50) <= 30
+                    ? 'Mild & safe with gentle humor'
+                    : (crazynessLevel[0] ?? 50) <= 45
+                      ? 'Moderately playful with mild awkwardness'
+                      : (crazynessLevel[0] ?? 50) <= 60
+                        ? 'Spicy & entertaining with social drama'
+                        : (crazynessLevel[0] ?? 50) <= 75
+                          ? 'Bold & dramatic with adult themes'
+                          : (crazynessLevel[0] ?? 50) <= 90
+                            ? 'Extremely wild & outrageous scenarios'
+                            : 'Absolutely unhinged & chaotic content'}
               </div>
             </div>
-            
-            
+
             {/* Input area */}
-            <div className="p-4 border-t flex-shrink-0">
+            <div className="flex-shrink-0 border-t p-4">
               <div className="flex space-x-2">
                 <Input
                   ref={inputRef}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={e => setInputMessage(e.target.value)}
                   placeholder="Ask me anything or describe your group..."
                   onKeyPress={handleKeyPress}
                   disabled={isLoading}

@@ -1,23 +1,29 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useRoomActions } from "@/hooks/useRoomActions";
-import { Loader2, UserPlus } from "lucide-react";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { useRoomActions } from '@/hooks/useRoomActions';
+import { Loader2, UserPlus } from 'lucide-react';
 
 interface JoinRoomProps {
   onClose?: () => void;
 }
 
 export const JoinRoom = ({ onClose }: JoinRoomProps) => {
-  const [roomCode, setRoomCode] = useState("");
-  const [playerName, setPlayerName] = useState("");
+  const [roomCode, setRoomCode] = useState('');
+  const [playerName, setPlayerName] = useState('');
   const { joinRoom, loading } = useRoomActions();
 
   const handleJoinRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const success = await joinRoom(roomCode, playerName);
     if (success) {
       onClose?.();
@@ -25,9 +31,9 @@ export const JoinRoom = ({ onClose }: JoinRoomProps) => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="mx-auto w-full max-w-md">
       <CardHeader className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="mb-2 flex items-center justify-center gap-2">
           <UserPlus className="h-5 w-5 text-primary" />
           <CardTitle>Join Room</CardTitle>
         </div>
@@ -44,14 +50,14 @@ export const JoinRoom = ({ onClose }: JoinRoomProps) => {
               type="text"
               placeholder="Enter 6-character room code"
               value={roomCode}
-              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              onChange={e => setRoomCode(e.target.value.toUpperCase())}
               maxLength={6}
               disabled={loading}
-              className="text-center text-lg font-mono tracking-wider font-slashed-zero"
+              className="font-slashed-zero text-center font-mono text-lg tracking-wider"
               autoComplete="off"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="playerName">Your Name</Label>
             <Input
@@ -59,7 +65,7 @@ export const JoinRoom = ({ onClose }: JoinRoomProps) => {
               type="text"
               placeholder="Enter your name"
               value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
+              onChange={e => setPlayerName(e.target.value)}
               maxLength={20}
               disabled={loading}
               autoComplete="nickname"
@@ -67,11 +73,7 @@ export const JoinRoom = ({ onClose }: JoinRoomProps) => {
             />
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={loading}
-          >
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

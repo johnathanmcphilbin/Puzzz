@@ -13,7 +13,10 @@ export async function applyGameStatePatch(
 }
 
 // Guard: ignore client actions if expected phase doesn't match current phase
-export function phaseGuard(currentPhase: string | undefined, expected: string | string[]) {
+export function phaseGuard(
+  currentPhase: string | undefined,
+  expected: string | string[]
+) {
   const list = Array.isArray(expected) ? expected : [expected];
   return list.includes(currentPhase || '');
 }
@@ -31,15 +34,19 @@ export function getActivePlayers(
     ...(gameState?.disconnectedPlayerIds || []),
   ]);
 
-  return players.filter((p) => {
+  return players.filter(p => {
     const pid = (p as any).player_id || (p as any).id;
-    const isEliminated = Boolean((p as any).eliminated) || eliminatedSet.has(pid);
+    const isEliminated =
+      Boolean((p as any).eliminated) || eliminatedSet.has(pid);
     const isDisconnected = disconnectedSet.has(pid);
     return !isEliminated && !isDisconnected;
   });
 }
 
 // Merge helper in case local components need to compose nested state before sending
-export function mergeLocalGameState<T extends Record<string, any>>(current: T, patch: Partial<T>): T {
+export function mergeLocalGameState<T extends Record<string, any>>(
+  current: T,
+  patch: Partial<T>
+): T {
   return safeDeepMerge(current, patch as any);
 }

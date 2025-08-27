@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Volume2, VolumeX, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,19 +9,22 @@ interface BackgroundMusicProps {
   showControls?: boolean;
 }
 
-export const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ 
-  audioSrc, 
-  volume = 0.3, 
-  showControls = true 
+export const BackgroundMusic: React.FC<BackgroundMusicProps> = ({
+  audioSrc,
+  volume = 0.3,
+  showControls = true,
 }) => {
-  const { isPlaying, isMuted, togglePlay, toggleMute } = useBackgroundMusic(audioSrc, volume);
+  const { isPlaying, isMuted, togglePlay, toggleMute } = useBackgroundMusic(
+    audioSrc,
+    volume
+  );
 
   if (!showControls) {
     return null;
   }
 
   return (
-    <div className="fixed top-4 left-4 z-40 flex gap-2">
+    <div className="fixed left-4 top-4 z-40 flex gap-2">
       <Button
         variant="outline"
         size="icon"

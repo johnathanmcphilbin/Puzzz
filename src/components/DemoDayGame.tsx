@@ -2,7 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Crown, Users, CheckCircle, XCircle, Loader2, MessageSquare, Send, Sparkles } from 'lucide-react';
+import {
+  Crown,
+  Users,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  MessageSquare,
+  Send,
+  Sparkles,
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getCatImageUrl } from '@/assets/catImages';
 import { useToast } from '@/hooks/use-toast';
@@ -51,10 +60,10 @@ interface DemoDayGameProps {
 
 // Single Tim question with specific options
 const timQuestion: Question = {
-  id: "tim",
+  id: 'tim',
   image: '/6.png',
   options: ['Tim', 'Patrick Walsh', 'Lucy Daly', 'Lynetta Wang'],
-  correctAnswer: 'Tim'
+  correctAnswer: 'Tim',
 };
 
 type GamePhase = 'waiting' | 'question' | 'results' | 'ai-chat' | 'finished';
@@ -69,13 +78,17 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
   room,
   players,
   currentPlayer,
-  onUpdateRoom
+  onUpdateRoom,
 }) => {
   const [gamePhase, setGamePhase] = useState<GamePhase>('waiting');
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>({});
+  const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>(
+    {}
+  );
   const [scores, setScores] = useState<Record<string, number>>({});
-  const [characterData, setCharacterData] = useState<Record<string, CatCharacter>>({});
+  const [characterData, setCharacterData] = useState<
+    Record<string, CatCharacter>
+  >({});
   const [showResults, setShowResults] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiResponse, setAiResponse] = useState<AIResponse | null>(null);
@@ -83,7 +96,8 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
   const { toast } = useToast();
 
   const isHost = currentPlayer.is_host;
-  const allPlayersAnswered = Object.keys(playerAnswers).length === players.length;
+  const allPlayersAnswered =
+    Object.keys(playerAnswers).length === players.length;
 
   // Sync game state from room
   useEffect(() => {
@@ -113,14 +127,14 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
         const { data, error } = await supabase
           .from('cat_characters')
           .select('*');
-        
+
         if (error) {
           console.error('Error loading characters:', error);
           return;
         }
 
         const charactersMap: Record<string, CatCharacter> = {};
-        data?.forEach((char) => {
+        data?.forEach(char => {
           if (char.icon_url) {
             charactersMap[char.id] = char as CatCharacter;
           }
@@ -136,19 +150,27 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
 
   // Auto-show results when all players answered (host only)
   useEffect(() => {
-    if (isHost && gamePhase === 'question' && allPlayersAnswered && Object.keys(playerAnswers).length > 0) {
+    if (
+      isHost &&
+      gamePhase === 'question' &&
+      allPlayersAnswered &&
+      Object.keys(playerAnswers).length > 0
+    ) {
       setTimeout(() => handleShowResults(), 500);
     }
   }, [playerAnswers, gamePhase, allPlayersAnswered, isHost]);
 
-  const updateGameState = useCallback(async (updates: any) => {
-    await onUpdateRoom({
-      game_state: {
-        ...room.game_state,
-        ...updates
-      }
-    });
-  }, [onUpdateRoom, room.game_state]);
+  const updateGameState = useCallback(
+    async (updates: any) => {
+      await onUpdateRoom({
+        game_state: {
+          ...room.game_state,
+          ...updates,
+        },
+      });
+    },
+    [onUpdateRoom, room.game_state]
+  );
 
   const startGame = async () => {
     const initialState = {
@@ -157,20 +179,20 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
       scores: {},
       playerAnswers: {},
       showResults: false,
-      aiResponse: null
+      aiResponse: null,
     };
-    
+
     await updateGameState(initialState);
   };
 
   const handleAnswerSelect = async (answer: string) => {
     if (selectedAnswer || gamePhase !== 'question') return;
-    
+
     setSelectedAnswer(answer);
     const newAnswers = { ...playerAnswers, [currentPlayer.player_id]: answer };
-    
+
     await updateGameState({
-      playerAnswers: newAnswers
+      playerAnswers: newAnswers,
     });
   };
 
@@ -182,12 +204,12 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
         newScores[playerId] = (newScores[playerId] || 0) + 1;
       }
     });
-    
+
     await updateGameState({
       gamePhase: 'results',
       scores: newScores,
-      showResults: true
-     });
+      showResults: true,
+    });
 
     // Don't auto-advance anymore - let host manually end the demo
   };
@@ -199,7 +221,7 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
       scores: {},
       playerAnswers: {},
       showResults: false,
-      aiResponse: null
+      aiResponse: null,
     });
   };
 
@@ -210,29 +232,38 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
       scores: {},
       playerAnswers: {},
       showResults: false,
-      aiResponse: null
+      aiResponse: null,
     });
   };
 
   if (gamePhase === 'waiting') {
     return (
-      <div className="min-h-screen gradient-bg p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8 animate-fade-in">
-            <h1 className="text-5xl font-bold mb-4 text-primary">Demo Day</h1>
-            <h2 className="text-2xl mb-6 text-muted-foreground">Interactive Team Quiz</h2>
-            
+      <div className="gradient-bg min-h-screen p-6">
+        <div className="mx-auto max-w-4xl">
+          <div className="animate-fade-in mb-8 text-center">
+            <h1 className="mb-4 text-5xl font-bold text-primary">Demo Day</h1>
+            <h2 className="mb-6 text-2xl text-muted-foreground">
+              Interactive Team Quiz
+            </h2>
+
             <Card className="mb-6 border-2">
               <CardContent className="p-8">
-                <div className="flex items-center justify-center gap-4 mb-6">
+                <div className="mb-6 flex items-center justify-center gap-4">
                   <Users className="h-8 w-8 text-primary" />
-                  <span className="text-2xl font-semibold">{players.length} Players Ready</span>
+                  <span className="text-2xl font-semibold">
+                    {players.length} Players Ready
+                  </span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {players.map((player) => (
-                    <div key={player.id} className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                      {player.is_host && <Crown className="h-5 w-5 text-yellow-500" />}
-                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {players.map(player => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-3 rounded-lg bg-muted p-4"
+                    >
+                      {player.is_host && (
+                        <Crown className="h-5 w-5 text-yellow-500" />
+                      )}
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground">
                         {player.player_name.charAt(0).toUpperCase()}
                       </div>
                       <span className="font-medium">{player.player_name}</span>
@@ -243,14 +274,18 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
             </Card>
 
             {isHost && (
-              <Button onClick={startGame} size="lg" className="text-xl px-12 py-6 animate-scale-in">
-                <Sparkles className="h-6 w-6 mr-3" />
+              <Button
+                onClick={startGame}
+                size="lg"
+                className="animate-scale-in px-12 py-6 text-xl"
+              >
+                <Sparkles className="mr-3 h-6 w-6" />
                 Start Demo Day Experience
               </Button>
             )}
-            
+
             {!isHost && (
-              <p className="text-lg text-muted-foreground animate-pulse">
+              <p className="animate-pulse text-lg text-muted-foreground">
                 Waiting for host to start the demo day experience...
               </p>
             )}
@@ -264,26 +299,35 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
     const sortedScores = Object.entries(scores)
       .map(([playerId, score]) => ({
         player: players.find(p => p.player_id === playerId),
-        score
+        score,
       }))
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div className="min-h-screen gradient-bg p-6">
-        <div className="max-w-4xl mx-auto text-center animate-fade-in">
-          <h1 className="text-5xl font-bold mb-4 text-primary">Demo Day Complete! 🎉</h1>
-          <h2 className="text-2xl mb-8 text-muted-foreground">Final Results</h2>
-          
+      <div className="gradient-bg min-h-screen p-6">
+        <div className="animate-fade-in mx-auto max-w-4xl text-center">
+          <h1 className="mb-4 text-5xl font-bold text-primary">
+            Demo Day Complete! 🎉
+          </h1>
+          <h2 className="mb-8 text-2xl text-muted-foreground">Final Results</h2>
+
           <Card className="mb-8 border-2">
             <CardContent className="p-8">
-              <h3 className="text-2xl font-semibold mb-6">Leaderboard</h3>
+              <h3 className="mb-6 text-2xl font-semibold">Leaderboard</h3>
               <div className="space-y-4">
                 {sortedScores.map((item, index) => (
-                  <div key={item.player?.player_id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <div
+                    key={item.player?.player_id}
+                    className="flex items-center justify-between rounded-lg bg-muted p-4"
+                  >
                     <div className="flex items-center gap-4">
                       <span className="text-2xl font-bold">{index + 1}.</span>
-                      {index === 0 && <Crown className="h-6 w-6 text-yellow-500" />}
-                      <span className="text-lg font-medium">{item.player?.player_name}</span>
+                      {index === 0 && (
+                        <Crown className="h-6 w-6 text-yellow-500" />
+                      )}
+                      <span className="text-lg font-medium">
+                        {item.player?.player_name}
+                      </span>
                     </div>
                     <span className="text-xl font-bold">{item.score}/1</span>
                   </div>
@@ -293,7 +337,11 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
           </Card>
 
           {isHost && (
-            <Button onClick={resetGame} size="lg" className="text-xl px-12 py-6">
+            <Button
+              onClick={resetGame}
+              size="lg"
+              className="px-12 py-6 text-xl"
+            >
               Play Again
             </Button>
           )}
@@ -302,47 +350,54 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
     );
   }
 
-
   return (
-    <div className="min-h-screen gradient-bg p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold mb-4 text-primary">Demo Day Quiz</h1>
-          <div className="text-lg mb-6">
-            Who is this person?
-          </div>
+    <div className="gradient-bg min-h-screen p-6">
+      <div className="mx-auto max-w-4xl">
+        <div className="animate-fade-in mb-8 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-primary">
+            Demo Day Quiz
+          </h1>
+          <div className="mb-6 text-lg">Who is this person?</div>
         </div>
 
         <Card className="mb-6 border-2">
           <CardContent className="p-8 text-center">
-            <img 
-              src={timQuestion.image} 
-              alt="Demo Day quiz - identify this team member" 
-              className="w-80 h-80 object-contain rounded-lg mx-auto mb-8 bg-white/10 animate-fade-in shadow-lg"
+            <img
+              src={timQuestion.image}
+              alt="Demo Day quiz - identify this team member"
+              className="animate-fade-in mx-auto mb-8 h-80 w-80 rounded-lg bg-white/10 object-contain shadow-lg"
             />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+
+            <div className="mx-auto grid max-w-2xl grid-cols-1 gap-4 md:grid-cols-2">
               {timQuestion.options.map((option: string, index: number) => {
                 const isCorrect = option === timQuestion.correctAnswer;
                 const isSelected = selectedAnswer === option;
                 const showResultsNow = showResults;
-                
-                let buttonVariant: "default" | "destructive" | "outline" | "secondary" = "outline";
-                let buttonClassName = "p-6 text-left h-auto transition-all duration-500 text-lg font-medium";
-                
+
+                let buttonVariant:
+                  | 'default'
+                  | 'destructive'
+                  | 'outline'
+                  | 'secondary' = 'outline';
+                let buttonClassName =
+                  'p-6 text-left h-auto transition-all duration-500 text-lg font-medium';
+
                 if (showResultsNow) {
                   if (isCorrect) {
-                    buttonVariant = "default";
-                    buttonClassName += " bg-green-600 hover:bg-green-600 text-white border-green-600 animate-pulse scale-105";
+                    buttonVariant = 'default';
+                    buttonClassName +=
+                      ' bg-green-600 hover:bg-green-600 text-white border-green-600 animate-pulse scale-105';
                   } else if (isSelected) {
-                    buttonVariant = "destructive";
-                    buttonClassName += " bg-red-600 hover:bg-red-600 text-white border-red-600 scale-95";
+                    buttonVariant = 'destructive';
+                    buttonClassName +=
+                      ' bg-red-600 hover:bg-red-600 text-white border-red-600 scale-95';
                   } else {
-                    buttonClassName += " opacity-40 scale-95";
+                    buttonClassName += ' opacity-40 scale-95';
                   }
                 } else if (isSelected) {
-                  buttonVariant = "default";
-                  buttonClassName += " bg-primary text-primary-foreground scale-105";
+                  buttonVariant = 'default';
+                  buttonClassName +=
+                    ' bg-primary text-primary-foreground scale-105';
                 }
 
                 return (
@@ -354,13 +409,13 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
                     disabled={selectedAnswer !== null || showResultsNow}
                     className={buttonClassName}
                   >
-                    <div className="flex items-center justify-between w-full">
+                    <div className="flex w-full items-center justify-between">
                       <span>{option}</span>
                       {showResultsNow && isCorrect && (
-                        <CheckCircle className="h-6 w-6 ml-3" />
+                        <CheckCircle className="ml-3 h-6 w-6" />
                       )}
                       {showResultsNow && isSelected && !isCorrect && (
-                        <XCircle className="h-6 w-6 ml-3" />
+                        <XCircle className="ml-3 h-6 w-6" />
                       )}
                     </div>
                   </Button>
@@ -369,12 +424,12 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
             </div>
 
             {showResults && (
-              <div className="mt-8 p-8 rounded-xl border-2 bg-gradient-to-r from-background/90 to-background/95 backdrop-blur-sm animate-scale-in shadow-2xl">
+              <div className="animate-scale-in mt-8 rounded-xl border-2 bg-gradient-to-r from-background/90 to-background/95 p-8 shadow-2xl backdrop-blur-sm">
                 <div className="text-center">
                   {selectedAnswer === timQuestion.correctAnswer ? (
                     <div className="space-y-4">
                       <div className="flex items-center justify-center gap-4">
-                        <div className="p-3 rounded-full bg-green-100">
+                        <div className="rounded-full bg-green-100 p-3">
                           <CheckCircle className="h-10 w-10 text-green-600" />
                         </div>
                       </div>
@@ -388,7 +443,7 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
                   ) : (
                     <div className="space-y-4">
                       <div className="flex items-center justify-center gap-4">
-                        <div className="p-3 rounded-full bg-red-100">
+                        <div className="rounded-full bg-red-100 p-3">
                           <XCircle className="h-10 w-10 text-red-600" />
                         </div>
                       </div>
@@ -398,7 +453,7 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
                       <p className="text-2xl font-semibold text-foreground">
                         It was Tim!
                       </p>
-                      <div className="mt-6 p-6 bg-red-50 border-2 border-red-200 rounded-lg">
+                      <div className="mt-6 rounded-lg border-2 border-red-200 bg-red-50 p-6">
                         <p className="text-2xl font-bold text-red-800">
                           There are droids smarter than this Eejit
                         </p>
@@ -407,17 +462,19 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
                   )}
                   <div className="mt-6 flex flex-col items-center gap-4">
                     {isHost ? (
-                      <Button 
-                        onClick={endDemo} 
-                        size="lg" 
-                        className="text-xl px-8 py-4"
+                      <Button
+                        onClick={endDemo}
+                        size="lg"
+                        className="px-8 py-4 text-xl"
                         variant="default"
                       >
                         End Demo & Return to Lobby
                       </Button>
                     ) : (
                       <div className="flex items-center gap-3 text-muted-foreground">
-                        <span className="text-lg">Waiting for host to end the demo...</span>
+                        <span className="text-lg">
+                          Waiting for host to end the demo...
+                        </span>
                       </div>
                     )}
                   </div>
@@ -429,28 +486,35 @@ export const DemoDayGame: React.FC<DemoDayGameProps> = ({
 
         <Card className="border-2">
           <CardContent className="p-6">
-            <h3 className="font-semibold mb-4 text-lg">Live Scores</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {players.map((player) => {
-                const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+            <h3 className="mb-4 text-lg font-semibold">Live Scores</h3>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {players.map(player => {
+                const playerCharacter = player.selected_character_id
+                  ? characterData[player.selected_character_id]
+                  : null;
                 return (
-                  <div key={player.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between rounded-lg bg-muted p-3"
+                  >
                     <div className="flex items-center gap-3">
                       {playerCharacter ? (
                         <img
                           src={getCatImageUrl(playerCharacter.icon_url)}
                           alt={playerCharacter.name}
-                          className="w-8 h-8 rounded-full object-cover"
+                          className="h-8 w-8 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-semibold">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                           {player.player_name.charAt(0).toUpperCase()}
                         </div>
                       )}
                       <span className="font-medium">{player.player_name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-lg">{scores[player.player_id] || 0}</span>
+                      <span className="text-lg font-bold">
+                        {scores[player.player_id] || 0}
+                      </span>
                       {playerAnswers[player.player_id] && (
                         <CheckCircle className="h-4 w-4 text-green-600" />
                       )}

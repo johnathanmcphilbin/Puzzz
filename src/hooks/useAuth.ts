@@ -49,7 +49,7 @@ export const useAuth = () => {
 
   const createSession = async (playerId: string, playerName: string) => {
     const sessionToken = crypto.randomUUID();
-    
+
     localStorage.setItem('puzzz_player_id', playerId);
     localStorage.setItem('puzzz_player_name', playerName);
     localStorage.setItem('puzzz_session_token', sessionToken);
@@ -83,7 +83,7 @@ export const useAuth = () => {
     }
 
     return {
-      'Authorization': `Bearer ${authState.sessionToken}`,
+      Authorization: `Bearer ${authState.sessionToken}`,
       'X-Player-ID': authState.playerId,
     };
   };

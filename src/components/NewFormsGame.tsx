@@ -5,7 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, XCircle, Users, Crown, Loader2, ThumbsUp, ThumbsDown } from 'lucide-react';
+import {
+  CheckCircle,
+  XCircle,
+  Users,
+  Crown,
+  Loader2,
+  ThumbsUp,
+  ThumbsDown,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -34,7 +42,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
   room,
   players,
   currentPlayer,
-  onUpdateRoom
+  onUpdateRoom,
 }) => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -56,14 +64,17 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
       if (prompt.trim()) {
         // Try to generate AI questions with custom prompt
         try {
-          const { data, error } = await supabase.functions.invoke('room-questions', {
-            body: {
-              roomCode: room.roomCode,
-              customization: prompt.trim(),
-              gameType: 'forms',
-              questionCount: 25
+          const { data, error } = await supabase.functions.invoke(
+            'room-questions',
+            {
+              body: {
+                roomCode: room.roomCode,
+                customization: prompt.trim(),
+                gameType: 'forms',
+                questionCount: 25,
+              },
             }
-          });
+          );
 
           if (!error && data?.questions) {
             questions = data.questions.map((q: any, index: number) => ({
@@ -71,7 +82,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
               text: q.text,
               type: q.type,
               votes: 0,
-              playerVotes: []
+              playerVotes: [],
             }));
           }
         } catch (aiError) {
@@ -93,13 +104,15 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           }
 
           // Convert database questions to Forms game format
-          const dbQuestions = (formsData || []).map((q: any, index: number) => ({
-            id: `db-${index}`,
-            text: q.question,
-            type: 'yes_no' as const,
-            votes: 0,
-            playerVotes: []
-          }));
+          const dbQuestions = (formsData || []).map(
+            (q: any, index: number) => ({
+              id: `db-${index}`,
+              text: q.question,
+              type: 'yes_no' as const,
+              votes: 0,
+              playerVotes: [],
+            })
+          );
 
           questions = [...questions, ...dbQuestions];
         } catch (dbError) {
@@ -115,13 +128,13 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           'Do you think aliens exist?',
           'Would you rather live in the past or future?',
           'Do you prefer dogs over cats?',
-          'Would you want to know your future?'
+          'Would you want to know your future?',
         ].map((text, index) => ({
           id: `fallback-yn-${index}`,
           text,
           type: 'yes_no' as const,
           votes: 0,
-          playerVotes: []
+          playerVotes: [],
         }));
 
         // Add "most likely to" questions for variety
@@ -132,17 +145,21 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           'Who is most likely to adopt a stray animal?',
           'Who is most likely to become a millionaire?',
           'Who is most likely to forget their own birthday?',
-          'Who is most likely to become a professional athlete?'
+          'Who is most likely to become a professional athlete?',
         ].map((text, index) => ({
           id: `ml-${index}`,
           text,
           type: 'most_likely' as const,
           votes: 0,
-          playerVotes: []
+          playerVotes: [],
         }));
 
         // Add fallback questions
-        questions = [...questions, ...fallbackYesNoQuestions, ...mostLikelyQuestions];
+        questions = [
+          ...questions,
+          ...fallbackYesNoQuestions,
+          ...mostLikelyQuestions,
+        ];
       }
 
       if (questions.length === 0) {
@@ -157,21 +174,53 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           ...gameState,
           phase: 'question-voting',
           generatedQuestions: questions,
-          prompt: prompt.trim() || 'Default Questions'
-        }
+          prompt: prompt.trim() || 'Default Questions',
+        },
       });
 
       const sourceText = prompt.trim() ? 'AI-generated' : 'default';
-      toast.success(`Loaded ${questions.length} ${sourceText} questions! Now vote for your favorites.`);
+      toast.success(
+        `Loaded ${questions.length} ${sourceText} questions! Now vote for your favorites.`
+      );
     } catch (error) {
       console.error('Error generating questions:', error);
       // Even if there's an error, provide fallback questions
       const fallbackQuestions: Question[] = [
-        { id: 'f1', text: 'Do you prefer coffee over tea?', type: 'yes_no', votes: 0, playerVotes: [] },
-        { id: 'f2', text: 'Would you rather be invisible or fly?', type: 'yes_no', votes: 0, playerVotes: [] },
-        { id: 'f3', text: 'Do you believe in aliens?', type: 'yes_no', votes: 0, playerVotes: [] },
-        { id: 'f4', text: 'Who is most likely to become famous?', type: 'most_likely', votes: 0, playerVotes: [] },
-        { id: 'f5', text: 'Who is most likely to sleep through their alarm?', type: 'most_likely', votes: 0, playerVotes: [] }
+        {
+          id: 'f1',
+          text: 'Do you prefer coffee over tea?',
+          type: 'yes_no',
+          votes: 0,
+          playerVotes: [],
+        },
+        {
+          id: 'f2',
+          text: 'Would you rather be invisible or fly?',
+          type: 'yes_no',
+          votes: 0,
+          playerVotes: [],
+        },
+        {
+          id: 'f3',
+          text: 'Do you believe in aliens?',
+          type: 'yes_no',
+          votes: 0,
+          playerVotes: [],
+        },
+        {
+          id: 'f4',
+          text: 'Who is most likely to become famous?',
+          type: 'most_likely',
+          votes: 0,
+          playerVotes: [],
+        },
+        {
+          id: 'f5',
+          text: 'Who is most likely to sleep through their alarm?',
+          type: 'most_likely',
+          votes: 0,
+          playerVotes: [],
+        },
       ];
 
       await onUpdateRoom({
@@ -179,11 +228,13 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           ...gameState,
           phase: 'question-voting',
           generatedQuestions: fallbackQuestions,
-          prompt: 'Emergency Fallback Questions'
-        }
+          prompt: 'Emergency Fallback Questions',
+        },
       });
 
-      toast.success(`Loaded ${fallbackQuestions.length} emergency questions! Now vote for your favorites.`);
+      toast.success(
+        `Loaded ${fallbackQuestions.length} emergency questions! Now vote for your favorites.`
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -198,16 +249,26 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
 
     if (hasVoted) {
       // Remove vote
-      updatedQuestions = generatedQuestions.map(q => 
-        q.id === questionId 
-          ? { ...q, votes: q.votes - 1, playerVotes: q.playerVotes.filter(id => id !== currentPlayer.playerId) }
+      updatedQuestions = generatedQuestions.map(q =>
+        q.id === questionId
+          ? {
+              ...q,
+              votes: q.votes - 1,
+              playerVotes: q.playerVotes.filter(
+                id => id !== currentPlayer.playerId
+              ),
+            }
           : q
       );
     } else {
       // Add vote
-      updatedQuestions = generatedQuestions.map(q => 
-        q.id === questionId 
-          ? { ...q, votes: q.votes + 1, playerVotes: [...q.playerVotes, currentPlayer.playerId] }
+      updatedQuestions = generatedQuestions.map(q =>
+        q.id === questionId
+          ? {
+              ...q,
+              votes: q.votes + 1,
+              playerVotes: [...q.playerVotes, currentPlayer.playerId],
+            }
           : q
       );
     }
@@ -215,8 +276,8 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     await onUpdateRoom({
       gameState: {
         ...gameState,
-        generatedQuestions: updatedQuestions
-      }
+        generatedQuestions: updatedQuestions,
+      },
     });
   };
 
@@ -224,7 +285,13 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     // Select top voted questions (minimum 10, maximum 15)
     const sortedQuestions = [...generatedQuestions]
       .sort((a, b) => b.votes - a.votes)
-      .slice(0, Math.min(15, Math.max(10, generatedQuestions.filter(q => q.votes > 0).length)));
+      .slice(
+        0,
+        Math.min(
+          15,
+          Math.max(10, generatedQuestions.filter(q => q.votes > 0).length)
+        )
+      );
 
     if (sortedQuestions.length < 5) {
       toast.error('Need at least 5 questions with votes to start the game');
@@ -238,8 +305,8 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
         selectedQuestions: sortedQuestions,
         currentQuestionIndex: 0,
         currentAnswers: [],
-        allAnswers: [] // Store all answers for final results
-      }
+        allAnswers: [], // Store all answers for final results
+      },
     });
 
     toast.success(`Starting game with ${sortedQuestions.length} questions!`);
@@ -254,7 +321,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     const newAnswer: PlayerAnswer = {
       playerId: currentPlayer.playerId,
       playerName: currentPlayer.playerName,
-      answer: selectedAnswer
+      answer: selectedAnswer,
     };
 
     const updatedAnswers = [...answers, newAnswer];
@@ -262,8 +329,8 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     await onUpdateRoom({
       gameState: {
         ...gameState,
-        currentAnswers: updatedAnswers
-      }
+        currentAnswers: updatedAnswers,
+      },
     });
 
     setSelectedAnswer('');
@@ -275,7 +342,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     const questionResults = {
       question: currentQuestion,
       answers: answers,
-      questionIndex: currentQuestionIndex
+      questionIndex: currentQuestionIndex,
     };
 
     if (currentQuestionIndex + 1 >= selectedQuestions.length) {
@@ -284,8 +351,8 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
         gameState: {
           ...gameState,
           phase: 'results',
-          allAnswers: [...allAnswers, questionResults]
-        }
+          allAnswers: [...allAnswers, questionResults],
+        },
       });
     } else {
       // Next question
@@ -294,8 +361,8 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           ...gameState,
           currentQuestionIndex: currentQuestionIndex + 1,
           currentAnswers: [],
-          allAnswers: [...allAnswers, questionResults]
-        }
+          allAnswers: [...allAnswers, questionResults],
+        },
       });
     }
   };
@@ -309,23 +376,24 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
         currentQuestionIndex: 0,
         currentAnswers: [],
         allAnswers: [],
-        prompt: ''
-      }
+        prompt: '',
+      },
     });
     setPrompt('');
   };
 
   if (phase === 'setup') {
     return (
-      <div className="min-h-screen gradient-bg p-4">
-        <div className="max-w-2xl mx-auto">
-          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl">
+      <div className="gradient-bg min-h-screen p-4">
+        <div className="mx-auto max-w-2xl">
+          <Card className="border-blue-500/50 bg-card/95 shadow-xl backdrop-blur-sm">
             <CardHeader className="text-center">
-              <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              <CardTitle className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-4xl font-bold text-transparent">
                 📋 Forms Game
               </CardTitle>
-              <p className="text-blue-200 text-lg">
-                AI generates questions, you vote on favorites, then everyone answers!
+              <p className="text-lg text-blue-200">
+                AI generates questions, you vote on favorites, then everyone
+                answers!
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -338,10 +406,14 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                     <Input
                       id="prompt"
                       value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
+                      onChange={e => setPrompt(e.target.value)}
                       placeholder="e.g., 'college friends', 'work colleagues' - or leave blank for default questions"
-                      className="bg-black/30 border-blue-500/50 text-white placeholder-blue-300"
-                      onKeyPress={(e) => e.key === 'Enter' && !isGenerating && generateQuestions()}
+                      className="border-blue-500/50 bg-black/30 text-white placeholder-blue-300"
+                      onKeyPress={e =>
+                        e.key === 'Enter' &&
+                        !isGenerating &&
+                        generateQuestions()
+                      }
                     />
                   </div>
                   <Button
@@ -363,7 +435,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                 </>
               ) : (
                 <div className="text-center text-blue-200">
-                  <Users className="h-12 w-12 mx-auto mb-4 opacity-60" />
+                  <Users className="mx-auto mb-4 h-12 w-12 opacity-60" />
                   <p>Waiting for the host to generate questions...</p>
                 </div>
               )}
@@ -375,42 +447,54 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
   }
 
   if (phase === 'question-voting') {
-    const playerVotes = generatedQuestions.reduce((total, q) => total + (q.playerVotes.includes(currentPlayer.playerId) ? 1 : 0), 0);
+    const playerVotes = generatedQuestions.reduce(
+      (total, q) =>
+        total + (q.playerVotes.includes(currentPlayer.playerId) ? 1 : 0),
+      0
+    );
     const maxVotes = Math.ceil(generatedQuestions.length * 0.4); // Can vote for up to 40% of questions
 
     return (
-      <div className="min-h-screen gradient-bg p-4">
-        <div className="max-w-4xl mx-auto">
-          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl mb-6">
+      <div className="gradient-bg min-h-screen p-4">
+        <div className="mx-auto max-w-4xl">
+          <Card className="mb-6 border-blue-500/50 bg-card/95 shadow-xl backdrop-blur-sm">
             <CardHeader className="text-center">
               <CardTitle className="text-3xl font-bold text-blue-300">
                 Vote for Your Favorite Questions
               </CardTitle>
               <p className="text-blue-200">Topic: "{gameState.prompt}"</p>
-              <div className="flex justify-center gap-4 mt-4">
-                <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
+              <div className="mt-4 flex justify-center gap-4">
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-500/20 text-blue-300"
+                >
                   Your votes: {playerVotes}/{maxVotes}
                 </Badge>
-                <Badge variant="secondary" className="bg-purple-500/20 text-purple-300">
+                <Badge
+                  variant="secondary"
+                  className="bg-purple-500/20 text-purple-300"
+                >
                   {generatedQuestions.length} questions generated
                 </Badge>
               </div>
             </CardHeader>
           </Card>
 
-          <div className="grid gap-4 mb-6">
-            {generatedQuestions.map((question) => {
-              const hasVoted = question.playerVotes.includes(currentPlayer.playerId);
+          <div className="mb-6 grid gap-4">
+            {generatedQuestions.map(question => {
+              const hasVoted = question.playerVotes.includes(
+                currentPlayer.playerId
+              );
               const canVote = playerVotes < maxVotes || hasVoted;
 
               return (
-                <Card 
+                <Card
                   key={question.id}
-                  className={`bg-card/90 border transition-all cursor-pointer shadow-md ${
-                    hasVoted 
-                      ? 'border-green-500/50 bg-green-500/10' 
-                      : canVote 
-                        ? 'border-blue-500/30 hover:border-blue-400/60' 
+                  className={`cursor-pointer border bg-card/90 shadow-md transition-all ${
+                    hasVoted
+                      ? 'border-green-500/50 bg-green-500/10'
+                      : canVote
+                        ? 'border-blue-500/30 hover:border-blue-400/60'
                         : 'border-gray-500/30 opacity-60'
                   }`}
                   onClick={() => canVote && voteForQuestion(question.id)}
@@ -418,17 +502,21 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="text-white font-medium">{question.text}</p>
-                        <div className="flex items-center gap-2 mt-2">
+                        <p className="font-medium text-white">
+                          {question.text}
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">
-                            {question.type === 'yes_no' ? 'Yes/No' : 'Most Likely'}
+                            {question.type === 'yes_no'
+                              ? 'Yes/No'
+                              : 'Most Likely'}
                           </Badge>
                           <Badge variant="secondary" className="text-xs">
                             {question.votes} votes
                           </Badge>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 ml-4">
+                      <div className="ml-4 flex items-center gap-2">
                         {hasVoted ? (
                           <CheckCircle className="h-6 w-6 text-green-400" />
                         ) : canVote ? (
@@ -445,7 +533,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
           </div>
 
           {currentPlayer.isHost && (
-            <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl">
+            <Card className="border-blue-500/50 bg-card/95 shadow-xl backdrop-blur-sm">
               <CardContent className="p-4 text-center">
                 <Button
                   onClick={startGame}
@@ -463,29 +551,40 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
   }
 
   if (phase === 'playing') {
-    const hasAnswered = answers.some(a => a.playerId === currentPlayer.playerId);
-    const activePlayers = players.filter(p => !p.eliminated).length || players.length;
+    const hasAnswered = answers.some(
+      a => a.playerId === currentPlayer.playerId
+    );
+    const activePlayers =
+      players.filter(p => !p.eliminated).length || players.length;
     const allAnswered = answers.length === activePlayers;
 
     return (
-      <div className="min-h-screen gradient-bg p-4">
-        <div className="max-w-2xl mx-auto">
-          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl">
+      <div className="gradient-bg min-h-screen p-4">
+        <div className="mx-auto max-w-2xl">
+          <Card className="border-blue-500/50 bg-card/95 shadow-xl backdrop-blur-sm">
             <CardHeader className="text-center">
-              <div className="flex justify-between items-center mb-4">
-                <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
+              <div className="mb-4 flex items-center justify-between">
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-500/20 text-blue-300"
+                >
                   Question {currentQuestionIndex + 1}/{selectedQuestions.length}
                 </Badge>
-                <Badge variant="secondary" className="bg-purple-500/20 text-purple-300">
-                  {answers.length}/{players.filter(p => !p.eliminated).length || players.length} answered
+                <Badge
+                  variant="secondary"
+                  className="bg-purple-500/20 text-purple-300"
+                >
+                  {answers.length}/
+                  {players.filter(p => !p.eliminated).length || players.length}{' '}
+                  answered
                 </Badge>
               </div>
-              <CardTitle className="text-2xl font-bold text-white mb-4">
+              <CardTitle className="mb-4 text-2xl font-bold text-white">
                 {currentQuestion?.text}
               </CardTitle>
-              <Progress 
-                value={(currentQuestionIndex / selectedQuestions.length) * 100} 
-                className="w-full h-2"
+              <Progress
+                value={(currentQuestionIndex / selectedQuestions.length) * 100}
+                className="h-2 w-full"
               />
             </CardHeader>
             <CardContent className="space-y-6">
@@ -494,14 +593,18 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                   {currentQuestion?.type === 'yes_no' ? (
                     <div className="grid grid-cols-2 gap-4">
                       <Button
-                        variant={selectedAnswer === 'yes' ? 'default' : 'outline'}
+                        variant={
+                          selectedAnswer === 'yes' ? 'default' : 'outline'
+                        }
                         onClick={() => setSelectedAnswer('yes')}
                         className="h-16 text-lg"
                       >
                         ✅ Yes
                       </Button>
                       <Button
-                        variant={selectedAnswer === 'no' ? 'default' : 'outline'}
+                        variant={
+                          selectedAnswer === 'no' ? 'default' : 'outline'
+                        }
                         onClick={() => setSelectedAnswer('no')}
                         className="h-16 text-lg"
                       >
@@ -510,19 +613,23 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {players.map((player) => (
+                      {players.map(player => (
                         <Button
                           key={player.playerId}
-                          variant={selectedAnswer === player.playerId ? 'default' : 'outline'}
+                          variant={
+                            selectedAnswer === player.playerId
+                              ? 'default'
+                              : 'outline'
+                          }
                           onClick={() => setSelectedAnswer(player.playerId)}
-                          className="w-full justify-start h-12"
+                          className="h-12 w-full justify-start"
                         >
                           {player.playerName}
                         </Button>
                       ))}
                     </div>
                   )}
-                  
+
                   <Button
                     onClick={submitAnswer}
                     disabled={!selectedAnswer}
@@ -533,8 +640,8 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                 </>
               ) : (
                 <div className="text-center">
-                  <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
-                  <p className="text-green-300 text-lg">Answer submitted!</p>
+                  <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-400" />
+                  <p className="text-lg text-green-300">Answer submitted!</p>
                   <p className="text-blue-200">Waiting for other players...</p>
                 </div>
               )}
@@ -544,7 +651,9 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                   onClick={nextQuestion}
                   className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                 >
-                  {currentQuestionIndex + 1 >= selectedQuestions.length ? 'Show Final Results' : 'Next Question'}
+                  {currentQuestionIndex + 1 >= selectedQuestions.length
+                    ? 'Show Final Results'
+                    : 'Next Question'}
                 </Button>
               )}
             </CardContent>
@@ -558,14 +667,16 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     const allResults = gameState.allAnswers || [];
 
     return (
-      <div className="min-h-screen gradient-bg p-4">
-        <div className="max-w-4xl mx-auto">
-          <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl mb-6">
+      <div className="gradient-bg min-h-screen p-4">
+        <div className="mx-auto max-w-4xl">
+          <Card className="mb-6 border-blue-500/50 bg-card/95 shadow-xl backdrop-blur-sm">
             <CardHeader className="text-center">
-              <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              <CardTitle className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-4xl font-bold text-transparent">
                 📊 Final Results
               </CardTitle>
-              <p className="text-blue-200">Game Complete! Here's what everyone said:</p>
+              <p className="text-blue-200">
+                Game Complete! Here's what everyone said:
+              </p>
             </CardHeader>
           </Card>
 
@@ -576,51 +687,70 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
                 console.log('Invalid result structure:', result);
                 return null;
               }
-              
+
               return (
-                <Card key={index} className="bg-card/90 border-blue-500/50 shadow-md">
+                <Card
+                  key={index}
+                  className="border-blue-500/50 bg-card/90 shadow-md"
+                >
                   <CardHeader>
                     <CardTitle className="text-xl text-white">
-                      Q{index + 1}: {result.question.text || 'Question text unavailable'}
+                      Q{index + 1}:{' '}
+                      {result.question.text || 'Question text unavailable'}
                     </CardTitle>
                   </CardHeader>
-                <CardContent>
-                  {result.question.type === 'yes_no' ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-400">
-                          {result.answers.filter((a: PlayerAnswer) => a.answer === 'yes').length}
-                        </div>
-                        <div className="text-green-300">Yes</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-red-400">
-                          {result.answers.filter((a: PlayerAnswer) => a.answer === 'no').length}
-                        </div>
-                        <div className="text-red-300">No</div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {players.map((player) => {
-                        const votes = result.answers.filter((a: PlayerAnswer) => a.answer === player.playerId).length;
-                        return (
-                          <div key={player.playerId} className="flex justify-between items-center p-2 bg-white/5 rounded">
-                            <span className="text-white">{player.playerName}</span>
-                            <Badge variant="secondary">{votes} votes</Badge>
+                  <CardContent>
+                    {result.question.type === 'yes_no' ? (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-400">
+                            {
+                              result.answers.filter(
+                                (a: PlayerAnswer) => a.answer === 'yes'
+                              ).length
+                            }
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                 </CardContent>
-               </Card>
+                          <div className="text-green-300">Yes</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-red-400">
+                            {
+                              result.answers.filter(
+                                (a: PlayerAnswer) => a.answer === 'no'
+                              ).length
+                            }
+                          </div>
+                          <div className="text-red-300">No</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {players.map(player => {
+                          const votes = result.answers.filter(
+                            (a: PlayerAnswer) => a.answer === player.playerId
+                          ).length;
+                          return (
+                            <div
+                              key={player.playerId}
+                              className="flex items-center justify-between rounded bg-white/5 p-2"
+                            >
+                              <span className="text-white">
+                                {player.playerName}
+                              </span>
+                              <Badge variant="secondary">{votes} votes</Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
 
           {currentPlayer.isHost && (
-            <Card className="bg-card/95 border-blue-500/50 backdrop-blur-sm shadow-xl mt-6">
+            <Card className="mt-6 border-blue-500/50 bg-card/95 shadow-xl backdrop-blur-sm">
               <CardContent className="p-4 text-center">
                 <Button
                   onClick={resetGame}

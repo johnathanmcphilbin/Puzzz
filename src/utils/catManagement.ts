@@ -22,7 +22,11 @@ export async function addCatCharacter(cat: NewCatCharacter) {
   try {
     // Ensure the filename uses dashes instead of spaces
     let cleanIconUrl = cat.icon_url;
-    if (cleanIconUrl && !cleanIconUrl.startsWith('http') && !cleanIconUrl.startsWith('/')) {
+    if (
+      cleanIconUrl &&
+      !cleanIconUrl.startsWith('http') &&
+      !cleanIconUrl.startsWith('/')
+    ) {
       // If it's just a filename, ensure it uses dashes and add /cats/ prefix
       cleanIconUrl = `/cats/${cleanIconUrl.replace(/\s+/g, '-')}`;
     }
@@ -39,9 +43,9 @@ export async function addCatCharacter(cat: NewCatCharacter) {
             stealth: 2,
             charisma: 2,
             strength: 2,
-            intelligence: 2
-          }
-        }
+            intelligence: 2,
+          },
+        },
       ])
       .select()
       .single();
@@ -82,13 +86,13 @@ export async function getAllCatCharacters() {
 
 /**
  * Example usage:
- * 
+ *
  * // Add a new cat with just a name and filename
  * await addCatCharacter({
  *   name: "Cool Cat",
  *   icon_url: "cool-cat.png"  // File should be in public/cats/
  * });
- * 
+ *
  * // Add a cat with custom stats
  * await addCatCharacter({
  *   name: "Super Cat",
@@ -96,4 +100,4 @@ export async function getAllCatCharacters() {
  *   description: "A heroic feline with amazing powers",
  *   stats: { speed: 5, stealth: 3, charisma: 4, strength: 5, intelligence: 4 }
  * });
- */ 
+ */

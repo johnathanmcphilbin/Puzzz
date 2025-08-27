@@ -36,7 +36,7 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
   room,
   players,
   currentPlayer,
-  onUpdateRoom
+  onUpdateRoom,
 }) => {
   const [selfie, setSelfie] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -50,7 +50,7 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
     try {
       setIsCapturing(true);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 640, height: 480 }
+        video: { facingMode: 'user', width: 640, height: 480 },
       });
       setStream(mediaStream);
       if (videoRef.current) {
@@ -76,15 +76,15 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
       const canvas = canvasRef.current;
       const video = videoRef.current;
       const context = canvas.getContext('2d');
-      
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context?.drawImage(video, 0, 0);
-      
+
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
       setSelfie(imageData);
       stopCamera();
-      
+
       // Immediately store the selfie so other players can see the progress
       try {
         const currentSelfies = room.gameState?.selfies || {};
@@ -95,10 +95,10 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
               ...currentSelfies,
               [currentPlayer.playerId]: {
                 name: currentPlayer.playerName,
-                selfie: imageData
-              }
-            }
-          }
+                selfie: imageData,
+              },
+            },
+          },
         });
         toast.success('Selfie captured and shared!');
       } catch (error) {
@@ -127,23 +127,32 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
         ...currentSelfies,
         [currentPlayer.playerId]: {
           name: currentPlayer.playerName,
-          selfie: selfie
-        }
+          selfie: selfie,
+        },
       };
 
       // Get all other players with selfies (excluding current player)
-      const otherPlayersWithSelfies = Object.keys(updatedSelfies).filter(id => id !== currentPlayer.playerId);
-      
+      const otherPlayersWithSelfies = Object.keys(updatedSelfies).filter(
+        id => id !== currentPlayer.playerId
+      );
+
       if (otherPlayersWithSelfies.length === 0) {
-        toast.error('No other players have selfies yet! Wait for others to take their photos.');
+        toast.error(
+          'No other players have selfies yet! Wait for others to take their photos.'
+        );
         setIsMatching(false);
         return;
       }
 
       // Select random player for matching
-      const randomPlayerId = otherPlayersWithSelfies[Math.floor(Math.random() * otherPlayersWithSelfies.length)];
-      const matchedPlayer = randomPlayerId ? updatedSelfies[randomPlayerId] : null;
-      
+      const randomPlayerId =
+        otherPlayersWithSelfies[
+          Math.floor(Math.random() * otherPlayersWithSelfies.length)
+        ];
+      const matchedPlayer = randomPlayerId
+        ? updatedSelfies[randomPlayerId]
+        : null;
+
       if (!matchedPlayer) {
         toast.error('Selected player data not found!');
         setIsMatching(false);
@@ -151,19 +160,22 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
       }
 
       // Call AI drama engine
-      const { data, error } = await supabase.functions.invoke('drama-matching', {
-        body: {
-          player1: {
-            name: currentPlayer.playerName,
-            selfie: selfie
+      const { data, error } = await supabase.functions.invoke(
+        'drama-matching',
+        {
+          body: {
+            player1: {
+              name: currentPlayer.playerName,
+              selfie: selfie,
+            },
+            player2: matchedPlayer,
           },
-          player2: matchedPlayer
         }
-      });
+      );
 
       if (error) throw error;
 
-// Create a unique match ID and store the result in room state
+      // Create a unique match ID and store the result in room state
       const matchId = `${currentPlayer.playerId}-${randomPlayerId}-${Date.now()}`;
       const matchResult = {
         ...data,
@@ -180,8 +192,8 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
           ...room.gameState,
           selfies: updatedSelfies,
           matches: [...existingMatches, matchResult],
-          latestMatchId: matchId
-        }
+          latestMatchId: matchId,
+        },
       });
 
       setMatchResult(matchResult);
@@ -204,51 +216,65 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
   const currentSelfies = room.gameState?.selfies || {};
   const playersWithSelfies = Object.keys(currentSelfies).length;
   const totalPlayers = players.length;
-  const currentPlayerHasSelfie = currentSelfies[currentPlayer.playerId] !== undefined;
+  const currentPlayerHasSelfie =
+    currentSelfies[currentPlayer.playerId] !== undefined;
 
   // Check if there's a recent match involving this player
-React.useEffect(() => {
+  React.useEffect(() => {
     const matches = room.gameState?.matches || [];
-    const latestMatch = matches.find((match: any) => 
-      match.player1Id === currentPlayer.playerId || 
-      match.player2Id === currentPlayer.playerId ||
-      // Fallback for older entries stored by name
-      match.player1?.name === currentPlayer.playerName || 
-      match.player2?.name === currentPlayer.playerName
+    const latestMatch = matches.find(
+      (match: any) =>
+        match.player1Id === currentPlayer.playerId ||
+        match.player2Id === currentPlayer.playerId ||
+        // Fallback for older entries stored by name
+        match.player1?.name === currentPlayer.playerName ||
+        match.player2?.name === currentPlayer.playerName
     );
-    
+
     if (latestMatch && !matchResult) {
       setMatchResult(latestMatch);
     }
-  }, [room.gameState?.matches, currentPlayer.playerId, currentPlayer.playerName, matchResult]);
+  }, [
+    room.gameState?.matches,
+    currentPlayer.playerId,
+    currentPlayer.playerName,
+    matchResult,
+  ]);
 
   return (
-    <div className="min-h-screen gradient-bg p-4">
-      <div className="max-w-4xl mx-auto">
-        <Card className="bg-black/20 border-pink-500/30 backdrop-blur-sm">
+    <div className="gradient-bg min-h-screen p-4">
+      <div className="mx-auto max-w-4xl">
+        <Card className="border-pink-500/30 bg-black/20 backdrop-blur-sm">
           <CardHeader className="text-center">
-            <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
+            <CardTitle className="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-4xl font-bold text-transparent">
               🎭 Dramamatching
             </CardTitle>
-            <p className="text-pink-200 text-lg">
-              Snap a selfie and let our AI Drama Engine reveal your destined connections!
+            <p className="text-lg text-pink-200">
+              Snap a selfie and let our AI Drama Engine reveal your destined
+              connections!
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Progress Counter */}
             <div className="text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Badge variant="secondary" className="bg-pink-500/20 text-pink-300 border-pink-400 px-4 py-2">
+              <div className="mb-4 flex items-center justify-center gap-3">
+                <Badge
+                  variant="secondary"
+                  className="border-pink-400 bg-pink-500/20 px-4 py-2 text-pink-300"
+                >
                   📸 {playersWithSelfies}/{totalPlayers} players have selfies
                 </Badge>
                 {currentPlayerHasSelfie && (
-                  <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-400">
+                  <Badge
+                    variant="secondary"
+                    className="border-green-400 bg-green-500/20 text-green-300"
+                  >
                     ✅ You're ready!
                   </Badge>
                 )}
               </div>
               {currentPlayerHasSelfie && playersWithSelfies < totalPlayers && (
-                <p className="text-pink-300 text-sm mb-4">
+                <p className="mb-4 text-sm text-pink-300">
                   Waiting for other players to take their selfies...
                 </p>
               )}
@@ -257,11 +283,11 @@ React.useEffect(() => {
             {!matchResult ? (
               <>
                 {/* Selfie Capture Section */}
-                <div className="text-center space-y-4">
+                <div className="space-y-4 text-center">
                   {!selfie && !isCapturing && (
                     <Button
                       onClick={startCamera}
-                      className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-bold py-3 px-6 rounded-full"
+                      className="rounded-full bg-gradient-to-r from-pink-500 to-purple-500 px-6 py-3 font-bold text-white hover:from-pink-600 hover:to-purple-600"
                     >
                       <Camera className="mr-2 h-5 w-5" />
                       Take Your Selfie
@@ -274,10 +300,13 @@ React.useEffect(() => {
                         ref={videoRef}
                         autoPlay
                         playsInline
-                        className="w-64 h-64 mx-auto rounded-full border-4 border-pink-500 object-cover"
+                        className="mx-auto h-64 w-64 rounded-full border-4 border-pink-500 object-cover"
                       />
-                      <div className="flex gap-2 justify-center">
-                        <Button onClick={takeSelfie} className="bg-pink-500 hover:bg-pink-600">
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          onClick={takeSelfie}
+                          className="bg-pink-500 hover:bg-pink-600"
+                        >
                           📸 Capture
                         </Button>
                         <Button onClick={stopCamera} variant="outline">
@@ -292,9 +321,9 @@ React.useEffect(() => {
                       <img
                         src={selfie}
                         alt="Your selfie"
-                        className="w-64 h-64 mx-auto rounded-full border-4 border-pink-500 object-cover"
+                        className="mx-auto h-64 w-64 rounded-full border-4 border-pink-500 object-cover"
                       />
-                      <div className="flex gap-2 justify-center">
+                      <div className="flex justify-center gap-2">
                         <Button onClick={retakeSelfie} variant="outline">
                           <RefreshCw className="mr-2 h-4 w-4" />
                           Retake
@@ -304,7 +333,9 @@ React.useEffect(() => {
                           disabled={isMatching}
                           className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                         >
-                          {isMatching ? '🔮 Analyzing Drama...' : '🎭 Find My Dramamatch!'}
+                          {isMatching
+                            ? '🔮 Analyzing Drama...'
+                            : '🎭 Find My Dramamatch!'}
                         </Button>
                       </div>
                     </div>
@@ -317,38 +348,51 @@ React.useEffect(() => {
               /* Match Result Display */
               <div className="space-y-6">
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold text-pink-300 mb-4">🤯 AI DRAMA ENGINE RESULTS</h3>
+                  <h3 className="mb-4 text-2xl font-bold text-pink-300">
+                    🤯 AI DRAMA ENGINE RESULTS
+                  </h3>
                 </div>
 
                 {/* Player Comparison Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-3">
                   {/* Player 1 */}
                   <div className="text-center">
                     <img
                       src={matchResult.player1.selfie}
                       alt={matchResult.player1.name}
-                      className="w-32 h-32 mx-auto rounded-full border-4 border-pink-500 object-cover mb-2"
+                      className="mx-auto mb-2 h-32 w-32 rounded-full border-4 border-pink-500 object-cover"
                     />
-                    <p className="text-pink-200 font-semibold">🧍‍♂️ {matchResult.player1.name}</p>
+                    <p className="font-semibold text-pink-200">
+                      🧍‍♂️ {matchResult.player1.name}
+                    </p>
                   </div>
 
                   {/* Drama Scores */}
-                  <div className="text-center space-y-3">
-                    <div className="flex justify-center items-center gap-2">
+                  <div className="space-y-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <Heart className="h-5 w-5 text-red-400" />
-                      <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-400">
+                      <Badge
+                        variant="secondary"
+                        className="border-red-400 bg-red-500/20 text-red-300"
+                      >
                         Romance: {matchResult.romance}%
                       </Badge>
                     </div>
-                    <div className="flex justify-center items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <Users className="h-5 w-5 text-blue-400" />
-                      <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-400">
+                      <Badge
+                        variant="secondary"
+                        className="border-blue-400 bg-blue-500/20 text-blue-300"
+                      >
                         Friends: {matchResult.friendship}%
                       </Badge>
                     </div>
-                    <div className="flex justify-center items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <Zap className="h-5 w-5 text-yellow-400" />
-                      <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300 border-yellow-400">
+                      <Badge
+                        variant="secondary"
+                        className="border-yellow-400 bg-yellow-500/20 text-yellow-300"
+                      >
                         Enemies: {matchResult.enemies}%
                       </Badge>
                     </div>
@@ -359,15 +403,17 @@ React.useEffect(() => {
                     <img
                       src={matchResult.player2.selfie}
                       alt={matchResult.player2.name}
-                      className="w-32 h-32 mx-auto rounded-full border-4 border-purple-500 object-cover mb-2"
+                      className="mx-auto mb-2 h-32 w-32 rounded-full border-4 border-purple-500 object-cover"
                     />
-                    <p className="text-purple-200 font-semibold">🧍‍♀️ {matchResult.player2.name}</p>
+                    <p className="font-semibold text-purple-200">
+                      🧍‍♀️ {matchResult.player2.name}
+                    </p>
                   </div>
                 </div>
 
                 {/* AI Commentary */}
-                <div className="bg-black/30 rounded-lg p-4 border border-pink-500/30">
-                  <p className="text-pink-200 text-center italic text-lg">
+                <div className="rounded-lg border border-pink-500/30 bg-black/30 p-4">
+                  <p className="text-center text-lg italic text-pink-200">
                     🔊 "{matchResult.commentary}"
                   </p>
                 </div>

@@ -6,7 +6,11 @@ interface UseTimerOptions {
   autoStart?: boolean;
 }
 
-export const useTimer = ({ initialTime, onTimeUp, autoStart = false }: UseTimerOptions) => {
+export const useTimer = ({
+  initialTime,
+  onTimeUp,
+  autoStart = false,
+}: UseTimerOptions) => {
   const [time, setTime] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(autoStart);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,7 +42,7 @@ export const useTimer = ({ initialTime, onTimeUp, autoStart = false }: UseTimerO
   useEffect(() => {
     if (isRunning && time > 0) {
       intervalRef.current = setInterval(() => {
-        setTime((prevTime) => {
+        setTime(prevTime => {
           if (prevTime <= 1) {
             setIsRunning(false);
             onTimeUp?.();
@@ -75,6 +79,6 @@ export const useTimer = ({ initialTime, onTimeUp, autoStart = false }: UseTimerO
     reset,
     restart,
     formatTime: formatTime(time),
-    progress: ((initialTime - time) / initialTime) * 100
+    progress: ((initialTime - time) / initialTime) * 100,
   };
 };

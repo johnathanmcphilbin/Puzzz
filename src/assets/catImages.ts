@@ -35,17 +35,17 @@ export const STATIC_CATS = [
  */
 export const getCatImageUrl = (iconUrl: string | null): string => {
   if (!iconUrl) return '/placeholder.svg';
-  
+
   // If it's already a full URL, return as is
   if (iconUrl.startsWith('http')) {
     return iconUrl;
   }
-  
+
   // If it starts with /, it's already a public path (including /lovable-uploads/)
   if (iconUrl.startsWith('/')) {
     return iconUrl;
   }
-  
+
   // Otherwise, assume it's a filename in the public/cats folder
   return `/cats/${iconUrl}`;
 };

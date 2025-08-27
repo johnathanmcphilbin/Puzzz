@@ -20,5 +20,5 @@ export {
   formsGameImg,
   puzzlePanicImg,
   aiChatbotImg,
-  partyGamesHeaderImg
+  partyGamesHeaderImg,
 };

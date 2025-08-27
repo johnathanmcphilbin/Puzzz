@@ -2,8 +2,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { getCatImageUrl } from '@/assets/catImages';
 import type { Room, Player } from '@/types/room';
@@ -15,8 +26,20 @@ interface CoupGameProps {
   onUpdateRoom: (room: Room) => void;
 }
 
-type CoupRole = 'ballet-cat' | 'dino-cat' | 'aura-cat' | 'chill-cat' | 'princess-cat';
-type ActionType = 'income' | 'foreign-aid' | 'tax' | 'steal' | 'exchange' | 'assassinate' | 'coup';
+type CoupRole =
+  | 'ballet-cat'
+  | 'dino-cat'
+  | 'aura-cat'
+  | 'chill-cat'
+  | 'princess-cat';
+type ActionType =
+  | 'income'
+  | 'foreign-aid'
+  | 'tax'
+  | 'steal'
+  | 'exchange'
+  | 'assassinate'
+  | 'coup';
 
 interface CoupCard {
   id: string;
@@ -40,7 +63,13 @@ interface GameAction {
 }
 
 interface GameState {
-  phase: 'waiting' | 'playing' | 'action-pending' | 'challenge-pending' | 'block-pending' | 'game-over';
+  phase:
+    | 'waiting'
+    | 'playing'
+    | 'action-pending'
+    | 'challenge-pending'
+    | 'block-pending'
+    | 'game-over';
   currentTurnPlayer: string;
   players: CoupPlayer[];
   deck: CoupRole[];
@@ -58,39 +87,44 @@ const COUP_ROLES = {
     icon: 'ballet-cat.jpg',
     description: 'Can collect 3 coins (Tax) and block Foreign Aid',
     actions: ['tax'] as ActionType[],
-    blocks: ['foreign-aid'] as ActionType[]
+    blocks: ['foreign-aid'] as ActionType[],
   },
   'dino-cat': {
     name: 'Dino Cat',
     icon: 'dino-cat.jpg',
     description: 'Can pay 3 coins to eliminate an influence',
     actions: ['assassinate'] as ActionType[],
-    blocks: [] as ActionType[]
+    blocks: [] as ActionType[],
   },
   'aura-cat': {
     name: 'Aura Cat',
     icon: 'auracat.png',
     description: 'Can steal 2 coins from another player',
     actions: ['steal'] as ActionType[],
-    blocks: ['steal'] as ActionType[]
+    blocks: ['steal'] as ActionType[],
   },
   'chill-cat': {
     name: 'Chill Cat',
     icon: 'chill-cat.jpg',
     description: 'Can exchange cards and block stealing',
     actions: ['exchange'] as ActionType[],
-    blocks: ['steal'] as ActionType[]
+    blocks: ['steal'] as ActionType[],
   },
   'princess-cat': {
     name: 'Princess Cat',
     icon: 'king-cat.jpg', // Using king-cat as princess
     description: 'Can block assassination attempts',
     actions: [] as ActionType[],
-    blocks: ['assassinate'] as ActionType[]
-  }
+    blocks: ['assassinate'] as ActionType[],
+  },
 };
 
-export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }: CoupGameProps) {
+export default function CoupGame({
+  room,
+  players,
+  currentPlayer,
+  onUpdateRoom,
+}: CoupGameProps) {
   const { toast } = useToast();
   const [gameState, setGameState] = useState<GameState>(() => ({
     phase: 'waiting',
@@ -98,7 +132,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
     players: [],
     deck: [],
     treasury: 50,
-    actionLog: []
+    actionLog: [],
   }));
 
   const [showActionDialog, setShowActionDialog] = useState(false);
@@ -118,7 +152,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
       }
     });
 
-    // Shuffle deck  
+    // Shuffle deck
     for (let i = deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       const temp = deck[i]!;
@@ -134,7 +168,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
         influences.push({
           id: `${player.id}-${i}`,
           role,
-          revealed: false
+          revealed: false,
         });
       }
       return {
@@ -142,7 +176,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
         name: player.playerName,
         coins: 2,
         influences,
-        eliminated: false
+        eliminated: false,
       };
     });
 
@@ -151,8 +185,10 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
       currentTurnPlayer: players[0]?.id || '',
       players: gamePlayers,
       deck,
-      treasury: 50 - (players.length * 2),
-      actionLog: ['Game started! Each player starts with 2 coins and 2 influence cards.']
+      treasury: 50 - players.length * 2,
+      actionLog: [
+        'Game started! Each player starts with 2 coins and 2 influence cards.',
+      ],
     };
 
     setGameState(newGameState);
@@ -162,7 +198,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
   const updateRoomGameState = (newState: GameState) => {
     const updatedRoom = {
       ...room,
-      gameState: newState
+      gameState: newState,
     };
     onUpdateRoom(updatedRoom);
   };
@@ -181,34 +217,38 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
 
     if (action === 'coup' && player.coins < 7) return false;
     if (action === 'assassinate' && player.coins < 3) return false;
-    
+
     return true;
   };
 
-  const performAction = (action: ActionType, targetId?: string, role?: CoupRole) => {
+  const performAction = (
+    action: ActionType,
+    targetId?: string,
+    role?: CoupRole
+  ) => {
     const pendingAction: GameAction = {
       type: action,
       playerId: currentPlayer.id,
       targetId,
-      role
+      role,
     };
 
     // Check if action can be challenged or blocked
     const challengeable = ['tax', 'steal', 'exchange', 'assassinate'];
     const blockable = ['foreign-aid', 'steal', 'assassinate'];
-    
+
     if (challengeable.includes(action)) {
       setGameState(prev => {
         const newState = {
           ...prev,
           phase: 'challenge-pending' as const,
           pendingAction,
-          challengeTimer: 10
+          challengeTimer: 10,
         };
         updateRoomGameState(newState);
         return newState;
       });
-      
+
       // Auto-resolve if no challenge after timer
       setTimeout(() => {
         setGameState(prev => {
@@ -218,7 +258,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
               const newState = {
                 ...prev,
                 phase: 'block-pending' as const,
-                blockTimer: 10
+                blockTimer: 10,
               };
               updateRoomGameState(newState);
               return newState;
@@ -238,12 +278,12 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
           ...prev,
           phase: 'block-pending' as const,
           pendingAction,
-          blockTimer: 10
+          blockTimer: 10,
         };
         updateRoomGameState(newState);
         return newState;
       });
-      
+
       setTimeout(() => {
         setGameState(prev => {
           if (prev.phase === 'block-pending') {
@@ -269,7 +309,9 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
 
     const action = state.pendingAction;
     const player = state.players.find(p => p.id === action.playerId)!;
-    const target = action.targetId ? state.players.find(p => p.id === action.targetId) : null;
+    const target = action.targetId
+      ? state.players.find(p => p.id === action.targetId)
+      : null;
 
     let newState = { ...state };
     let logMessage = '';
@@ -328,7 +370,9 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
     }
 
     // Move to next player
-    const currentIndex = state.players.findIndex(p => p.id === state.currentTurnPlayer);
+    const currentIndex = state.players.findIndex(
+      p => p.id === state.currentTurnPlayer
+    );
     const nextIndex = (currentIndex + 1) % state.players.length;
     newState.currentTurnPlayer = state.players[nextIndex]?.id || '';
 
@@ -348,20 +392,22 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
 
     // Check if actor has the required role
     const requiredRole = getRequiredRole(action.type);
-    const hasRole = actor.influences.some(inf => !inf.revealed && inf.role === requiredRole);
+    const hasRole = actor.influences.some(
+      inf => !inf.revealed && inf.role === requiredRole
+    );
 
     if (hasRole) {
       // Challenge failed - challenger loses influence
       toast({
-        title: "Challenge Failed!",
+        title: 'Challenge Failed!',
         description: `${actor.name} revealed ${COUP_ROLES[requiredRole].name}. You lose an influence.`,
-        variant: "destructive"
+        variant: 'destructive',
       });
       // Trigger influence loss for challenger
     } else {
       // Challenge succeeded - actor loses influence
       toast({
-        title: "Challenge Succeeded!",
+        title: 'Challenge Succeeded!',
         description: `${actor.name} was bluffing! They lose an influence.`,
       });
       // Trigger influence loss for actor
@@ -375,18 +421,23 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
     const blocker = getCurrentGamePlayer()!;
 
     // Check if the role can block this action
-    const canBlock = COUP_ROLES[blockingRole].blocks.includes(action.type as any);
+    const canBlock = COUP_ROLES[blockingRole].blocks.includes(
+      action.type as any
+    );
 
     if (canBlock) {
       setGameState(prev => {
         const newState = {
           ...prev,
           phase: 'challenge-pending' as const, // Block can be challenged
-          actionLog: [...prev.actionLog, `${blocker.name} attempts to block with ${COUP_ROLES[blockingRole].name}`],
+          actionLog: [
+            ...prev.actionLog,
+            `${blocker.name} attempts to block with ${COUP_ROLES[blockingRole].name}`,
+          ],
           pendingAction: {
             ...prev.pendingAction!,
-            role: blockingRole // Store which role was claimed for blocking
-          }
+            role: blockingRole, // Store which role was claimed for blocking
+          },
         };
         updateRoomGameState(newState);
         return newState;
@@ -396,19 +447,21 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
 
   const getRequiredRole = (action: ActionType): CoupRole => {
     const roleMap: Record<ActionType, CoupRole> = {
-      'income': 'ballet-cat', // Default
+      income: 'ballet-cat', // Default
       'foreign-aid': 'ballet-cat',
-      'tax': 'ballet-cat',
-      'steal': 'aura-cat',
-      'exchange': 'chill-cat',
-      'assassinate': 'dino-cat',
-      'coup': 'ballet-cat'
+      tax: 'ballet-cat',
+      steal: 'aura-cat',
+      exchange: 'chill-cat',
+      assassinate: 'dino-cat',
+      coup: 'ballet-cat',
     };
     return roleMap[action];
   };
 
   const getAvailableTargets = () => {
-    return (gameState.players || []).filter(p => p.id !== currentPlayer.id && !p.eliminated);
+    return (gameState.players || []).filter(
+      p => p.id !== currentPlayer.id && !p.eliminated
+    );
   };
 
   const renderPlayerCard = (player: CoupPlayer) => {
@@ -416,44 +469,51 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
     const isCurrentPlayer = player.id === currentPlayer.id;
 
     return (
-      <Card key={player.id} className={`${isCurrentTurn ? 'ring-2 ring-primary' : ''} ${player.eliminated ? 'opacity-50' : ''}`}>
+      <Card
+        key={player.id}
+        className={`${isCurrentTurn ? 'ring-2 ring-primary' : ''} ${player.eliminated ? 'opacity-50' : ''}`}
+      >
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm">{player.name}</CardTitle>
-            <Badge variant={isCurrentPlayer ? "default" : "secondary"}>
+            <Badge variant={isCurrentPlayer ? 'default' : 'secondary'}>
               {player.coins} coins
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2 mb-2">
+          <div className="mb-2 flex gap-2">
             {(player.influences || []).map((influence, index) => (
               <div
                 key={influence.id}
-                className={`w-12 h-16 rounded border-2 ${influence.revealed ? 'border-destructive' : 'border-primary'} bg-card flex items-center justify-center`}
+                className={`h-16 w-12 rounded border-2 ${influence.revealed ? 'border-destructive' : 'border-primary'} flex items-center justify-center bg-card`}
               >
                 {influence.revealed ? (
                   <img
                     src={getCatImageUrl(COUP_ROLES[influence.role].icon)}
                     alt={COUP_ROLES[influence.role].name}
-                    className="w-8 h-8 object-cover rounded"
+                    className="h-8 w-8 rounded object-cover"
                   />
                 ) : isCurrentPlayer ? (
                   // Only show actual cards to current player
                   <img
                     src={getCatImageUrl(COUP_ROLES[influence.role].icon)}
                     alt={COUP_ROLES[influence.role].name}
-                    className="w-8 h-8 object-cover rounded"
+                    className="h-8 w-8 rounded object-cover"
                   />
                 ) : (
                   // Show card back to other players
-                  <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">?</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded bg-muted text-xs">
+                    ?
+                  </div>
                 )}
               </div>
             ))}
           </div>
           {isCurrentTurn && (
-            <Badge variant="default" className="text-xs">Current Turn</Badge>
+            <Badge variant="default" className="text-xs">
+              Current Turn
+            </Badge>
           )}
         </CardContent>
       </Card>
@@ -475,24 +535,30 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
               <Button onClick={() => performAction('income')} variant="outline">
                 Income (+1 coin)
               </Button>
-              <Button onClick={() => performAction('foreign-aid')} variant="outline">
+              <Button
+                onClick={() => performAction('foreign-aid')}
+                variant="outline"
+              >
                 Foreign Aid (+2 coins)
               </Button>
               <Button onClick={() => performAction('tax')} variant="outline">
                 Tax - Ballet Cat (+3 coins)
               </Button>
-              <Button 
-                onClick={() => setShowActionDialog(true)} 
+              <Button
+                onClick={() => setShowActionDialog(true)}
                 variant="outline"
                 disabled={!getAvailableTargets().length}
               >
                 Steal - Aura Cat
               </Button>
-              <Button onClick={() => performAction('exchange')} variant="outline">
+              <Button
+                onClick={() => performAction('exchange')}
+                variant="outline"
+              >
                 Exchange - Chill Cat
               </Button>
-              <Button 
-                onClick={() => setShowActionDialog(true)} 
+              <Button
+                onClick={() => setShowActionDialog(true)}
                 variant="outline"
                 disabled={player.coins < 3 || !getAvailableTargets().length}
               >
@@ -500,13 +566,13 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
               </Button>
             </>
           )}
-          <Button 
+          <Button
             onClick={() => setShowActionDialog(true)}
             variant="destructive"
             disabled={player.coins < 7 || !getAvailableTargets().length}
-            className={mustCoup ? "col-span-2" : ""}
+            className={mustCoup ? 'col-span-2' : ''}
           >
-            {mustCoup ? "Coup (Required)" : "Coup (-7 coins)"}
+            {mustCoup ? 'Coup (Required)' : 'Coup (-7 coins)'}
           </Button>
         </div>
       </div>
@@ -514,7 +580,8 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
   };
 
   const renderChallengeDialog = () => {
-    if (gameState.phase !== 'challenge-pending' || !gameState.pendingAction) return null;
+    if (gameState.phase !== 'challenge-pending' || !gameState.pendingAction)
+      return null;
 
     const action = gameState.pendingAction;
     const actor = gameState.players.find(p => p.id === action.playerId)!;
@@ -527,7 +594,10 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
             <DialogTitle>Challenge Opportunity</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>{actor.name} claims to use {COUP_ROLES[getRequiredRole(action.type)].name} for {action.type}</p>
+            <p>
+              {actor.name} claims to use{' '}
+              {COUP_ROLES[getRequiredRole(action.type)].name} for {action.type}
+            </p>
             <p>Do you want to challenge this claim?</p>
             <div className="flex gap-2">
               {canChallenge && (
@@ -535,25 +605,28 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
                   Challenge
                 </Button>
               )}
-              <Button onClick={() => {
-                setGameState(prev => {
-                  // Check if action can be blocked after challenge phase
-                  const blockable = ['foreign-aid', 'steal', 'assassinate'];
-                  if (blockable.includes(prev.pendingAction!.type)) {
-                    const newState = {
-                      ...prev,
-                      phase: 'block-pending' as const,
-                      blockTimer: 10
-                    };
-                    updateRoomGameState(newState);
-                    return newState;
-                  } else {
-                    const newState = resolveAction(prev);
-                    updateRoomGameState(newState);
-                    return newState;
-                  }
-                });
-              }} variant="outline">
+              <Button
+                onClick={() => {
+                  setGameState(prev => {
+                    // Check if action can be blocked after challenge phase
+                    const blockable = ['foreign-aid', 'steal', 'assassinate'];
+                    if (blockable.includes(prev.pendingAction!.type)) {
+                      const newState = {
+                        ...prev,
+                        phase: 'block-pending' as const,
+                        blockTimer: 10,
+                      };
+                      updateRoomGameState(newState);
+                      return newState;
+                    } else {
+                      const newState = resolveAction(prev);
+                      updateRoomGameState(newState);
+                      return newState;
+                    }
+                  });
+                }}
+                variant="outline"
+              >
                 Allow
               </Button>
             </div>
@@ -564,7 +637,8 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
   };
 
   const renderBlockDialog = () => {
-    if (gameState.phase !== 'block-pending' || !gameState.pendingAction) return null;
+    if (gameState.phase !== 'block-pending' || !gameState.pendingAction)
+      return null;
 
     const action = gameState.pendingAction;
     const actor = gameState.players.find(p => p.id === action.playerId)!;
@@ -572,7 +646,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
     const targetedPlayer = action.targetId === currentPlayer.id;
 
     // Get possible blocking roles for this action
-    const blockingRoles = Object.entries(COUP_ROLES).filter(([role, data]) => 
+    const blockingRoles = Object.entries(COUP_ROLES).filter(([role, data]) =>
       data.blocks.includes(action.type as any)
     );
 
@@ -583,29 +657,37 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
             <DialogTitle>Block Opportunity</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>{actor.name} is attempting to {action.type}
-              {action.targetId ? ` against ${gameState.players.find(p => p.id === action.targetId)?.name}` : ''}
+            <p>
+              {actor.name} is attempting to {action.type}
+              {action.targetId
+                ? ` against ${gameState.players.find(p => p.id === action.targetId)?.name}`
+                : ''}
             </p>
-            {targetedPlayer && <p className="text-destructive font-medium">You are the target!</p>}
+            {targetedPlayer && (
+              <p className="font-medium text-destructive">
+                You are the target!
+              </p>
+            )}
             <p>Do you want to block this action?</p>
             <div className="flex flex-wrap gap-2">
-              {canBlock && blockingRoles.map(([role, data]) => (
-                <Button 
-                  key={role}
-                  onClick={() => blockAction(role as CoupRole)} 
-                  variant="secondary"
-                >
-                  Block with {data.name}
-                </Button>
-              ))}
-              <Button 
+              {canBlock &&
+                blockingRoles.map(([role, data]) => (
+                  <Button
+                    key={role}
+                    onClick={() => blockAction(role as CoupRole)}
+                    variant="secondary"
+                  >
+                    Block with {data.name}
+                  </Button>
+                ))}
+              <Button
                 onClick={() => {
                   setGameState(prev => {
                     const newState = resolveAction(prev);
                     updateRoomGameState(newState);
                     return newState;
                   });
-                }} 
+                }}
                 variant="outline"
               >
                 Allow Action
@@ -625,23 +707,26 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
 
   if (gameState.phase === 'waiting') {
     return (
-      <div className="container mx-auto p-4 space-y-6">
-        <div className="text-center space-y-4">
+      <div className="container mx-auto space-y-6 p-4">
+        <div className="space-y-4 text-center">
           <h1 className="text-3xl font-bold">Cat Conspiracy</h1>
           <p className="text-muted-foreground">
-            A game of deduction, deception, and cute cats! Each player gets 2 influence cards and must be the last one standing.
+            A game of deduction, deception, and cute cats! Each player gets 2
+            influence cards and must be the last one standing.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 max-w-4xl mx-auto">
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-5">
             {Object.entries(COUP_ROLES).map(([role, data]) => (
               <Card key={role}>
                 <CardContent className="p-4 text-center">
                   <img
                     src={getCatImageUrl(data.icon)}
                     alt={data.name}
-                    className="w-16 h-16 mx-auto mb-2 rounded object-cover"
+                    className="mx-auto mb-2 h-16 w-16 rounded object-cover"
                   />
-                  <h3 className="font-semibold text-sm">{data.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">{data.description}</p>
+                  <h3 className="text-sm font-semibold">{data.name}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {data.description}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -657,13 +742,15 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto space-y-6 p-4">
       <div className="text-center">
         <h1 className="text-2xl font-bold">Cat Conspiracy</h1>
-        <p className="text-muted-foreground">Treasury: {gameState.treasury} coins</p>
+        <p className="text-muted-foreground">
+          Treasury: {gameState.treasury} coins
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {(gameState.players || []).map(renderPlayerCard)}
       </div>
 
@@ -671,11 +758,13 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
       {renderChallengeDialog()}
       {renderBlockDialog()}
 
-      <div className="bg-muted p-4 rounded-lg">
-        <h3 className="font-semibold mb-2">Action Log</h3>
-        <div className="space-y-1 max-h-32 overflow-y-auto">
+      <div className="rounded-lg bg-muted p-4">
+        <h3 className="mb-2 font-semibold">Action Log</h3>
+        <div className="max-h-32 space-y-1 overflow-y-auto">
           {(gameState.actionLog || []).slice(-5).map((log, index) => (
-            <p key={index} className="text-sm">{log}</p>
+            <p key={index} className="text-sm">
+              {log}
+            </p>
           ))}
         </div>
       </div>
@@ -699,7 +788,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
               </SelectContent>
             </Select>
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={() => {
                   performAction('steal', selectedTarget);
                   setShowActionDialog(false);
@@ -709,7 +798,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
               >
                 Steal
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   performAction('assassinate', selectedTarget);
                   setShowActionDialog(false);
@@ -720,7 +809,7 @@ export default function CoupGame({ room, players, currentPlayer, onUpdateRoom }:
               >
                 Assassinate
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   performAction('coup', selectedTarget);
                   setShowActionDialog(false);
