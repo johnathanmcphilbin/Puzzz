@@ -31,7 +31,13 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{
+      backgroundImage: 'url(/src/assets/main-background.png)',
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed'
+    }}>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">
