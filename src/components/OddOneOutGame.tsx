@@ -1,34 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { useTimer } from '@/hooks/useTimer';
-import {
-  Users,
   Crown,
   Trophy,
-  MessageSquare,
   Play,
   StopCircle,
   Clock,
   ArrowLeft,
   LogOut,
-  Eye,
-  EyeOff,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { getCatImageUrl, STATIC_CATS } from '@/assets/catImages';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { useTimer } from '@/hooks/useTimer';
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 import { getActivePlayers } from '@/utils/roomState';
 
@@ -422,7 +412,7 @@ export function OddOneOutGame({
       vote_counts: voteCounts,
       suspected_imposter: tie ? null : suspectedImposter,
       was_imposter_caught: wasImposterCaught,
-      tie: tie,
+      tie,
       scores: newScores,
     });
   };

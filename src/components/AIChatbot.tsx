@@ -1,13 +1,14 @@
+import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Sparkles, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import 'regenerator-runtime/runtime';
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
@@ -125,7 +126,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
             },
             body: JSON.stringify({
               action: 'update',
-              roomCode: roomCode,
+              roomCode,
               updates: {
                 gameState: {
                   aiCustomization: userMessage,
@@ -146,7 +147,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
           body: {
             message: userMessage,
             action: 'chat',
-            customization: customization,
+            customization,
             crazynessLevel: crazynessLevel[0] ?? 50,
           },
         });

@@ -1,10 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import {
   CheckCircle,
   XCircle,
@@ -12,9 +5,16 @@ import {
   Crown,
   Loader2,
   ThumbsUp,
-  ThumbsDown,
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 
 interface NewFormsGameProps {
@@ -341,7 +341,7 @@ export const NewFormsGame: React.FC<NewFormsGameProps> = ({
     const allAnswers = gameState.allAnswers || [];
     const questionResults = {
       question: currentQuestion,
-      answers: answers,
+      answers,
       questionIndex: currentQuestionIndex,
     };
 

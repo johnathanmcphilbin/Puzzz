@@ -1,18 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+
+import { getCatImageUrl } from '@/assets/catImages';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { getCatImageUrl } from '@/assets/catImages';
-import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 import { supabase } from '@/integrations/supabase/client';
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface CatCharacter {
   id: string;
@@ -201,7 +200,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
         },
         body: JSON.stringify({
           action: 'update',
-          roomCode: roomCode,
+          roomCode,
           updates: { players: updatedPlayers },
         }),
       });
@@ -292,7 +291,7 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
                                   }
                                 }}
                               />
-                              <div className="flex hidden h-16 w-16 items-center justify-center rounded-full bg-gray-200">
+                              <div className="hidden h-16 w-16 items-center justify-center rounded-full bg-gray-200">
                                 🐱
                               </div>
                             </div>

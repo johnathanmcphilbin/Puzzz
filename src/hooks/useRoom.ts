@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   FUNCTIONS_BASE_URL,
   SUPABASE_ANON_KEY,
   safeDeepMerge,
 } from '@/utils/functions';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface Room {
   roomCode: string;
@@ -250,7 +251,7 @@ export const useRoom = (roomCode: string) => {
 
     return () => {
       supabase.removeChannel(channel);
-      console.log('[Room] unsubscribed channel room_' + roomCode);
+      console.log(`[Room] unsubscribed channel room_${roomCode}`);
     };
   }, [roomCode, room?.roomCode]); // Only depend on roomCode to avoid re-subscriptions
 

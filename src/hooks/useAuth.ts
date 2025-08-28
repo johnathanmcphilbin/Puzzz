@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -27,7 +26,8 @@ export const useAuth = () => {
         // Session verification is now handled through Redis room data
         try {
           // Check if player exists in any active room
-          if (true) {
+          // For now, assume session is valid if all required data exists
+          if (playerId && playerName && sessionToken) {
             setAuthState({
               isAuthenticated: true,
               playerId,

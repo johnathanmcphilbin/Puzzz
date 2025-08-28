@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
+
+import { getCatImageUrl } from '@/assets/catImages';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +18,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { getCatImageUrl } from '@/assets/catImages';
 import type { Room, Player } from '@/types/room';
 
 interface CoupGameProps {
@@ -313,7 +314,7 @@ export default function CoupGame({
       ? state.players.find(p => p.id === action.targetId)
       : null;
 
-    let newState = { ...state };
+    const newState = { ...state };
     let logMessage = '';
 
     switch (action.type) {

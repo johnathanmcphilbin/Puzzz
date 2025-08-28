@@ -1,14 +1,3 @@
-import { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import {
   Copy,
   Play,
@@ -19,14 +8,27 @@ import {
   UserX,
   Cat,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { CharacterSelection } from './CharacterSelection';
-import { getCatImageUrl } from '@/assets/catImages';
 import GameCustomizer from './GameCustomizer';
-import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
-import { supabase } from '@/integrations/supabase/client';
+
+import { getCatImageUrl } from '@/assets/catImages';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { FEATURES } from '@/config/featureFlags';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface Room {
   id: string;
@@ -263,7 +265,7 @@ export const RoomLobby = ({
           roomCode: room.room_code,
           updates: {
             currentGame: selectedGame,
-            gameState: gameState,
+            gameState,
           },
         }),
       });

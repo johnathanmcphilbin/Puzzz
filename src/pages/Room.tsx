@@ -1,33 +1,31 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useRoom } from '@/hooks/useRoom';
-import { RoomLobby } from '@/components/RoomLobby';
-import { WouldYouRatherGame } from '@/components/WouldYouRatherGame';
-import { ParanoiaGameV2 } from '@/components/ParanoiaGameV2';
-import { OddOneOutGame } from '@/components/OddOneOutGame';
-import { DemoDayGame } from '@/components/DemoDayGame';
-import { NewFormsGame } from '@/components/NewFormsGame';
-import { DramamatchingGame } from '@/components/DramamatchingGame';
-import { FEATURES } from '@/config/featureFlags';
-
-import { SayItOrPayItGame } from '@/components/SayItOrPayItGame';
-import { PuzzzPanicGame } from '@/components/PuzzzPanicGame';
-import CoupGame from '@/components/CoupGame';
-import AIChatbot from '@/components/AIChatbot';
 import { Loader2 } from 'lucide-react';
-import type { Room as LegacyRoom, Player as LegacyPlayer } from '@/types/room';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import CoupGame from '@/components/CoupGame';
+import { DemoDayGame } from '@/components/DemoDayGame';
+import { DramamatchingGame } from '@/components/DramamatchingGame';
+import { NewFormsGame } from '@/components/NewFormsGame';
+import { OddOneOutGame } from '@/components/OddOneOutGame';
+import { ParanoiaGameV2 } from '@/components/ParanoiaGameV2';
+import { PuzzzPanicGame } from '@/components/PuzzzPanicGame';
+import { RoomLobby } from '@/components/RoomLobby';
+import { SayItOrPayItGame } from '@/components/SayItOrPayItGame';
+import { WouldYouRatherGame } from '@/components/WouldYouRatherGame';
+import { FEATURES } from '@/config/featureFlags';
+import { useRoom } from '@/hooks/useRoom';
 
 export const Room = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
+
+  const { room, players, currentPlayer, loading, error, updateRoom, reload } =
+    useRoom(roomCode);
 
   // Redirect if no room code
   if (!roomCode) {
     navigate('/');
     return null;
   }
-
-  const { room, players, currentPlayer, loading, error, updateRoom, reload } =
-    useRoom(roomCode);
 
   if (loading) {
     return (

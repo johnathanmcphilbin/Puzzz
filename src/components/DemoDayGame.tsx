@@ -1,20 +1,11 @@
+import { Crown, Users, CheckCircle, XCircle, Sparkles } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
+
+import { getCatImageUrl } from '@/assets/catImages';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-  Crown,
-  Users,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  MessageSquare,
-  Send,
-  Sparkles,
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { getCatImageUrl } from '@/assets/catImages';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Question {
   id: string;

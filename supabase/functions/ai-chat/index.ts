@@ -346,7 +346,7 @@ serve(async req => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: temperature,
+        temperature,
         max_tokens: action === 'chat' ? 200 : 1000,
       }),
     });
@@ -371,7 +371,7 @@ serve(async req => {
     return new Response(
       JSON.stringify({
         response: generatedText,
-        action: action,
+        action,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

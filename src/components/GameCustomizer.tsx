@@ -1,13 +1,14 @@
+import { Sparkles, Loader2, Wand2, Users, Zap } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Loader2, Wand2, Users, Zap, Check } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface GameCustomizerProps {
@@ -55,7 +56,7 @@ const GameCustomizer: React.FC<GameCustomizerProps> = ({
         },
         body: JSON.stringify({
           action: 'update',
-          roomCode: roomCode,
+          roomCode,
           updates: {
             gameState: {
               aiCustomization: customization.trim(),

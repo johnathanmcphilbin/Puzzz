@@ -1,4 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
+
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface AnalyticsContextType {

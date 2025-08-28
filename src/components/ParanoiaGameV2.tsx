@@ -1,23 +1,16 @@
-import { useState, useEffect } from 'react';
+import { Users, Crown, Play, Clock, ArrowLeft, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { CoinFlip3D } from './CoinFlip3D';
+import { ParanoiaPlayerCircle } from './ParanoiaPlayerCircle';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { supabase } from '@/integrations/supabase/client';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Crown, Play, Clock, ArrowLeft, LogOut } from 'lucide-react';
-import { CoinFlip3D } from './CoinFlip3D';
-import { useNavigate } from 'react-router-dom';
-import { ParanoiaPlayerCircle } from './ParanoiaPlayerCircle';
 import { useParanoiaGame } from '@/hooks/useParanoiaGame';
 import { useParanoiaTimer } from '@/hooks/useParanoiaTimer';
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';

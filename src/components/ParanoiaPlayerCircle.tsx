@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { getCatImageUrl } from '@/assets/catImages';
 import { Coins } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { getCatImageUrl } from '@/assets/catImages';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Player {
   id: string;

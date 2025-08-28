@@ -1,15 +1,20 @@
+import { Info, User } from 'lucide-react';
 import { useState } from 'react';
+
+import {
+  wouldYouRatherImg,
+  paranoiaGameImg,
+  oddOneOutImg,
+  sayItOrPayItImg,
+  catConspiracyImg,
+  formsGameImg,
+  puzzlePanicImg,
+} from '@/assets/gameImages';
+import { AuthDialog } from '@/components/AuthDialog';
 import { CreateRoom } from '@/components/CreateRoom';
 import { JoinRoom } from '@/components/JoinRoom';
-import { AuthDialog } from '@/components/AuthDialog';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -17,18 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Info, User } from 'lucide-react';
 import { FEATURES } from '@/config/featureFlags';
-import {
-  wouldYouRatherImg,
-  paranoiaGameImg,
-  oddOneOutImg,
-  coupGameImg,
-  sayItOrPayItImg,
-  catConspiracyImg,
-  formsGameImg,
-  puzzlePanicImg,
-} from '@/assets/gameImages';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<'create' | 'join'>('create');

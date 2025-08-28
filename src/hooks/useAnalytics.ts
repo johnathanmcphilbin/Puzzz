@@ -1,6 +1,6 @@
+import posthog from 'posthog-js';
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import posthog from 'posthog-js';
 
 // Generate a unique session ID
 const generateSessionId = () => {

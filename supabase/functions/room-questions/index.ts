@@ -4,7 +4,7 @@ import 'https://deno.land/x/xhr@0.1.0/mod.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const functionsUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1';
+const functionsUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1`;
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
 const corsHeaders = {
@@ -444,13 +444,13 @@ serve(async req => {
       // Update room state with AI questions
       const updatePayload = {
         action: 'update',
-        roomCode: roomCode,
+        roomCode,
         updates: {
           gameState: {
-            aiQuestions: aiQuestions,
+            aiQuestions,
             aiCustomization: customization,
             questionsGenerated: true,
-            crazynessLevel: crazynessLevel,
+            crazynessLevel,
             generatedForGame: gameType,
           },
         },
@@ -518,13 +518,13 @@ serve(async req => {
         },
         body: JSON.stringify({
           action: 'update',
-          roomCode: roomCode,
+          roomCode,
           updates: {
             gameState: {
               aiCustomization: customization,
-              customQuestions: customQuestions,
+              customQuestions,
               questionsGenerated: true,
-              crazynessLevel: crazynessLevel,
+              crazynessLevel,
               generatedForGame: gameType,
             },
           },
@@ -557,8 +557,8 @@ serve(async req => {
         success: true,
         message: `Generated ${questions.questions?.length || 0} custom ${gameDisplayName} questions for your room!`,
         count: questions.questions?.length || 0,
-        gameType: gameType,
-        crazynessLevel: crazynessLevel,
+        gameType,
+        crazynessLevel,
         crazynessDescription: crazynessConfig.description,
       }),
       {

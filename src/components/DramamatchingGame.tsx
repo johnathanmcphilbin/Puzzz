@@ -1,9 +1,10 @@
-import React, { useState, useRef, useCallback } from 'react';
+import { Camera, Heart, Users, Zap, RefreshCw } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Camera, Heart, Users, Zap, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DramamatchingGameProps {
@@ -127,7 +128,7 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
         ...currentSelfies,
         [currentPlayer.playerId]: {
           name: currentPlayer.playerName,
-          selfie: selfie,
+          selfie,
         },
       };
 
@@ -166,7 +167,7 @@ export const DramamatchingGame: React.FC<DramamatchingGameProps> = ({
           body: {
             player1: {
               name: currentPlayer.playerName,
-              selfie: selfie,
+              selfie,
             },
             player2: matchedPlayer,
           },

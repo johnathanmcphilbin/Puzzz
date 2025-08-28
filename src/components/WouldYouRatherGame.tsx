@@ -1,25 +1,3 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { supabase } from '@/integrations/supabase/client';
-import type { Tables } from '@/integrations/supabase/types';
-import { useToast } from '@/hooks/use-toast';
-import { useTimer } from '@/hooks/useTimer';
 import {
   ChevronRight,
   Users,
@@ -29,8 +7,24 @@ import {
   ArrowLeft,
   LogOut,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { getCatImageUrl } from '@/assets/catImages';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { useTimer } from '@/hooks/useTimer';
+import { supabase } from '@/integrations/supabase/client';
 import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY } from '@/utils/functions';
 
 interface Room {
@@ -326,13 +320,13 @@ export const WouldYouRatherGame = ({
       const updatedGameState = {
         ...gameState,
         votes: newVotes,
-        currentQuestion: currentQuestion,
+        currentQuestion,
       };
 
       await onUpdateRoom({
         gameState: {
           votes: newVotes,
-          currentQuestion: currentQuestion,
+          currentQuestion,
         },
       } as any);
       // no-op error handling here; onUpdateRoom shows toast on failure via useRoom

@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
   Trophy,
-  Clock,
   Zap,
   ArrowUp,
   ArrowDown,
   ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import React, { useState, useEffect, useRef } from 'react';
+
 import { STATIC_CATS, getCatImageUrl } from '@/assets/catImages';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Challenge {
@@ -320,10 +318,6 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
     challengeOrder[currentChallengeIndex] ?? currentChallengeIndex;
   const challenge = CHALLENGES[challengeIndex % CHALLENGES.length];
 
-  if (!challenge) {
-    return <div>Loading challenge...</div>;
-  }
-
   // Determine if current player is host
   const isHost = currentPlayer?.isHost || false;
 
@@ -480,6 +474,11 @@ export const PuzzzPanicGame: React.FC<PuzzzPanicGameProps> = ({
       }
     }
   }, [room.gameState?.breakStart, breakTime, gamePhase]);
+
+  // Early return for invalid challenge
+  if (!challenge) {
+    return <div>Loading challenge...</div>;
+  }
 
   // Initialize challenge when it starts
   useEffect(() => {

@@ -1,5 +1,6 @@
-import React from 'react';
 import { Volume2, VolumeX, Play, Pause } from 'lucide-react';
+import React from 'react';
+
 import { Button } from '@/components/ui/button';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 
