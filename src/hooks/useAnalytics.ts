@@ -1,6 +1,6 @@
+import posthog from 'posthog-js';
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import posthog from 'posthog-js';
 
 // Generate a unique session ID
 const generateSessionId = () => {
@@ -25,17 +25,17 @@ export const useAnalytics = () => {
   // Track page views
   useEffect(() => {
     const currentPath = location.pathname;
-    
+
     // Don't track the same page twice in a row
     if (lastPageRef.current === currentPath) return;
-    
+
     lastPageRef.current = currentPath;
 
     const trackPageView = async () => {
       try {
         posthog.capture('$pageview', {
           $current_url: currentPath,
-          session_id: sessionId.current
+          session_id: sessionId.current,
         });
         console.log('Page view tracked:', currentPath);
       } catch (error) {
@@ -48,7 +48,7 @@ export const useAnalytics = () => {
 
   // Track custom events
   const trackEvent = async (
-    eventType: string, 
+    eventType: string,
     metadata: Record<string, any> = {},
     roomCode?: string,
     gameType?: string
@@ -58,9 +58,13 @@ export const useAnalytics = () => {
         ...metadata,
         room_code: roomCode,
         game_type: gameType,
-        session_id: sessionId.current
+        session_id: sessionId.current,
       });
-      console.log('Event tracked:', eventType, { metadata, roomCode, gameType });
+      console.log('Event tracked:', eventType, {
+        metadata,
+        roomCode,
+        gameType,
+      });
     } catch (error) {
       console.error('Event tracking error:', error);
     }
@@ -68,7 +72,13 @@ export const useAnalytics = () => {
 
   // Track game events specifically
   const trackGameEvent = (
-    eventType: 'game_start' | 'game_end' | 'player_join' | 'player_leave' | 'question_answered' | 'round_complete',
+    eventType:
+      | 'game_start'
+      | 'game_end'
+      | 'player_join'
+      | 'player_leave'
+      | 'question_answered'
+      | 'round_complete',
     gameType: string,
     roomCode: string,
     metadata: Record<string, any> = {}
@@ -88,6 +98,6 @@ export const useAnalytics = () => {
     trackEvent,
     trackGameEvent,
     trackInteraction,
-    sessionId: sessionId.current
+    sessionId: sessionId.current,
   };
 };

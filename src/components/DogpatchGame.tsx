@@ -1,9 +1,17 @@
+import {
+  Crown,
+  Users,
+  SkipForward,
+  CheckCircle,
+  XCircle,
+  Loader2,
+} from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+
+import { getCatImageUrl } from '@/assets/catImages';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Crown, Users, SkipForward, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { getCatImageUrl } from '@/assets/catImages';
 
 interface Question {
   id: string;
@@ -50,14 +58,19 @@ interface DogpatchGameProps {
 // Single question with Tim
 const questionsData: Omit<Question, 'options'>[] = [
   {
-    id: "6",
+    id: '6',
     image: '/6.png',
-    correctAnswer: 'Tim'
-  }
+    correctAnswer: 'Tim',
+  },
 ];
 
 // Specific options for the Tim question
-const timQuestionOptions = ['Tim', 'Patrick Walsh', 'Lucy Daly', 'Lynetta Wang'];
+const timQuestionOptions = [
+  'Tim',
+  'Patrick Walsh',
+  'Lucy Daly',
+  'Lynetta Wang',
+];
 
 // Function to shuffle array
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -76,10 +89,10 @@ const generateQuestions = (): Question[] => {
   return questionsData.map(questionData => {
     // Use the specific options and shuffle them
     const shuffledOptions = shuffleArray([...timQuestionOptions]);
-    
+
     return {
       ...questionData,
-      options: shuffledOptions
+      options: shuffledOptions,
     };
   });
 };
@@ -90,15 +103,27 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   room,
   players,
   currentPlayer,
-  onUpdateRoom
+  onUpdateRoom,
 }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [gamePhase, setGamePhase] = useState<'waiting' | 'question' | 'results' | 'finished'>('waiting');
-  const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>({});
+  const [gamePhase, setGamePhase] = useState<
+    'waiting' | 'question' | 'results' | 'finished'
+  >('waiting');
+  const [playerAnswers, setPlayerAnswers] = useState<Record<string, string>>(
+    {}
+  );
   const [scores, setScores] = useState<Record<string, number>>({});
-  const [characterData, setCharacterData] = useState<Record<string, CatCharacter>>({});
-  const [questionResults, setQuestionResults] = useState<Array<{questionId: string, playerAnswers: Record<string, string>, correctAnswer: string}>>([]);
+  const [characterData, setCharacterData] = useState<
+    Record<string, CatCharacter>
+  >({});
+  const [questionResults, setQuestionResults] = useState<
+    Array<{
+      questionId: string;
+      playerAnswers: Record<string, string>;
+      correctAnswer: string;
+    }>
+  >([]);
 
   // Sync game state from room
   useEffect(() => {
@@ -128,7 +153,8 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
 
   const currentQuestion = questions[currentQuestionIndex];
   const isHost = currentPlayer.is_host;
-  const allPlayersAnswered = Object.keys(playerAnswers).length === players.length;
+  const allPlayersAnswered =
+    Object.keys(playerAnswers).length === players.length;
   const showResults = gamePhase === 'results';
 
   // Load cat characters
@@ -138,15 +164,16 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         const { data, error } = await supabase
           .from('cat_characters')
           .select('*');
-        
+
         if (error) {
           console.error('Error loading characters:', error);
           return;
         }
 
         const charactersMap: Record<string, CatCharacter> = {};
-        data?.forEach((char) => {
-          if (char.icon_url) { // Only add characters with valid icon URLs
+        data?.forEach(char => {
+          if (char.icon_url) {
+            // Only add characters with valid icon URLs
             charactersMap[char.id] = char as CatCharacter;
           }
         });
@@ -161,7 +188,12 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
 
   // Check if all players have answered (only host handles this)
   useEffect(() => {
-    if (isHost && gamePhase === 'question' && allPlayersAnswered && Object.keys(playerAnswers).length > 0) {
+    if (
+      isHost &&
+      gamePhase === 'question' &&
+      allPlayersAnswered &&
+      Object.keys(playerAnswers).length > 0
+    ) {
       setTimeout(() => showQuestionResults(), 300);
     }
   }, [playerAnswers, gamePhase, allPlayersAnswered, isHost]);
@@ -173,26 +205,26 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
       currentQuestion: 0,
       scores: {},
       playerAnswers: {},
-      questionResults: []
+      questionResults: [],
     };
-    
+
     await onUpdateRoom({
-      game_state: initialState
+      game_state: initialState,
     });
   };
 
   const handleAnswerSelect = async (answer: string) => {
     if (selectedAnswer || gamePhase !== 'question') return;
-    
+
     setSelectedAnswer(answer);
     const newAnswers = { ...playerAnswers, [currentPlayer.player_id]: answer };
-    
+
     // Update room state with new answer
     await onUpdateRoom({
       game_state: {
         ...room.game_state,
-        playerAnswers: newAnswers
-      }
+        playerAnswers: newAnswers,
+      },
     });
   };
 
@@ -204,24 +236,27 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         newScores[playerId] = (newScores[playerId] || 0) + 1;
       }
     });
-    
+
     // Store this question's results
     if (currentQuestion) {
-      const newQuestionResults = [...questionResults, {
-        questionId: currentQuestion.id,
-        playerAnswers: { ...playerAnswers },
-        correctAnswer: currentQuestion.correctAnswer
-      }];
+      const newQuestionResults = [
+        ...questionResults,
+        {
+          questionId: currentQuestion.id,
+          playerAnswers: { ...playerAnswers },
+          correctAnswer: currentQuestion.correctAnswer,
+        },
+      ];
       await onUpdateRoom({
         game_state: {
           ...room.game_state,
           phase: 'results', // For Room component compatibility
           gamePhase: 'results',
           scores: newScores,
-          questionResults: newQuestionResults
-        }
+          questionResults: newQuestionResults,
+        },
       });
-      
+
       setTimeout(() => {
         nextQuestion(newScores, newQuestionResults);
       }, 2000);
@@ -232,7 +267,14 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     showQuestionResults();
   };
 
-  const nextQuestion = async (preservedScores?: Record<string, number>, preservedResults?: Array<{questionId: string, playerAnswers: Record<string, string>, correctAnswer: string}>) => {
+  const nextQuestion = async (
+    preservedScores?: Record<string, number>,
+    preservedResults?: Array<{
+      questionId: string;
+      playerAnswers: Record<string, string>;
+      correctAnswer: string;
+    }>
+  ) => {
     if (currentQuestionIndex + 1 >= questions.length) {
       await onUpdateRoom({
         game_state: {
@@ -241,14 +283,14 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
           gamePhase: 'finished',
           // Preserve all final data
           scores: preservedScores || scores,
-          questionResults: preservedResults || questionResults
-        }
+          questionResults: preservedResults || questionResults,
+        },
       });
       return;
     }
-    
+
     setSelectedAnswer(null);
-    
+
     await onUpdateRoom({
       game_state: {
         ...room.game_state,
@@ -260,14 +302,14 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         resetAnswers: true,
         // Keep existing questionResults and scores from parameters or current state
         questionResults: preservedResults || questionResults,
-        scores: preservedScores || scores
-      }
+        scores: preservedScores || scores,
+      },
     });
   };
 
   const resetGame = async () => {
     setSelectedAnswer(null);
-    
+
     await onUpdateRoom({
       game_state: {
         phase: 'lobby', // For Room component compatibility - goes back to lobby
@@ -275,29 +317,38 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
         currentQuestion: 0,
         scores: {},
         playerAnswers: {},
-        questionResults: []
-      }
+        questionResults: [],
+      },
     });
   };
 
   if (gamePhase === 'waiting') {
     return (
-      <div className="min-h-screen gradient-bg p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 text-primary">Demo Day</h1>
-            <h2 className="text-2xl mb-6 text-muted-foreground">Guess Who Game</h2>
-            
+      <div className="gradient-bg min-h-screen p-6">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-8 text-center">
+            <h1 className="mb-4 text-4xl font-bold text-primary">Demo Day</h1>
+            <h2 className="mb-6 text-2xl text-muted-foreground">
+              Guess Who Game
+            </h2>
+
             <Card className="mb-6">
               <CardContent className="p-6">
-                <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="mb-4 flex items-center justify-center gap-4">
                   <Users className="h-6 w-6" />
-                  <span className="text-lg font-semibold">{players.length} Players</span>
+                  <span className="text-lg font-semibold">
+                    {players.length} Players
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {players.map((player) => (
-                    <div key={player.id} className="flex items-center gap-2 p-2 bg-muted rounded">
-                      {player.is_host && <Crown className="h-4 w-4 text-yellow-500" />}
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                  {players.map(player => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-2 rounded bg-muted p-2"
+                    >
+                      {player.is_host && (
+                        <Crown className="h-4 w-4 text-yellow-500" />
+                      )}
                       <span className="text-sm">{player.player_name}</span>
                     </div>
                   ))}
@@ -306,13 +357,19 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
             </Card>
 
             {isHost && (
-              <Button onClick={startGame} size="lg" className="text-lg px-8 py-4">
+              <Button
+                onClick={startGame}
+                size="lg"
+                className="px-8 py-4 text-lg"
+              >
                 Start Guess Who Game
               </Button>
             )}
-            
+
             {!isHost && (
-              <p className="text-muted-foreground">Waiting for host to start the game...</p>
+              <p className="text-muted-foreground">
+                Waiting for host to start the game...
+              </p>
             )}
           </div>
         </div>
@@ -324,37 +381,48 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
     const sortedScores = Object.entries(scores)
       .map(([playerId, score]) => ({
         player: players.find(p => p.player_id === playerId),
-        score
+        score,
       }))
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div className="min-h-screen gradient-bg p-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl font-bold mb-4 text-primary">Game Over!</h1>
-          <h2 className="text-2xl mb-8 text-muted-foreground">Final Results</h2>
-          
+      <div className="gradient-bg min-h-screen p-6">
+        <div className="mx-auto max-w-4xl text-center">
+          <h1 className="mb-4 text-4xl font-bold text-primary">Game Over!</h1>
+          <h2 className="mb-8 text-2xl text-muted-foreground">Final Results</h2>
+
           <Card className="mb-6">
             <CardContent className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Final Scores</h3>
+              <h3 className="mb-4 text-xl font-semibold">Final Scores</h3>
               <div className="space-y-2">
                 {sortedScores.map((item, index) => {
-                  const playerCharacter = item.player?.selected_character_id ? characterData[item.player.selected_character_id] : null;
+                  const playerCharacter = item.player?.selected_character_id
+                    ? characterData[item.player.selected_character_id]
+                    : null;
                   return (
-                    <div key={item.player?.player_id} className="flex items-center justify-between p-3 bg-muted rounded">
+                    <div
+                      key={item.player?.player_id}
+                      className="flex items-center justify-between rounded bg-muted p-3"
+                    >
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg">{index + 1}.</span>
-                        {index === 0 && <Crown className="h-5 w-5 text-yellow-500" />}
+                        <span className="text-lg font-bold">{index + 1}.</span>
+                        {index === 0 && (
+                          <Crown className="h-5 w-5 text-yellow-500" />
+                        )}
                         {playerCharacter && (
                           <img
                             src={getCatImageUrl(playerCharacter.icon_url)}
                             alt={playerCharacter.name}
-                            className="w-8 h-8 rounded-full object-cover"
+                            className="h-8 w-8 rounded-full object-cover"
                           />
                         )}
-                        <span className="font-medium">{item.player?.player_name}</span>
+                        <span className="font-medium">
+                          {item.player?.player_name}
+                        </span>
                       </div>
-                      <span className="font-bold text-lg">{item.score}/{questions.length}</span>
+                      <span className="text-lg font-bold">
+                        {item.score}/{questions.length}
+                      </span>
                     </div>
                   );
                 })}
@@ -364,51 +432,89 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
 
           <Card className="mb-6">
             <CardContent className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Question Results</h3>
+              <h3 className="mb-4 text-xl font-semibold">Question Results</h3>
               <div className="space-y-4">
                 {questionResults.map((result, qIndex) => (
-                  <div key={result.questionId} className="border rounded-lg p-4">
-                    <h4 className="font-medium mb-2">Question {qIndex + 1}</h4>
-                    <p className="text-sm text-muted-foreground mb-3">Correct Answer: {result.correctAnswer}</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div
+                    key={result.questionId}
+                    className="rounded-lg border p-4"
+                  >
+                    <h4 className="mb-2 font-medium">Question {qIndex + 1}</h4>
+                    <p className="mb-3 text-sm text-muted-foreground">
+                      Correct Answer: {result.correctAnswer}
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                       <div>
-                        <h5 className="text-sm font-medium text-green-600 mb-1">✓ Correct</h5>
-                        {players.filter(p => result.playerAnswers[p.player_id] === result.correctAnswer).map(player => {
-                          const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
-                          return (
-                            <div key={player.player_id} className="flex items-center gap-2 text-sm p-1">
-                              {playerCharacter && (
-                                <img
-                                  src={getCatImageUrl(playerCharacter.icon_url)}
-                                  alt={playerCharacter.name}
-                                  className="w-4 h-4 rounded-full object-cover"
-                                />
-                              )}
-                              <span>{player.player_name}</span>
-                            </div>
-                          );
-                        })}
+                        <h5 className="mb-1 text-sm font-medium text-green-600">
+                          ✓ Correct
+                        </h5>
+                        {players
+                          .filter(
+                            p =>
+                              result.playerAnswers[p.player_id] ===
+                              result.correctAnswer
+                          )
+                          .map(player => {
+                            const playerCharacter = player.selected_character_id
+                              ? characterData[player.selected_character_id]
+                              : null;
+                            return (
+                              <div
+                                key={player.player_id}
+                                className="flex items-center gap-2 p-1 text-sm"
+                              >
+                                {playerCharacter && (
+                                  <img
+                                    src={getCatImageUrl(
+                                      playerCharacter.icon_url
+                                    )}
+                                    alt={playerCharacter.name}
+                                    className="h-4 w-4 rounded-full object-cover"
+                                  />
+                                )}
+                                <span>{player.player_name}</span>
+                              </div>
+                            );
+                          })}
                       </div>
-                      
+
                       <div>
-                        <h5 className="text-sm font-medium text-red-600 mb-1">✗ Incorrect</h5>
-                        {players.filter(p => result.playerAnswers[p.player_id] && result.playerAnswers[p.player_id] !== result.correctAnswer).map(player => {
-                          const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
-                          return (
-                            <div key={player.player_id} className="flex items-center gap-2 text-sm p-1">
-                              {playerCharacter && (
-                                <img
-                                  src={getCatImageUrl(playerCharacter.icon_url)}
-                                  alt={playerCharacter.name}
-                                  className="w-4 h-4 rounded-full object-cover"
-                                />
-                              )}
-                              <span>{player.player_name}</span>
-                              <span className="text-muted-foreground">({result.playerAnswers[player.player_id]})</span>
-                            </div>
-                          );
-                        })}
+                        <h5 className="mb-1 text-sm font-medium text-red-600">
+                          ✗ Incorrect
+                        </h5>
+                        {players
+                          .filter(
+                            p =>
+                              result.playerAnswers[p.player_id] &&
+                              result.playerAnswers[p.player_id] !==
+                                result.correctAnswer
+                          )
+                          .map(player => {
+                            const playerCharacter = player.selected_character_id
+                              ? characterData[player.selected_character_id]
+                              : null;
+                            return (
+                              <div
+                                key={player.player_id}
+                                className="flex items-center gap-2 p-1 text-sm"
+                              >
+                                {playerCharacter && (
+                                  <img
+                                    src={getCatImageUrl(
+                                      playerCharacter.icon_url
+                                    )}
+                                    alt={playerCharacter.name}
+                                    className="h-4 w-4 rounded-full object-cover"
+                                  />
+                                )}
+                                <span>{player.player_name}</span>
+                                <span className="text-muted-foreground">
+                                  ({result.playerAnswers[player.player_id]})
+                                </span>
+                              </div>
+                            );
+                          })}
                       </div>
                     </div>
                   </div>
@@ -428,29 +534,30 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
   }
 
   return (
-    <div className="min-h-screen gradient-bg p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4 text-primary">Demo Day</h1>
-          
-          <div className="flex items-center justify-center gap-6 mb-6">
+    <div className="gradient-bg min-h-screen p-6">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-primary">Demo Day</h1>
+
+          <div className="mb-6 flex items-center justify-center gap-6">
             <div className="text-lg">
               Question {currentQuestionIndex + 1} of {questions.length}
             </div>
             <div className="text-sm text-muted-foreground">
-              {Object.keys(playerAnswers).length}/{players.length} players answered
+              {Object.keys(playerAnswers).length}/{players.length} players
+              answered
             </div>
           </div>
-          
+
           {isHost && gamePhase === 'question' && (
             <div className="mb-4">
-              <Button 
-                onClick={handleSkipQuestion} 
-                variant="outline" 
+              <Button
+                onClick={handleSkipQuestion}
+                variant="outline"
                 size="sm"
                 className="mb-2"
               >
-                <SkipForward className="h-4 w-4 mr-2" />
+                <SkipForward className="mr-2 h-4 w-4" />
                 Skip Question (Host)
               </Button>
             </div>
@@ -461,66 +568,77 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
           <CardContent className="p-6 text-center">
             {currentQuestion && (
               <>
-                <img 
-                  src={currentQuestion.image} 
-                  alt="Demo Day question image - who is this person?" 
-                  className="w-80 h-80 object-contain rounded-lg mx-auto mb-6 bg-white/10 animate-fade-in"
+                <img
+                  src={currentQuestion.image}
+                  alt="Demo Day question image - who is this person?"
+                  className="animate-fade-in mx-auto mb-6 h-80 w-80 rounded-lg bg-white/10 object-contain"
                 />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                  {currentQuestion.options.map((option: string, index: number) => {
-                    const isCorrect = option === currentQuestion.correctAnswer;
-                    const isSelected = selectedAnswer === option;
-                    const showResults = gamePhase === 'results';
-                    
-                    let buttonVariant: "default" | "destructive" | "outline" | "secondary" = "outline";
-                    let buttonClassName = "p-4 text-left h-auto transition-all duration-300";
-                    
-                    if (showResults) {
-                      if (isCorrect) {
-                        buttonVariant = "default";
-                        buttonClassName += " bg-green-600 hover:bg-green-600 text-white border-green-600 animate-pulse";
-                      } else if (isSelected) {
-                        buttonVariant = "destructive";
-                        buttonClassName += " bg-red-600 hover:bg-red-600 text-white border-red-600";
-                      } else {
-                        buttonClassName += " opacity-50";
-                      }
-                    } else if (isSelected) {
-                      buttonVariant = "default";
-                      buttonClassName += " bg-primary text-primary-foreground";
-                    }
 
-                    return (
-                      <Button
-                        key={index}
-                        variant={buttonVariant}
-                        size="lg"
-                        onClick={() => handleAnswerSelect(option)}
-                        disabled={selectedAnswer !== null || showResults}
-                        className={buttonClassName}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="font-medium">{option}</span>
-                          {showResults && isCorrect && (
-                            <CheckCircle className="h-5 w-5 ml-2" />
-                          )}
-                          {showResults && isSelected && !isCorrect && (
-                            <XCircle className="h-5 w-5 ml-2" />
-                          )}
-                        </div>
-                      </Button>
-                    );
-                  })}
+                <div className="mx-auto grid max-w-2xl grid-cols-1 gap-4 md:grid-cols-2">
+                  {currentQuestion.options.map(
+                    (option: string, index: number) => {
+                      const isCorrect =
+                        option === currentQuestion.correctAnswer;
+                      const isSelected = selectedAnswer === option;
+                      const showResults = gamePhase === 'results';
+
+                      let buttonVariant:
+                        | 'default'
+                        | 'destructive'
+                        | 'outline'
+                        | 'secondary' = 'outline';
+                      let buttonClassName =
+                        'p-4 text-left h-auto transition-all duration-300';
+
+                      if (showResults) {
+                        if (isCorrect) {
+                          buttonVariant = 'default';
+                          buttonClassName +=
+                            ' bg-green-600 hover:bg-green-600 text-white border-green-600 animate-pulse';
+                        } else if (isSelected) {
+                          buttonVariant = 'destructive';
+                          buttonClassName +=
+                            ' bg-red-600 hover:bg-red-600 text-white border-red-600';
+                        } else {
+                          buttonClassName += ' opacity-50';
+                        }
+                      } else if (isSelected) {
+                        buttonVariant = 'default';
+                        buttonClassName +=
+                          ' bg-primary text-primary-foreground';
+                      }
+
+                      return (
+                        <Button
+                          key={index}
+                          variant={buttonVariant}
+                          size="lg"
+                          onClick={() => handleAnswerSelect(option)}
+                          disabled={selectedAnswer !== null || showResults}
+                          className={buttonClassName}
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <span className="font-medium">{option}</span>
+                            {showResults && isCorrect && (
+                              <CheckCircle className="ml-2 h-5 w-5" />
+                            )}
+                            {showResults && isSelected && !isCorrect && (
+                              <XCircle className="ml-2 h-5 w-5" />
+                            )}
+                          </div>
+                        </Button>
+                      );
+                    }
+                  )}
                 </div>
 
                 {showResults && (
-                  <div className="mt-8 p-6 rounded-xl border-2 bg-gradient-to-r from-background/90 to-background/95 backdrop-blur-sm animate-scale-in shadow-lg">
+                  <div className="animate-scale-in mt-8 rounded-xl border-2 bg-gradient-to-r from-background/90 to-background/95 p-6 shadow-lg backdrop-blur-sm">
                     <div className="text-center">
                       {selectedAnswer === currentQuestion.correctAnswer ? (
                         <div className="space-y-3">
                           <div className="flex items-center justify-center gap-3">
-                            <div className="p-2 rounded-full bg-green-100">
+                            <div className="rounded-full bg-green-100 p-2">
                               <CheckCircle className="h-8 w-8 text-green-600" />
                             </div>
                           </div>
@@ -534,7 +652,7 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
                       ) : (
                         <div className="space-y-3">
                           <div className="flex items-center justify-center gap-3">
-                            <div className="p-2 rounded-full bg-red-100">
+                            <div className="rounded-full bg-red-100 p-2">
                               <XCircle className="h-8 w-8 text-red-600" />
                             </div>
                           </div>
@@ -560,23 +678,30 @@ export const DogpatchGame: React.FC<DogpatchGameProps> = ({
 
         <Card>
           <CardContent className="p-4">
-            <h3 className="font-semibold mb-2">Current Scores</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {players.map((player) => {
-                const playerCharacter = player.selected_character_id ? characterData[player.selected_character_id] : null;
+            <h3 className="mb-2 font-semibold">Current Scores</h3>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              {players.map(player => {
+                const playerCharacter = player.selected_character_id
+                  ? characterData[player.selected_character_id]
+                  : null;
                 return (
-                  <div key={player.id} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between rounded bg-muted p-2 text-sm"
+                  >
                     <div className="flex items-center gap-2">
                       {playerCharacter && (
                         <img
                           src={getCatImageUrl(playerCharacter.icon_url)}
                           alt={playerCharacter.name}
-                          className="w-6 h-6 rounded-full object-cover"
+                          className="h-6 w-6 rounded-full object-cover"
                         />
                       )}
                       <span>{player.player_name}</span>
                     </div>
-                    <span className="font-semibold">{scores[player.player_id] || 0}</span>
+                    <span className="font-semibold">
+                      {scores[player.player_id] || 0}
+                    </span>
                   </div>
                 );
               })}

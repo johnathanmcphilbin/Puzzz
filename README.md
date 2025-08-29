@@ -5,6 +5,7 @@ An online party-game platform where friends can join rooms and compete in real-t
 ---
 
 ## 📑 Table of Contents
+
 1. [Getting Started](#getting-started)
 2. [Project Scripts](#project-scripts)
 3. [Environment Variables](#environment-variables)
@@ -19,11 +20,13 @@ An online party-game platform where friends can join rooms and compete in real-t
 ## Getting Started
 
 ### Prerequisites
-* **Node.js ≥ 18** – recommended to install via [`nvm`](https://github.com/nvm-sh/nvm)
-* **npm ≥ 9** (or [Bun](https://bun.sh/) if you prefer – just replace the npm commands below)
-* **Supabase CLI** *(optional but recommended)* – for running the database & edge functions locally
+
+- **Node.js ≥ 18** – recommended to install via [`nvm`](https://github.com/nvm-sh/nvm)
+- **npm ≥ 9** (or [Bun](https://bun.sh/) if you prefer – just replace the npm commands below)
+- **Supabase CLI** _(optional but recommended)_ – for running the database & edge functions locally
 
 ### Installation
+
 ```bash
 # 1. Clone the repo
 $ git clone <your_git_url>
@@ -41,17 +44,19 @@ $ npm run dev
 ---
 
 ## Project Scripts
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite in development mode with hot-reload |
-| `npm run build` | Production build (to `dist/`) |
-| `npm run build:dev` | Build in development mode |
-| `npm run preview` | Preview the production build locally |
-| `npm run lint` | Run ESLint on the entire codebase |
+
+| Command             | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `npm run dev`       | Start Vite in development mode with hot-reload |
+| `npm run build`     | Production build (to `dist/`)                  |
+| `npm run build:dev` | Build in development mode                      |
+| `npm run preview`   | Preview the production build locally           |
+| `npm run lint`      | Run ESLint on the entire codebase              |
 
 ---
 
 ## Environment Variables
+
 Create a `.env` (or `.env.local`) file in the project root.
 
 ```env
@@ -75,18 +80,20 @@ Or set it in the Supabase dashboard under Settings → Edge Functions → Enviro
 ---
 
 ## Tech Stack
-* **React 18** & **Vite 5** – lightning-fast dev experience
-* **TypeScript** – type-safe development
-* **Tailwind CSS** & **shadcn-ui** – modern UI components & utility-first styling
-* **@tanstack/react-query** – remote data management
-* **Three.js** (`@react-three/fiber`) – 3D visuals & animations
-* **Supabase** – database, auth, storage & edge functions
-* **ESLint** & **Prettier** – code quality & formatting
+
+- **React 18** & **Vite 5** – lightning-fast dev experience
+- **TypeScript** – type-safe development
+- **Tailwind CSS** & **shadcn-ui** – modern UI components & utility-first styling
+- **@tanstack/react-query** – remote data management
+- **Three.js** (`@react-three/fiber`) – 3D visuals & animations
+- **Supabase** – database, auth, storage & edge functions
+- **ESLint** & **Prettier** – code quality & formatting
 
 ---
 
 ## Project Structure
-```text
+
+````text
 ├── public/            # Static assets served as-is
 ├── src/
 │   ├── components/    # Re-usable UI components
@@ -103,13 +110,14 @@ $ supabase start
 
 # serve a specific edge function (example: ai-chat)
 $ supabase functions serve ai-chat --watch
-```
+````
 
 Refer to the Supabase docs for more CLI options and deployment instructions.
 
 ---
 
 ## Deployment
+
 This project is hosted on **Lovable**. From the project dashboard choose **Share → Publish** to deploy the latest build.
 
 If you prefer your own infrastructure, you can deploy the static `dist/` folder to any CDN (e.g. Vercel, Netlify, Cloudflare Pages) and your Supabase project will continue to serve the API layer.

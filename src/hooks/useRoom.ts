@@ -1,8 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { FUNCTIONS_BASE_URL, SUPABASE_ANON_KEY, safeDeepMerge } from '@/utils/functions';
 import { useNavigate } from 'react-router-dom';
+
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  FUNCTIONS_BASE_URL,
+  SUPABASE_ANON_KEY,
+  safeDeepMerge,
+} from '@/utils/functions';
 
 export interface Room {
   roomCode: string;
@@ -28,20 +33,26 @@ export const useRoom = (roomCode: string) => {
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const loadRoom = useCallback(async () => {
     if (!roomCode) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service?roomCode=${roomCode}`, { 
-        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } 
-      });
+
+      const response = await fetch(
+        `${FUNCTIONS_BASE_URL}/rooms-service?roomCode=${roomCode}`,
+        {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -59,7 +70,7 @@ export const useRoom = (roomCode: string) => {
         is_host: p.isHost,
         selected_character_id: p.selectedCharacterId,
         joined_at: p.joinedAt,
-        id: p.playerId // alias for keying in maps
+        id: p.playerId, // alias for keying in maps
       }));
 
       setRoom({
@@ -69,15 +80,17 @@ export const useRoom = (roomCode: string) => {
         current_game: roomData.currentGame,
         game_state: roomData.gameState,
         is_active: true,
-        id: roomData.roomCode // placeholder
+        id: roomData.roomCode, // placeholder
       } as any);
       setPlayers(playersWithLegacy);
 
       // Find current player
       const playerId = localStorage.getItem('puzzz_player_id');
       if (playerId) {
-        const foundPlayer = playersWithLegacy.find((p: any) => p.player_id === playerId);
-        
+        const foundPlayer = playersWithLegacy.find(
+          (p: any) => p.player_id === playerId
+        );
+
         if (foundPlayer) {
           setCurrentPlayer(foundPlayer);
         } else {
@@ -89,7 +102,6 @@ export const useRoom = (roomCode: string) => {
         setError('Please join the room properly');
         return;
       }
-
     } catch (err) {
       setError('Failed to load room data');
     } finally {
@@ -97,66 +109,91 @@ export const useRoom = (roomCode: string) => {
     }
   }, [roomCode]);
 
-const updateRoom = useCallback(async (updates: Partial<Room>) => {
-    if (!room) return;
+  const updateRoom = useCallback(
+    async (updates: Partial<Room>) => {
+      if (!room) return;
 
-    try {
-      const requesterId = currentPlayer?.playerId || localStorage.getItem('puzzz_player_id');
-      const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ action: 'update', roomCode: room.roomCode, updates, requestingPlayerId: requesterId }),
-      });
+      try {
+        const requesterId =
+          currentPlayer?.playerId || localStorage.getItem('puzzz_player_id');
+        const response = await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            action: 'update',
+            roomCode: room.roomCode,
+            updates,
+            requestingPlayerId: requesterId,
+          }),
+        });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || 'Update failed');
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'Update failed');
+        }
+
+        setRoom(prevRoom => {
+          if (!prevRoom) return prevRoom;
+          const mergedGameState = updates.gameState
+            ? safeDeepMerge(prevRoom.gameState || {}, updates.gameState as any)
+            : prevRoom.gameState;
+          const { gameState: _ignored, ...other } = updates as any;
+          return { ...prevRoom, ...other, gameState: mergedGameState } as Room;
+        });
+      } catch (err) {
+        toast({
+          title: 'Error',
+          description: 'Failed to update room',
+          variant: 'destructive',
+        });
       }
+    },
+    [room, currentPlayer, toast]
+  );
 
-      setRoom(prevRoom => {
-        if (!prevRoom) return prevRoom;
-        const mergedGameState = updates.gameState
-          ? safeDeepMerge(prevRoom.gameState || {}, updates.gameState as any)
-          : prevRoom.gameState;
-        const { gameState: _ignored, ...other } = updates as any;
-        return { ...prevRoom, ...other, gameState: mergedGameState } as Room;
-      });
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update room',
-        variant: 'destructive',
-      });
-    }
-  }, [room, currentPlayer, toast]);
+  const kickPlayer = useCallback(
+    async (playerIdToKick: string) => {
+      if (!room || !currentPlayer?.isHost) return;
 
-  const kickPlayer = useCallback(async (playerIdToKick: string) => {
-    if (!room || !currentPlayer?.isHost) return;
+      try {
+        await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            action: 'kick',
+            roomCode: room.roomCode,
+            targetPlayerId: playerIdToKick,
+            hostId: currentPlayer?.playerId,
+          }),
+        });
 
-    try {
-      await fetch(`${FUNCTIONS_BASE_URL}/rooms-service`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ action: 'kick', roomCode: room.roomCode, targetPlayerId: playerIdToKick, hostId: currentPlayer?.playerId }),
-      });
-
-      toast({
-        title: 'Player Removed',
-        description: 'Player has been removed from the room',
-      });
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to remove player',
-        variant: 'destructive',
-      });
-    }
-  }, [room, currentPlayer, toast]);
+        toast({
+          title: 'Player Removed',
+          description: 'Player has been removed from the room',
+        });
+      } catch (err) {
+        toast({
+          title: 'Error',
+          description: 'Failed to remove player',
+          variant: 'destructive',
+        });
+      }
+    },
+    [room, currentPlayer, toast]
+  );
 
   // Initial load - only run once when component mounts
   useEffect(() => {
     if (!roomCode) return;
-    
+
     const playerId = localStorage.getItem('puzzz_player_id');
     const playerName = localStorage.getItem('puzzz_player_name');
 
@@ -174,9 +211,9 @@ const updateRoom = useCallback(async (updates: Partial<Room>) => {
 
     const channel = supabase
       .channel(`room_${roomCode}`)
-      .on('broadcast', { event: 'room_update' }, (payload) => {
+      .on('broadcast', { event: 'room_update' }, payload => {
         const newRoomData = payload.payload;
-        
+
         // compatibility: add legacy field names expected by components
         const playersWithLegacy = (newRoomData.players || []).map((p: any) => ({
           ...p,
@@ -185,7 +222,7 @@ const updateRoom = useCallback(async (updates: Partial<Room>) => {
           is_host: p.isHost,
           selected_character_id: p.selectedCharacterId,
           joined_at: p.joinedAt,
-          id: p.playerId // alias for keying in maps
+          id: p.playerId, // alias for keying in maps
         }));
 
         setRoom({
@@ -195,14 +232,16 @@ const updateRoom = useCallback(async (updates: Partial<Room>) => {
           current_game: newRoomData.currentGame,
           game_state: newRoomData.gameState,
           is_active: true,
-          id: newRoomData.roomCode // placeholder
+          id: newRoomData.roomCode, // placeholder
         } as any);
         setPlayers(playersWithLegacy);
 
         // Update current player if needed
         const playerId = localStorage.getItem('puzzz_player_id');
         if (playerId) {
-          const foundPlayer = playersWithLegacy.find((p: any) => p.player_id === playerId);
+          const foundPlayer = playersWithLegacy.find(
+            (p: any) => p.player_id === playerId
+          );
           if (foundPlayer) {
             setCurrentPlayer(foundPlayer);
           }
@@ -212,7 +251,7 @@ const updateRoom = useCallback(async (updates: Partial<Room>) => {
 
     return () => {
       supabase.removeChannel(channel);
-      console.log('[Room] unsubscribed channel room_'+roomCode);
+      console.log(`[Room] unsubscribed channel room_${roomCode}`);
     };
   }, [roomCode, room?.roomCode]); // Only depend on roomCode to avoid re-subscriptions
 

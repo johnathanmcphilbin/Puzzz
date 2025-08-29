@@ -8,56 +8,68 @@
   :root {
     --background: 0 0% 98%;
     --foreground: 220 13% 18%;
-    
+
     /* Primary - Soft Cat Pink for Actions */
     --primary: 340 60% 70%;
     --primary-foreground: 0 0% 100%;
     --primary-hover: 340 60% 65%;
-    
+
     /* Secondary - Warm Cream for Balance */
     --secondary: 40 30% 95%;
     --secondary-foreground: 220 13% 18%;
-    
+
     /* Accent - Playful Cat Blue for Highlights */
     --accent: 200 60% 70%;
     --accent-foreground: 0 0% 100%;
-    
+
     /* Success - Fresh Green for Positive Actions */
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
-    
+
     /* Warning - Warm Orange for Alerts */
     --warning: 32 95% 44%;
     --warning-foreground: 0 0% 100%;
-    
+
     /* Game Colors - Fun and Engaging */
     --game-option-a: 0 84% 60%;
     --game-option-b: 200 100% 50%;
     --game-result: 142 76% 36%;
-    
+
     /* Interactive States */
     --hover: 220 13% 91%;
     --active: 220 13% 86%;
-    
+
     /* Join Game Button Color */
     --join-game: 217 87% 62%;
-    
+
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(262 52% 47%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 98%));
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(217 91% 60%),
+      hsl(262 52% 47%)
+    );
+    --gradient-subtle: linear-gradient(
+      180deg,
+      hsl(0 0% 100%),
+      hsl(220 13% 98%)
+    );
     --gradient-game: linear-gradient(45deg, hsl(217 91% 60%), hsl(262 52% 47%));
-    
+
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(220 13% 18% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(220 13% 18% / 0.1), 0 2px 4px -1px hsl(220 13% 18% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(220 13% 18% / 0.1), 0 4px 6px -2px hsl(220 13% 18% / 0.05);
+    --shadow-md:
+      0 4px 6px -1px hsl(220 13% 18% / 0.1),
+      0 2px 4px -1px hsl(220 13% 18% / 0.06);
+    --shadow-lg:
+      0 10px 15px -3px hsl(220 13% 18% / 0.1),
+      0 4px 6px -2px hsl(220 13% 18% / 0.05);
     --shadow-game: 0 8px 25px -5px hsl(217 91% 60% / 0.25);
-    
+
     /* Animation */
     --transition-fast: 0.15s ease-out;
     --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    
+
     /* Standard UI Components */
     --card: 0 0% 100%;
     --card-foreground: 220 13% 18%;
@@ -118,7 +130,7 @@
   }
 
   body {
-    @apply text-foreground font-sans;
+    @apply font-sans text-foreground;
     background-color: white;
   }
 }
@@ -126,39 +138,41 @@
 @layer components {
   /* Game Option Buttons */
   .game-option-a {
-    @apply bg-[hsl(var(--game-option-a))] text-white hover:bg-[hsl(var(--game-option-a)/0.9)] 
-           shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105;
+    @apply transform bg-[hsl(var(--game-option-a))] text-white 
+           shadow-md transition-all duration-300 hover:scale-105 hover:bg-[hsl(var(--game-option-a)/0.9)] hover:shadow-lg;
   }
-  
+
   .game-option-b {
-    @apply bg-[hsl(var(--game-option-b))] text-white hover:bg-[hsl(var(--game-option-b)/0.9)]
-           shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105;
+    @apply transform bg-[hsl(var(--game-option-b))] text-white
+           shadow-md transition-all duration-300 hover:scale-105 hover:bg-[hsl(var(--game-option-b)/0.9)] hover:shadow-lg;
   }
-  
+
   /* Forms Game Colors */
   .forms-primary {
     @apply bg-[hsl(var(--primary))];
   }
-  
+
   /* Paranoia Game Colors */
   .paranoia-primary {
     @apply bg-[hsl(var(--destructive))];
   }
-  
+
   /* Room Code Display */
   .room-code {
-    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] 
-           text-white font-bold text-2xl tracking-wider px-6 py-3 rounded-lg font-slashed-zero;
+    @apply font-slashed-zero rounded-lg bg-gradient-to-r 
+           from-[hsl(var(--primary))] to-[hsl(var(--accent))] px-6 py-3 text-2xl font-bold tracking-wider text-white;
     box-shadow: 0 8px 25px -5px hsl(217 91% 60% / 0.25);
   }
-  
+
   /* Animated Gradient Background */
   .gradient-bg {
     position: relative;
   }
-  
+
   .gradient-bg::before {
-    background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('/src/assets/party-games-header.png') no-repeat center center / cover;
+    background:
+      linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
+      url('/src/assets/party-games-header.png') no-repeat center center / cover;
     content: '';
     position: absolute;
     inset: 0;
@@ -166,12 +180,12 @@
     z-index: -1;
     filter: grayscale(50%);
   }
-  
+
   /* Interactive Card Hover */
   .card-interactive {
-    @apply transition-all duration-300 hover:shadow-lg cursor-pointer relative overflow-hidden;
+    @apply relative cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-lg;
   }
-  
+
   .card-interactive::before {
     content: '';
     position: absolute;
@@ -185,16 +199,16 @@
     opacity: 0.3;
     transition: opacity 0.3s ease;
   }
-  
+
   .card-interactive:hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   }
-  
+
   .card-interactive:hover::before {
     opacity: 0.6;
   }
-  
+
   /* Pulse Animation for Waiting States */
   .pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -205,6 +219,6 @@
   /* Utility to render slashed zero for clarity between O and 0 */
   .font-slashed-zero {
     font-variant-numeric: slashed-zero;
-    font-feature-settings: "zero" 1;
+    font-feature-settings: 'zero' 1;
   }
 }

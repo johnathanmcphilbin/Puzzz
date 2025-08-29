@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -27,7 +26,8 @@ export const useAuth = () => {
         // Session verification is now handled through Redis room data
         try {
           // Check if player exists in any active room
-          if (true) {
+          // For now, assume session is valid if all required data exists
+          if (playerId && playerName && sessionToken) {
             setAuthState({
               isAuthenticated: true,
               playerId,
@@ -49,7 +49,7 @@ export const useAuth = () => {
 
   const createSession = async (playerId: string, playerName: string) => {
     const sessionToken = crypto.randomUUID();
-    
+
     localStorage.setItem('puzzz_player_id', playerId);
     localStorage.setItem('puzzz_player_name', playerName);
     localStorage.setItem('puzzz_session_token', sessionToken);
@@ -83,7 +83,7 @@ export const useAuth = () => {
     }
 
     return {
-      'Authorization': `Bearer ${authState.sessionToken}`,
+      Authorization: `Bearer ${authState.sessionToken}`,
       'X-Player-ID': authState.playerId,
     };
   };

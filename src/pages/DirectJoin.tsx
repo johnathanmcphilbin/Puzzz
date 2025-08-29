@@ -1,15 +1,22 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useRoomActions } from "@/hooks/useRoomActions";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus } from 'lucide-react';
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useRoomActions } from '@/hooks/useRoomActions';
 
 export const DirectJoin = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
-  const [playerName, setPlayerName] = useState("");
+  const [playerName, setPlayerName] = useState('');
   const { joinRoom, loading } = useRoomActions();
 
   const handleJoinRoom = async () => {
@@ -18,10 +25,10 @@ export const DirectJoin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-lg shadow-lg">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 p-3 bg-accent/10 rounded-full w-fit">
+          <div className="mx-auto mb-4 w-fit rounded-full bg-accent/10 p-3">
             <UserPlus className="h-8 w-8 text-accent" />
           </div>
           <CardTitle className="text-2xl">Join Room {roomCode}</CardTitle>
@@ -38,18 +45,18 @@ export const DirectJoin = () => {
               id="playerName"
               placeholder="Enter your name..."
               value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              className="text-lg py-3"
+              onChange={e => setPlayerName(e.target.value)}
+              className="py-3 text-lg"
               maxLength={30}
-              onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+              onKeyDown={e => e.key === 'Enter' && handleJoinRoom()}
               autoFocus
             />
           </div>
 
-          <Button 
-            onClick={handleJoinRoom} 
+          <Button
+            onClick={handleJoinRoom}
             disabled={loading}
-            className="w-full text-lg py-6 bg-accent hover:bg-accent/90 shadow-md"
+            className="w-full bg-accent py-6 text-lg shadow-md hover:bg-accent/90"
             size="lg"
           >
             {loading ? (

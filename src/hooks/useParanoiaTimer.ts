@@ -6,16 +6,20 @@ interface UseParanoiaTimerProps {
   onTimeUp: () => void;
 }
 
-export const useParanoiaTimer = ({ duration, isActive, onTimeUp }: UseParanoiaTimerProps) => {
+export const useParanoiaTimer = ({
+  duration,
+  isActive,
+  onTimeUp,
+}: UseParanoiaTimerProps) => {
   const [timeLeft, setTimeLeft] = useState(duration);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const start = () => {
     if (intervalRef.current) return;
-    
+
     setTimeLeft(duration);
     intervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
+      setTimeLeft(prev => {
         if (prev <= 1) {
           onTimeUp();
           return 0;
@@ -59,6 +63,6 @@ export const useParanoiaTimer = ({ duration, isActive, onTimeUp }: UseParanoiaTi
     start,
     stop,
     reset,
-    isRunning: intervalRef.current !== null
+    isRunning: intervalRef.current !== null,
   };
 };
