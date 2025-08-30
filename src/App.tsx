@@ -33,7 +33,7 @@ const App = () => (
           </Routes>
 
           <BackgroundMusic
-            audioSrc={''} // TODO: add new game music file path here (e.g., "/new-music.mp3")
+            audioSrc={'/puzzz-music.mp3'} 
             volume={0.2}
             showControls={true}
           />
